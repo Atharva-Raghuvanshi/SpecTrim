@@ -30,6 +30,10 @@ lint:
 	$(PY) -m ruff check .
 	$(PY) -m mypy server/app
 
+smoke-real:
+	@if [ -f .env ]; then set -a; . ./.env; set +a; fi; \
+	$(PY) -m app.gateway.smoke
+
 clean:
 	rm -rf .venv .pytest_cache .ruff_cache
 	find . -type d -name __pycache__ -exec rm -rf {} +
