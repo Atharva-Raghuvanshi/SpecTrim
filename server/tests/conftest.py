@@ -58,3 +58,27 @@ def fake_gateway():
     from tests.test_stages import canned_gateway
 
     return canned_gateway()
+
+
+@pytest.fixture()
+def app_client(fake_gateway, db_pool):
+    from app.main import create_app
+    from fastapi.testclient import TestClient
+
+    app = create_app(gateway=fake_gateway)
+    with TestClient(app) as client:
+        yield client, app.state.gateway
+
+
+def drain(client, session_id):
+    """Process a session's job until it reaches ready/awaiting_user."""
+    import asyncio
+
+    from app.pipeline.orchestrator import PipelineContext, run_pipeline_job
+
+    ctx = PipelineContext(client.app.state.pool, client.app.state.gateway, 3)
+    for _ in range(3):
+        status = asyncio.get_event_loop().run_until_complete(run_pipeline_job(ctx, session_id))
+        if status in ("awaiting_user", "ready"):
+            return ctx
+    return ctx

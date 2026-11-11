@@ -8,7 +8,7 @@ from psycopg_pool import AsyncConnectionPool
 
 from app import winloop  # noqa: F401  (must run before asyncio/psycopg on Windows)
 from app.gateway.base import Gateway, GatewayRateLimited
-from app.pipeline.orchestrator import PipelineContext, run_pipeline_job
+from app.pipeline.orchestrator import PipelineContext, run_pipeline_job, run_revision_job
 from app.pipeline.states import InvalidTransition
 from app.settings import Settings
 from app.storage.repos import EventsRepo, SessionsRepo
@@ -30,7 +30,14 @@ class Worker:
             return False
         ctx = PipelineContext(self.pool, self.gateway, self.settings.max_questions_per_round)
         try:
-            await run_pipeline_job(ctx, job["session_id"])
+            if job["kind"] == "revision":
+                payload = job.get("payload") or {}
+                await run_revision_job(
+                    ctx, job["session_id"], str(payload.get("feedback", "")),
+                    str(payload.get("type", "change_request")),
+                )
+            else:
+                await run_pipeline_job(ctx, job["session_id"])
             await self.jobs.complete(job["id"])
         except GatewayRateLimited:
             await self.jobs.fail_transient(job["id"], job["attempts"])
@@ -77,7 +84,7 @@ class _Jobs:
             "make_interval(secs => %s), attempts = attempts + 1 WHERE id = ("
             "  SELECT id FROM jobs WHERE status = 'pending' AND run_after <= now()"
             "  ORDER BY created_at LIMIT 1 FOR UPDATE SKIP LOCKED) "
-            "RETURNING id::text, session_id, attempts, max_attempts"
+            "RETURNING id::text, session_id, kind, payload, attempts, max_attempts"
         )
         async with self.pool.connection() as conn, conn.cursor() as cur:
             await cur.execute(query, (worker_id, lease_seconds))
@@ -85,7 +92,14 @@ class _Jobs:
             await conn.commit()
         if row is None:
             return None
-        return {"id": row[0], "session_id": row[1], "attempts": row[2], "max_attempts": row[3]}
+        return {
+            "id": row[0],
+            "session_id": row[1],
+            "kind": row[2],
+            "payload": row[3],
+            "attempts": row[4],
+            "max_attempts": row[5],
+        }
 
     async def complete(self, job_id: str) -> None:
         async with self.pool.connection() as conn, conn.cursor() as cur:

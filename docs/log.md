@@ -71,3 +71,51 @@ make smoke-real    # needs GROQ_API_KEY in .env; prints model/latency/usage/text
 
 ### Next step
 M2.1 — Message envelope and package schemas (Pydantic): bad id, unknown type, empty fields rejected. Read PRD.md §2 (envelope/package) sections first, tests first, FakeGateway for any LLM-shaped input.
+
+## M2.x + M3.x — schemas, validators, repair-retry, prompts v1, stages, CLI
+
+**Date:** 2026-11-12
+**Status:** DONE. Commits `6adb9f4` (Phase 2), `dadc3b0` (Phase 3 code). Real smoke: 5/5 ideas valid after re-run (idea_1..5 in evals/results/smoke_m35/, idea_2 re-run once after a litellm stdout banner polluted the file).
+
+### What was done
+- M2.1 `schemas/envelope.py` + `schemas/package.py` per PRD 5.5 (envelope id `^msg_\d+$`, 9 message types, package with master_spec/assumptions/questions/sub_specs/contract/validation).
+- M2.2 `gateway/repair.py`: strict-JSON + one repair retry then permanent GatewayError (FR-11); `extract_json` tolerates fences/prose.
+- M2.3 `validators/openapi_lint.py` (openapi-spec-validator) + `validators/consistency.py` (deterministic FR-12 checks).
+- M3.1-M3.4 prompts v1 (`prompts/{analyzer,classifier,spec_writer,contract,decomposer}/v1.md`), stage modules in `stages/`, deterministic question gate (cap 3, low-confidence blocking loses priority, suppressed → non-overridable assumptions), contract stage builds OpenAPI deterministically (always lints; path params auto-declared), decomposer normalizes endpoint method/path from contract (sub-specs cannot drift).
+- M3.5 `pipeline/inmemory.py` + `cli.py` (`python -m app.cli "<idea>" --auto-answer --json`).
+- Groq decommissioned llama-3.x mid-milestone; re-pinned models.yaml to `groq/openai/gpt-oss-120b` / `groq/openai/gpt-oss-20b`.
+
+## M4.1-M4.5 — durability: migrations, repos, queue, state machine, resume, idempotent API
+
+**Date:** 2026-11-12
+**Status:** DONE. Commit `05b24ed`. 65 tests pass; ruff+mypy clean. Exit checks: `make migrate` idempotent (tested); concurrent duplicate POSTs → one session (tested); resume skips done stages, changed hash re-runs (tested); killed worker's job reclaimed (tested); versions ON CONFLICT DO NOTHING (tested).
+
+### What was done
+- `storage/migrations/001_init.sql` (7 tables per PRD 5.7) + `storage/migrate.py` (schema_migrations bookkeeping; runs on API startup; `make migrate` target pending).
+- `storage/repos.py`: Sessions/Jobs/Stages/Versions/Questions/Events repos; events seq via `INSERT..SELECT MAX(seq)+1` (monotonic per session).
+- `pipeline/states.py`: full transition table from PRD 5.2; `transition()` raises InvalidTransition; all state changes go through it.
+- `pipeline/orchestrator.py`: DB-backed run_pipeline_job with resume via chained input_hash (stage key + prompt version + model + config + upstream hashes + payload); stage skip only when done+hash-match.
+- `worker.py`: claim loop `UPDATE..WHERE id=(SELECT..FOR UPDATE SKIP LOCKED)`, leases, `run_after = now()+min(300,2^attempts)+rand(0,1)`, dead after max_attempts, expired-lease reclaim.
+- `main.py`: POST /sessions (Idempotency-Key, unique), GET /sessions/{id}, POST answers (awaiting_user only), POST cancel (409 on invalid transition), /healthz with DB ping.
+
+### Decisions / Assumptions
+- **psycopg_pool AsyncConnectionPool is broken on this Windows host** (PoolTimeout despite instant direct connects) → `storage/db.py` uses a per-checkout `Database.connection()` factory with commit-on-success/rollback-on-error; same `.connection()` interface. Revisit pool on Linux deploy.
+- **psycopg async requires SelectorEventLoop** (Proactor is Windows default) → `app/winloop.py` imported first in main.py/worker.py/conftest.
+- Stage functions are synchronous (gateway protocol is sync); orchestrator DB I/O is async.
+- `_move()` = the only state-change path in the orchestrator (transition + set_status + event).
+- DB tests auto-skip when Postgres unreachable (conftest); run `make up` first. `TEST_DATABASE_URL` overrides DSN (host port 5433).
+
+### Open issues
+- `make migrate` target not yet in Makefile (migration runner exists; add with next Makefile touch).
+- pytest-asyncio deprecation warning (asyncio_default_fixture_loop_scope unset) — cosmetic.
+
+### How to verify (exact commands)
+```
+cd "C:/Users/Admin/OneDrive/Desktop/Query Optimizer"
+make up && make test    # 65 passed (DB tests included when Postgres up)
+make lint               # ruff + mypy clean
+.venv/Scripts/python.exe -m app.cli "A bookmarking tool" --auto-answer   # real end-to-end
+```
+
+### Next step
+Phase 5 (M5.1-M5.3): revision stage (ready→revising→v2), diff engine with breaking-change flags, GET /diff endpoint. M5.1 (versions immutable) already done+tested.

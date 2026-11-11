@@ -93,11 +93,13 @@ class JobsRepo:
     def __init__(self, pool) -> None:
         self.pool = pool
 
-    async def enqueue(self, session_id: str, kind: str = "pipeline") -> str:
+    async def enqueue(
+        self, session_id: str, kind: str = "pipeline", payload: dict | None = None
+    ) -> str:
         async with self.pool.connection() as conn, conn.cursor() as cur:
             await cur.execute(
-                "INSERT INTO jobs (session_id, kind) VALUES (%s, %s) RETURNING id",
-                (session_id, kind),
+                "INSERT INTO jobs (session_id, kind, payload) VALUES (%s, %s, %s) RETURNING id",
+                (session_id, kind, Jsonb(payload) if payload else None),
             )
             job_id = str((await cur.fetchone())[0])
             await conn.commit()

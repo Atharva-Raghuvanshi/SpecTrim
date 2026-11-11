@@ -53,7 +53,7 @@ def test_full_session_reaches_ready_with_fake_gateway(app_client) -> None:
         "/sessions", json={"idea": "habit tracker"}, headers={"Idempotency-Key": f"k-{uuid.uuid4()}"}
     )
     session_id = r.json()["id"]
-    worker = _drain(client, session_id)
+    _drain(client, session_id)
     session = client.get(f"/sessions/{session_id}").json()
     assert session["status"] == "awaiting_user", session
     r = client.post(
@@ -61,20 +61,13 @@ def test_full_session_reaches_ready_with_fake_gateway(app_client) -> None:
         json={"answers": [{"id": "Q1", "answer": "single user"}]},
     )
     assert r.status_code == 200
-    _drain(client, session_id, worker)
+    _drain(client, session_id)
     session = client.get(f"/sessions/{session_id}").json()
     assert session["status"] == "ready", session
     assert session["current_version"] == 1
 
 
-def _drain(client, session_id, worker=None):
-    """Process this session's job to completion using the app's own gateway."""
-    ctx = PipelineContext(client.app.state.pool, client.app.state.gateway, 3)
-    for _ in range(3):
-        status = _run(run_pipeline_job(ctx, session_id))
-        if status == "awaiting_user":
-            return ctx
-    return ctx
+from tests.conftest import drain as _drain  # noqa: E402
 
 
 def test_resume_skips_done_stages(app_client) -> None:
@@ -85,7 +78,6 @@ def test_resume_skips_done_stages(app_client) -> None:
     session_id = r.json()["id"]
     import asyncio
 
-    from app.pipeline.orchestrator import PipelineContext, run_pipeline_job
 
     ctx = PipelineContext(client.app.state.pool, gateway, 3)
     asyncio.get_event_loop().run_until_complete(run_pipeline_job(ctx, session_id))
@@ -99,7 +91,7 @@ def test_changed_input_hash_reruns_stage(app_client) -> None:
     client, gateway = app_client
     import asyncio
 
-    from app.pipeline.orchestrator import PipelineContext, run_stage
+    from app.pipeline.orchestrator import run_stage
     from app.stages.analyzer import run_analyzer
 
     async def scenario():

@@ -17,7 +17,7 @@ from app.pipeline.states import InvalidTransition
 from app.settings import Settings, get_settings
 from app.storage.db import close_pool, open_pool
 from app.storage.migrate import apply_migrations
-from app.storage.repos import EventsRepo, JobsRepo, QuestionsRepo, SessionsRepo
+from app.storage.repos import EventsRepo, JobsRepo, QuestionsRepo, SessionsRepo, VersionsRepo
 
 
 class CreateSession(BaseModel):
@@ -31,6 +31,11 @@ class AnswerItem(BaseModel):
 
 class AnswersIn(BaseModel):
     answers: list[AnswerItem] = Field(min_length=1)
+
+
+class RevisionIn(BaseModel):
+    type: str = Field(pattern=r"^(change_request|failure_report)$")
+    feedback: str = Field(min_length=1)
 
 
 def build_gateway(settings: Settings) -> Gateway:
@@ -140,6 +145,48 @@ def create_app(gateway: Gateway | None = None) -> FastAPI:
         except InvalidTransition as exc:
             raise HTTPException(409, str(exc)) from exc
         return JSONResponse({"id": session_id, "status": "cancelled"})
+
+    @app.post("/sessions/{session_id}/revisions")
+    async def post_revision(session_id: str, body: RevisionIn, request: Request) -> JSONResponse:
+        r = repos(request)
+        session = await r["sessions"].get(session_id)
+        if session is None:
+            raise HTTPException(404, "session not found")
+        if session["status"] != "ready":
+            raise HTTPException(409, f"can only revise a ready session (now {session['status']})")
+        try:
+            from app.pipeline.orchestrator import _move
+            from app.pipeline.states import State
+
+            await _move(ctx(request), session_id, State.revising)
+        except InvalidTransition as exc:
+            raise HTTPException(409, str(exc)) from exc
+        await r["jobs"].enqueue(
+            session_id,
+            kind="revision",
+            payload={"feedback": body.feedback, "type": body.type},
+        )
+        return JSONResponse({"id": session_id, "status": "revising"}, status_code=202)
+
+    @app.get("/sessions/{session_id}/diff")
+    async def get_diff(
+        session_id: str, request: Request, from_version: int | None = None, to_version: int | None = None
+    ) -> JSONResponse:
+        from app.diffing.diff import diff_packages
+
+        r = repos(request)
+        latest = await r["sessions"].get(session_id)
+        if latest is None:
+            raise HTTPException(404, "session not found")
+        to_v = to_version or latest["current_version"]
+        from_v = from_version or (to_v - 1 if to_v and to_v > 1 else to_v)
+        if not to_v or not from_v:
+            raise HTTPException(404, "no versions to diff")
+        old = await VersionsRepo(request.app.state.pool).get(session_id, from_v)
+        new = await VersionsRepo(request.app.state.pool).get(session_id, to_v)
+        if old is None or new is None:
+            raise HTTPException(404, "version not found")
+        return JSONResponse(diff_packages(old, new))
 
     return app
 

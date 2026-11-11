@@ -12,7 +12,7 @@ from typing import Any, Callable
 from app.gateway.base import CompletionResult, Gateway
 from app.pipeline.hashing import input_hash
 from app.pipeline.prompts import render
-from app.pipeline.states import State, transition
+from app.pipeline.states import InvalidTransition, State, transition
 from app.schemas.package import Contract, MasterSpec, SpecPackage, ValidationReport
 from app.stages.analyzer import IdeaAnalysis, run_analyzer
 from app.stages.classifier import ClassifierOutput, run_classifier
@@ -198,3 +198,79 @@ async def cancel_session(ctx: PipelineContext, session_id: str) -> None:
     if session is None:
         raise KeyError(session_id)
     await _move(ctx, session_id, State.cancelled)
+
+
+async def run_revision_job(
+    ctx: PipelineContext, session_id: str, feedback: str, created_from: str
+) -> str:
+    """Apply change_request/failure_report: ready -> revising -> ... -> ready @ vN+1."""
+    from app.diffing.diff import diff_packages
+    from app.stages.revision import run_revision
+
+    session = await ctx.sessions.get(session_id)
+    assert session is not None
+    status = State(session["status"])
+    if status is State.ready:
+        await _move(ctx, session_id, State.revising)  # direct/API-less invocation
+    elif status is not State.revising:
+        raise InvalidTransition(f"cannot revise from {status.value}")
+
+    idea = await ctx.sessions.idea(session_id)
+    prev_version = await ctx.versions.latest_version(session_id)
+    if prev_version is None:
+        raise ValueError(f"session {session_id} has no version to revise")
+    prev_pkg = await ctx.versions.get(session_id, prev_version)
+    assert prev_pkg is not None
+    prev_master = MasterSpec.model_validate(prev_pkg["master_spec"])
+
+    new_version = prev_version + 1
+    rev_ih = _ih(
+        ctx, "revision", {"prev_version": str(prev_version)},
+        {"feedback": feedback, "type": created_from},
+    )
+    revision_out = await run_stage(
+        ctx, session_id, "revision", rev_ih,
+        lambda: run_revision(ctx.gateway, idea, prev_master, feedback, created_from),
+    )
+    master = MasterSpec.model_validate(revision_out)
+    contract_out = await run_stage(
+        ctx, session_id, "contract", _ih(ctx, "contract", {"revision": rev_ih}, None),
+        lambda: run_contract(ctx.gateway, master.model_dump(), version=new_version),
+    )
+    contract = Contract.model_validate(contract_out)
+    contract_ih = _ih(ctx, "contract", {"revision": rev_ih}, None)
+    subs_out = await run_stage(
+        ctx, session_id, "decomposer",
+        _ih(ctx, "decomposer", {"revision": rev_ih, "contract": contract_ih}, None),
+        lambda: run_decomposer(ctx.gateway, master, contract),
+    )
+
+    package = SpecPackage(
+        session_id=session_id,
+        version=new_version,
+        master_spec=master,
+        assumptions=[],
+        open_questions=[],
+        sub_specs=subs_out.get("sub_specs", {}),
+        contract=contract,
+        validation=ValidationReport(warnings=[]),
+    )
+    await _move(ctx, session_id, State.validating)
+    diff = diff_packages(prev_pkg, package.model_dump())
+    package.diff_from_previous = diff
+    lint_errors = lint_openapi(contract.openapi)
+    consistency_warnings = check_consistency(package)
+    package.validation = ValidationReport(
+        schema_ok=True,
+        openapi_lint_ok=not lint_errors,
+        consistency_ok=not consistency_warnings,
+        warnings=lint_errors + consistency_warnings,
+    )
+    inserted = await ctx.versions.insert(session_id, new_version, package.model_dump(), created_from)
+    if inserted:
+        await ctx.events.append(
+            session_id, "version_created", {"version": new_version, "breaking": diff["breaking"]}
+        )
+    await _move(ctx, session_id, State.ready)
+    await ctx.sessions.set_status(session_id, State.ready.value, current_version=new_version)
+    return State.ready.value
