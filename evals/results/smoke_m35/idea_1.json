@@ -1,0 +1,575 @@
+{
+  "session_id": "ses_0d9ca49a6000",
+  "version": 1,
+  "master_spec": {
+    "summary": "The personal habit tracker lets users define habits with flexible schedules (daily, weekly, or specific days) and automatically records completions to calculate streaks that respect each habit's schedule. Users can quickly check in, view real‑time streak counts, and see a dashboard of all habits with progress indicators. Sensible defaults provide timely reminders and seamless offline persistence, while the UI remains simple and intuitive.",
+    "user_flows": [
+      "User creates a new habit, selects a schedule (e.g., every Monday and Thursday), and saves it; the habit appears on the dashboard with the next due date.",
+      "User opens the app, marks a habit as completed for the current period, and sees the streak count increment accordingly.",
+      "User reviews the dashboard, notices a streak warning for a missed habit, and decides to adjust the reminder settings."
+    ],
+    "features": [
+      {
+        "id": "F1",
+        "title": "Flexible Habit Creation",
+        "acceptance": [
+          "User can create a habit with a name and select a schedule type: daily, weekly, or specific days of the week.",
+          "The selected schedule is stored and displayed correctly on the habit detail view."
+        ]
+      },
+      {
+        "id": "F2",
+        "title": "Period‑Based Check‑In",
+        "acceptance": [
+          "User can mark a habit as completed for the current period (day or week) with a single tap.",
+          "The UI updates to show the habit as completed for that period."
+        ]
+      },
+      {
+        "id": "F3",
+        "title": "Schedule‑Aware Streak Tracking",
+        "acceptance": [
+          "Streak count increments only when the habit is completed for every required period according to its schedule.",
+          "If a required period is missed, the streak resets to zero.",
+          "Streak display updates in real time after each check‑in."
+        ]
+      },
+      {
+        "id": "F4",
+        "title": "Dashboard with Progress Overview",
+        "acceptance": [
+          "Dashboard lists all active habits with name, schedule icon, next due date, and current streak.",
+          "Habits that are overdue are visually highlighted.",
+          "Tapping a habit opens its detail view."
+        ]
+      },
+      {
+        "id": "F5",
+        "title": "Default Reminder Notifications",
+        "acceptance": [
+          "App sends a push notification at a sensible default time (e.g., 9:00 AM) reminding the user of due habits.",
+          "User can mute or adjust reminder settings from the settings screen."
+        ]
+      },
+      {
+        "id": "F6",
+        "title": "Offline Persistence and Sync",
+        "acceptance": [
+          "All habit definitions and completion records are stored locally and survive app restarts.",
+          "When network connectivity is restored, data syncs to the cloud without data loss."
+        ]
+      }
+    ],
+    "non_functional": [
+      "Responsive UI: all interactions complete within 200 ms on typical mobile hardware.",
+      "Data privacy: habit data is encrypted at rest and in transit.",
+      "Accessibility: UI meets WCAG 2.1 AA standards for color contrast and screen‑reader support.",
+      "Scalability: system supports at least 10,000 concurrent users without degradation.",
+      "Reliability: 99.9% uptime for cloud sync services.",
+      "Battery efficiency: background reminder service consumes less than 1% battery per day."
+    ]
+  },
+  "assumptions": [
+    {
+      "id": "A1",
+      "text": "Should habits support flexible schedules (daily, weekly, specific days) or only simple daily tracking?",
+      "rationale": "blocking but question cap reached; confidence 0.90: Supporting flexible schedules changes the core data model and storage schema, a blocking decision.",
+      "category": "suppressed_blocking",
+      "overridable": false
+    },
+    {
+      "id": "A2",
+      "text": "How is a streak defined—must the habit be completed every calendar day, or can gaps be allowed (e.g., weekly habits)?",
+      "rationale": "blocking but question cap reached; confidence 0.85: Streak definition is part of the core data model and impacts persistence and UI logic, a blocking decision.",
+      "category": "suppressed_blocking",
+      "overridable": false
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "Q1",
+      "text": "Should the app require user authentication (account) or operate anonymously with local storage?",
+      "category": "auth_model",
+      "answer": null
+    },
+    {
+      "id": "Q2",
+      "text": "Is the habit tracker intended as a mobile app, web app, desktop app, or cross‑platform solution?",
+      "category": "target_platform",
+      "answer": null
+    },
+    {
+      "id": "Q3",
+      "text": "Will habit data be stored locally only, or synced to a cloud service for backup and multi‑device access?",
+      "category": "data_ownership",
+      "answer": null
+    }
+  ],
+  "sub_specs": {
+    "frontend": {
+      "component": "frontend",
+      "pages": [
+        {
+          "name": "Home",
+          "endpoints": [
+            "getDashboard"
+          ]
+        },
+        {
+          "name": "CreateHabit",
+          "endpoints": [
+            "createHabit"
+          ]
+        },
+        {
+          "name": "HabitDetail",
+          "endpoints": [
+            "getHabit",
+            "checkInHabit",
+            "getHabitStreak"
+          ]
+        },
+        {
+          "name": "Settings",
+          "endpoints": [
+            "getReminderSettings",
+            "updateReminderSettings"
+          ]
+        },
+        {
+          "name": "HabitList",
+          "endpoints": [
+            "listHabits"
+          ]
+        },
+        {
+          "name": "DeleteHabit",
+          "endpoints": [
+            "deleteHabit"
+          ]
+        }
+      ],
+      "endpoints": [],
+      "entities": [],
+      "contract_version": 1
+    },
+    "backend": {
+      "component": "backend",
+      "pages": [],
+      "endpoints": [
+        {
+          "op_id": "createHabit",
+          "method": "post",
+          "path": "/habits",
+          "uses_entities": [
+            "Habit"
+          ],
+          "description": "Create a new habit with name and schedule."
+        },
+        {
+          "op_id": "deleteHabit",
+          "method": "delete",
+          "path": "/habits/{habitId}",
+          "uses_entities": [
+            "Habit"
+          ],
+          "description": "Delete an existing habit."
+        },
+        {
+          "op_id": "getDashboard",
+          "method": "get",
+          "path": "/dashboard",
+          "uses_entities": [
+            "Habit",
+            "Completion"
+          ],
+          "description": "Retrieve aggregated dashboard data for all active habits."
+        },
+        {
+          "op_id": "getHabit",
+          "method": "get",
+          "path": "/habits/{habitId}",
+          "uses_entities": [
+            "Habit"
+          ],
+          "description": "Fetch details of a specific habit."
+        },
+        {
+          "op_id": "getHabitStreak",
+          "method": "get",
+          "path": "/habits/{habitId}/streak",
+          "uses_entities": [
+            "Habit",
+            "Completion"
+          ],
+          "description": "Get the current streak count for a habit."
+        },
+        {
+          "op_id": "getReminderSettings",
+          "method": "get",
+          "path": "/users/{userId}/reminders",
+          "uses_entities": [
+            "ReminderSettings"
+          ],
+          "description": "Retrieve the user's reminder configuration."
+        },
+        {
+          "op_id": "listHabits",
+          "method": "get",
+          "path": "/habits",
+          "uses_entities": [
+            "Habit"
+          ],
+          "description": "List all habits belonging to the user."
+        },
+        {
+          "op_id": "syncData",
+          "method": "post",
+          "path": "/sync",
+          "uses_entities": [
+            "Habit",
+            "Completion",
+            "ReminderSettings"
+          ],
+          "description": "Synchronize local data with the cloud."
+        },
+        {
+          "op_id": "updateHabit",
+          "method": "patch",
+          "path": "/habits/{habitId}",
+          "uses_entities": [
+            "Habit"
+          ],
+          "description": "Update habit properties such as name or schedule."
+        },
+        {
+          "op_id": "updateReminderSettings",
+          "method": "put",
+          "path": "/users/{userId}/reminders",
+          "uses_entities": [
+            "ReminderSettings"
+          ],
+          "description": "Modify reminder time or mute settings."
+        },
+        {
+          "op_id": "checkInHabit",
+          "method": "post",
+          "path": "/habits/{habitId}/checkin",
+          "uses_entities": [
+            "Habit",
+            "Completion"
+          ],
+          "description": "Record completion for the current period of a habit."
+        }
+      ],
+      "entities": [
+        "Habit",
+        "Completion",
+        "ReminderSettings"
+      ],
+      "contract_version": 1
+    },
+    "database": {
+      "component": "database",
+      "pages": [],
+      "endpoints": [],
+      "entities": [
+        "Habit",
+        "Completion",
+        "ReminderSettings"
+      ],
+      "contract_version": 1
+    },
+    "supporting": {
+      "component": "supporting",
+      "pages": [],
+      "endpoints": [],
+      "entities": [],
+      "contract_version": 1
+    }
+  },
+  "contract": {
+    "version": 1,
+    "openapi": {
+      "openapi": "3.1.0",
+      "info": {
+        "title": "Habit Tracker API",
+        "version": "1"
+      },
+      "paths": {
+        "/habits": {
+          "post": {
+            "operationId": "createHabit",
+            "summary": "Create a new habit with name, schedule type, and optional specific days.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          },
+          "get": {
+            "operationId": "listHabits",
+            "summary": "List all active habits for the authenticated user.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/habits/{habitId}": {
+          "parameters": [
+            {
+              "name": "habitId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "get": {
+            "operationId": "getHabit",
+            "summary": "Retrieve details of a specific habit, including schedule and current streak.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          },
+          "patch": {
+            "operationId": "updateHabit",
+            "summary": "Update habit properties such as name, schedule, or activation status.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          },
+          "delete": {
+            "operationId": "deleteHabit",
+            "summary": "Remove a habit permanently.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/habits/{habitId}/checkin": {
+          "parameters": [
+            {
+              "name": "habitId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "post": {
+            "operationId": "checkInHabit",
+            "summary": "Mark the habit as completed for the current period; updates streak accordingly.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/habits/{habitId}/streak": {
+          "parameters": [
+            {
+              "name": "habitId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "get": {
+            "operationId": "getHabitStreak",
+            "summary": "Return the current streak count for the habit.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/dashboard": {
+          "get": {
+            "operationId": "getDashboard",
+            "summary": "Provide a dashboard view of all habits with name, schedule icon, next due date, current streak, and overdue highlight.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/users/{userId}/reminders": {
+          "parameters": [
+            {
+              "name": "userId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "get": {
+            "operationId": "getReminderSettings",
+            "summary": "Retrieve the user's reminder notification settings.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          },
+          "put": {
+            "operationId": "updateReminderSettings",
+            "summary": "Create or modify reminder time, enable/disable notifications, and mute specific habits.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/sync": {
+          "post": {
+            "operationId": "syncData",
+            "summary": "Synchronize local habit definitions and completion records with the cloud when connectivity is restored.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        }
+      }
+    },
+    "entities": [
+      {
+        "name": "Habit",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "userId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "scheduleType",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "scheduleDays",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "updatedAt",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "nextDueDate",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "streakCount",
+            "type": "integer",
+            "required": true
+          },
+          {
+            "name": "isActive",
+            "type": "boolean",
+            "required": true
+          }
+        ]
+      },
+      {
+        "name": "Completion",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "habitId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "periodStart",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "periodEnd",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "completedAt",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      {
+        "name": "ReminderSettings",
+        "fields": [
+          {
+            "name": "userId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "enabled",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "name": "time",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "mutedHabitIds",
+            "type": "array",
+            "required": false
+          }
+        ]
+      }
+    ]
+  },
+  "validation": {
+    "schema_ok": true,
+    "openapi_lint_ok": true,
+    "consistency_ok": true,
+    "warnings": []
+  },
+  "diff_from_previous": null
+}

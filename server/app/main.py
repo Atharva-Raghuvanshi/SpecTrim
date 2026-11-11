@@ -1,9 +1,147 @@
-from fastapi import FastAPI
-from fastapi.responses import PlainTextResponse
+"""FastAPI app: sessions, answers, cancel (M4.5). SSE/MCP/exports come in Phase 6."""
+from __future__ import annotations
 
-app = FastAPI(title="Query Optimizer Service")
+from contextlib import asynccontextmanager
+from typing import AsyncIterator
+
+from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi.responses import JSONResponse, PlainTextResponse
+from pydantic import BaseModel, Field
+
+from app import winloop  # noqa: F401  (must run before asyncio/psycopg on Windows)
+from app.gateway.base import Gateway
+from app.gateway.config import load_models_config
+from app.gateway.litellm_gateway import LiteLLMGateway
+from app.pipeline.orchestrator import PipelineContext, cancel_session
+from app.pipeline.states import InvalidTransition
+from app.settings import Settings, get_settings
+from app.storage.db import close_pool, open_pool
+from app.storage.migrate import apply_migrations
+from app.storage.repos import EventsRepo, JobsRepo, QuestionsRepo, SessionsRepo
 
 
-@app.get("/healthz", response_class=PlainTextResponse)
-def healthz() -> str:
-    return "OK"
+class CreateSession(BaseModel):
+    idea: str = Field(min_length=1)
+
+
+class AnswerItem(BaseModel):
+    id: str
+    answer: str = Field(min_length=1)
+
+
+class AnswersIn(BaseModel):
+    answers: list[AnswerItem] = Field(min_length=1)
+
+
+def build_gateway(settings: Settings) -> Gateway:
+    cfg = load_models_config(settings.models_config, settings.active_config)
+    return LiteLLMGateway(cfg)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    settings = get_settings()
+    app.state.settings = settings
+    apply_migrations(settings.database_url)
+    app.state.pool = await open_pool(settings.database_url)
+    app.state.gateway = build_gateway(settings)
+    yield
+    await close_pool()
+
+
+def create_app(gateway: Gateway | None = None) -> FastAPI:
+    app = FastAPI(title="Query Optimizer Service", lifespan=lifespan)
+    if gateway is not None:  # test injection: skip real gateway construction
+        original = app.router.lifespan_context
+
+        @asynccontextmanager
+        async def patched(app: FastAPI) -> AsyncIterator[None]:
+            async with original(app):
+                app.state.gateway = gateway
+                yield
+
+        app.router.lifespan_context = patched
+
+    def ctx(request: Request) -> PipelineContext:
+        settings: Settings = request.app.state.settings
+        return PipelineContext(
+            request.app.state.pool, request.app.state.gateway, settings.max_questions_per_round
+        )
+
+    def repos(request: Request) -> dict:
+        pool = request.app.state.pool
+        return {
+            "sessions": SessionsRepo(pool),
+            "jobs": JobsRepo(pool),
+            "questions": QuestionsRepo(pool),
+            "events": EventsRepo(pool),
+        }
+
+    @app.get("/healthz", response_class=PlainTextResponse)
+    async def healthz(request: Request) -> PlainTextResponse:
+        pool = getattr(request.app.state, "pool", None)
+        if pool is not None:
+            try:
+                async with pool.connection() as conn:
+                    async with conn.cursor() as cur:
+                        await cur.execute("SELECT 1")
+            except Exception:
+                return PlainTextResponse("DB unreachable", status_code=503)
+        return PlainTextResponse("OK")
+
+    @app.post("/sessions", status_code=201)
+    async def create_session(
+        body: CreateSession, request: Request, idempotency_key: str = Header(alias="Idempotency-Key")
+    ) -> JSONResponse:
+        if not idempotency_key.strip():
+            raise HTTPException(422, "Idempotency-Key must be non-empty")
+        r = repos(request)
+        session_id, created = await r["sessions"].create_idempotent(body.idea, idempotency_key)
+        if created:
+            await r["events"].append(session_id, "session_created", {"idea": body.idea[:200]})
+            await r["jobs"].enqueue(session_id)
+        session = await r["sessions"].get(session_id)
+        code = 201 if created else 200
+        return JSONResponse({"id": session_id, "status": session["status"]}, status_code=code)
+
+    @app.get("/sessions/{session_id}")
+    async def get_session(session_id: str, request: Request) -> JSONResponse:
+        session = await repos(request)["sessions"].get(session_id)
+        if session is None:
+            raise HTTPException(404, "session not found")
+        return JSONResponse(session)
+
+    @app.post("/sessions/{session_id}/answers")
+    async def post_answers(session_id: str, body: AnswersIn, request: Request) -> JSONResponse:
+        r = repos(request)
+        session = await r["sessions"].get(session_id)
+        if session is None:
+            raise HTTPException(404, "session not found")
+        if session["status"] != "awaiting_user":
+            raise HTTPException(409, f"cannot answer in state {session['status']}")
+        answered = 0
+        for item in body.answers:
+            if await r["questions"].answer(session_id, item.id, item.answer):
+                answered += 1
+        if answered == 0:
+            raise HTTPException(422, "no matching unanswered questions")
+        remaining = await r["questions"].list_unanswered(session_id)
+        await r["events"].append(session_id, "answers_received", {"answered": answered})
+        await r["jobs"].enqueue(session_id)  # worker moves awaiting_user -> analyzing
+        return JSONResponse({"answered": answered, "remaining": len(remaining)})
+
+    @app.post("/sessions/{session_id}/cancel")
+    async def cancel(session_id: str, request: Request) -> JSONResponse:
+        session = await repos(request)["sessions"].get(session_id)
+        if session is None:
+            raise HTTPException(404, "session not found")
+        try:
+            await cancel_session(ctx(request), session_id)
+        except InvalidTransition as exc:
+            raise HTTPException(409, str(exc)) from exc
+        return JSONResponse({"id": session_id, "status": "cancelled"})
+
+    return app
+
+
+app = create_app()

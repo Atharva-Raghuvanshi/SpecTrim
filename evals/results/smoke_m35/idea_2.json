@@ -1,0 +1,552 @@
+{
+  "session_id": "ses_1a359a8004cf",
+  "version": 1,
+  "master_spec": {
+    "summary": "The Recipe Box lets users capture, store, and retrieve personal recipes. Users can add recipes with ingredients, steps, and optional photos, then tag them for easy organization. Tags are flat (non‑hierarchical) and can be created on the fly. The system provides search, filtering, and basic management capabilities while applying sensible defaults for pagination, sorting, and visibility.",
+    "user_flows": [
+      "A user signs up, creates a new recipe, adds flat tags, and saves it to their personal box.",
+      "A user browses their saved recipes, applies tag filters, and opens a recipe to view details.",
+      "A user edits an existing recipe, updates tags, and confirms the changes are persisted."
+    ],
+    "features": [
+      {
+        "id": "F1",
+        "title": "Create and Save Recipe",
+        "acceptance": [
+          "Given a logged‑in user, when they submit a recipe form with required fields (title, ingredients, steps), then the recipe is stored and appears in their recipe list.",
+          "If optional fields (photo, notes) are omitted, the recipe is still saved using sensible defaults for missing data."
+        ]
+      },
+      {
+        "id": "F2",
+        "title": "Flat Tagging System",
+        "acceptance": [
+          "When a user adds a tag to a recipe, the tag is stored as a flat label without parent/child relationships.",
+          "Duplicate tags entered for the same recipe are ignored, ensuring each tag appears only once per recipe."
+        ]
+      },
+      {
+        "id": "F3",
+        "title": "Search and Filter Recipes",
+        "acceptance": [
+          "When a user enters a keyword or selects one or more tags, the system returns only recipes matching the criteria.",
+          "Results are paginated with a sensible default page size of 20 items."
+        ]
+      },
+      {
+        "id": "F4",
+        "title": "Edit and Delete Recipes",
+        "acceptance": [
+          "A user can modify any field of an existing recipe and save changes, which are reflected immediately in the recipe list.",
+          "A user can delete a recipe, after confirming the action, and the recipe no longer appears in any view."
+        ]
+      },
+      {
+        "id": "F5",
+        "title": "View Recipe Details",
+        "acceptance": [
+          "Selecting a recipe from the list opens a detail view showing title, ingredients, steps, tags, and any attached photo.",
+          "The detail view loads within 2 seconds under normal load conditions."
+        ]
+      },
+      {
+        "id": "F6",
+        "title": "Export and Share Recipe",
+        "acceptance": [
+          "A user can export a recipe as a printable PDF or share a generated link that displays the recipe in read‑only mode.",
+          "Exported PDFs include all recipe fields and use a default layout when no custom template is specified."
+        ]
+      }
+    ],
+    "non_functional": [
+      "Performance: All UI actions (create, edit, search, view) must respond within 2 seconds for 95% of requests.",
+      "Scalability: System must support at least 10,000 concurrent users with graceful degradation.",
+      "Security: Data must be stored encrypted at rest and transmitted over TLS 1.2+.",
+      "Usability: Interface follows accessibility standards (WCAG 2.1 AA) and provides sensible defaults for form fields.",
+      "Reliability: Automatic daily backups with a retention period of 30 days.",
+      "Data Privacy: Users can permanently delete their account and all associated recipes."
+    ]
+  },
+  "assumptions": [
+    {
+      "id": "A1",
+      "text": "Should tags support hierarchical relationships or remain flat?",
+      "rationale": "blocking but question cap reached; confidence 0.95: Tag hierarchy decisions affect core data structures and persistence, making it blocking.",
+      "category": "suppressed_blocking",
+      "overridable": false
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "Q1",
+      "text": "Should users be required to register/login or can they save recipes anonymously?",
+      "category": "auth_model",
+      "answer": null
+    },
+    {
+      "id": "Q2",
+      "text": "Are saved recipes private, shareable, or publicly visible?",
+      "category": "data_ownership",
+      "answer": null
+    },
+    {
+      "id": "Q3",
+      "text": "Is the product delivered as a web app, mobile app, or both?",
+      "category": "target_platform",
+      "answer": null
+    }
+  ],
+  "sub_specs": {
+    "frontend": {
+      "component": "frontend",
+      "pages": [
+        {
+          "name": "Register",
+          "endpoints": [
+            "registerUser"
+          ]
+        },
+        {
+          "name": "Login",
+          "endpoints": [
+            "loginUser"
+          ]
+        },
+        {
+          "name": "Home",
+          "endpoints": [
+            "listRecipes",
+            "listTags"
+          ]
+        },
+        {
+          "name": "RecipeCreate",
+          "endpoints": [
+            "createRecipe"
+          ]
+        },
+        {
+          "name": "RecipeDetail",
+          "endpoints": [
+            "getRecipe",
+            "exportRecipe",
+            "shareRecipe",
+            "updateRecipe",
+            "deleteRecipe"
+          ]
+        },
+        {
+          "name": "AccountSettings",
+          "endpoints": [
+            "deleteAccount"
+          ]
+        }
+      ],
+      "endpoints": [],
+      "entities": [],
+      "contract_version": 1
+    },
+    "backend": {
+      "component": "backend",
+      "pages": [],
+      "endpoints": [
+        {
+          "op_id": "createRecipe",
+          "method": "post",
+          "path": "/recipes",
+          "uses_entities": [
+            "User",
+            "Recipe",
+            "Tag"
+          ],
+          "description": "Create a new recipe with title, ingredients, steps, optional photo and tags."
+        },
+        {
+          "op_id": "deleteAccount",
+          "method": "delete",
+          "path": "/users/{userId}",
+          "uses_entities": [
+            "User"
+          ],
+          "description": "Delete user account and all associated recipes."
+        },
+        {
+          "op_id": "deleteRecipe",
+          "method": "delete",
+          "path": "/recipes/{recipeId}",
+          "uses_entities": [
+            "User",
+            "Recipe"
+          ],
+          "description": "Delete a recipe owned by the user."
+        },
+        {
+          "op_id": "exportRecipe",
+          "method": "get",
+          "path": "/recipes/{recipeId}/export",
+          "uses_entities": [
+            "Recipe"
+          ],
+          "description": "Export recipe as PDF or generate a shareable read‑only link."
+        },
+        {
+          "op_id": "getRecipe",
+          "method": "get",
+          "path": "/recipes/{recipeId}",
+          "uses_entities": [
+            "Recipe",
+            "Tag"
+          ],
+          "description": "Retrieve detailed information for a recipe."
+        },
+        {
+          "op_id": "listRecipes",
+          "method": "get",
+          "path": "/recipes",
+          "uses_entities": [
+            "Recipe",
+            "Tag"
+          ],
+          "description": "List recipes for the authenticated user with optional filters and pagination."
+        },
+        {
+          "op_id": "listTags",
+          "method": "get",
+          "path": "/tags",
+          "uses_entities": [
+            "Tag"
+          ],
+          "description": "List all tags used by the user."
+        },
+        {
+          "op_id": "loginUser",
+          "method": "post",
+          "path": "/auth/login",
+          "uses_entities": [
+            "User"
+          ],
+          "description": "Authenticate user and return a session token."
+        },
+        {
+          "op_id": "registerUser",
+          "method": "post",
+          "path": "/users",
+          "uses_entities": [
+            "User"
+          ],
+          "description": "Create a new user account."
+        },
+        {
+          "op_id": "shareRecipe",
+          "method": "get",
+          "path": "/recipes/{recipeId}/share",
+          "uses_entities": [
+            "Recipe"
+          ],
+          "description": "Generate a read‑only share link for a recipe."
+        },
+        {
+          "op_id": "updateRecipe",
+          "method": "put",
+          "path": "/recipes/{recipeId}",
+          "uses_entities": [
+            "User",
+            "Recipe",
+            "Tag"
+          ],
+          "description": "Update an existing recipe's fields and tags."
+        }
+      ],
+      "entities": [
+        "User",
+        "Recipe",
+        "Tag"
+      ],
+      "contract_version": 1
+    },
+    "database": {
+      "component": "database",
+      "pages": [],
+      "endpoints": [],
+      "entities": [
+        "User",
+        "Recipe",
+        "Tag"
+      ],
+      "contract_version": 1
+    },
+    "supporting": {
+      "component": "supporting",
+      "pages": [],
+      "endpoints": [],
+      "entities": [],
+      "contract_version": 1
+    }
+  },
+  "contract": {
+    "version": 1,
+    "openapi": {
+      "openapi": "3.1.0",
+      "info": {
+        "title": "Recipe Box API",
+        "version": "1"
+      },
+      "paths": {
+        "/users": {
+          "post": {
+            "operationId": "registerUser",
+            "summary": "Create a new user account",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/auth/login": {
+          "post": {
+            "operationId": "loginUser",
+            "summary": "Authenticate a user and return an access token",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/recipes": {
+          "post": {
+            "operationId": "createRecipe",
+            "summary": "Create and save a new recipe for the authenticated user",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          },
+          "get": {
+            "operationId": "listRecipes",
+            "summary": "Search and filter recipes with optional keyword, tag list, pagination (default pageSize 20)",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/recipes/{recipeId}": {
+          "parameters": [
+            {
+              "name": "recipeId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "get": {
+            "operationId": "getRecipe",
+            "summary": "Retrieve detailed view of a single recipe",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          },
+          "put": {
+            "operationId": "updateRecipe",
+            "summary": "Edit an existing recipe and persist changes",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          },
+          "delete": {
+            "operationId": "deleteRecipe",
+            "summary": "Delete a recipe permanently",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/recipes/{recipeId}/export": {
+          "parameters": [
+            {
+              "name": "recipeId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "get": {
+            "operationId": "exportRecipe",
+            "summary": "Export a recipe as PDF or generate a read‑only shareable link (format query param)",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/recipes/{recipeId}/share": {
+          "parameters": [
+            {
+              "name": "recipeId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "get": {
+            "operationId": "shareRecipe",
+            "summary": "Obtain a read‑only URL for sharing the recipe",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/tags": {
+          "get": {
+            "operationId": "listTags",
+            "summary": "Retrieve all flat tags used by the authenticated user",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/users/{userId}": {
+          "parameters": [
+            {
+              "name": "userId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "delete": {
+            "operationId": "deleteAccount",
+            "summary": "Permanently delete a user account and all associated recipes",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        }
+      }
+    },
+    "entities": [
+      {
+        "name": "User",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "email",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "passwordHash",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      {
+        "name": "Recipe",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "userId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ingredients",
+            "type": "array",
+            "required": true
+          },
+          {
+            "name": "steps",
+            "type": "array",
+            "required": true
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "photoUrl",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "tags",
+            "type": "array",
+            "required": true
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "updatedAt",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      {
+        "name": "Tag",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          }
+        ]
+      }
+    ]
+  },
+  "validation": {
+    "schema_ok": true,
+    "openapi_lint_ok": true,
+    "consistency_ok": true,
+    "warnings": []
+  },
+  "diff_from_previous": null
+}

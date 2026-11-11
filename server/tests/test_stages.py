@@ -84,7 +84,8 @@ def test_contract_stage_builds_lintable_openapi() -> None:
 def test_decomposer_normalizes_endpoints_from_contract() -> None:
     master_obj, _ = run_spec_writer(canned_gateway(), "idea", [], [])
     contract, _ = run_contract(canned_gateway(), master_obj.model_dump())
-    subs, _ = run_decomposer(canned_gateway(), master_obj, contract)
+    subs_model, _ = run_decomposer(canned_gateway(), master_obj, contract)
+    subs = subs_model.sub_specs
     backend = subs["backend"].endpoints[0]
     assert (backend.method, backend.path) == ("post", "/habits")  # corrected from put//WRONG
     assert subs["frontend"].pages[0].endpoints == ["createHabit"]

@@ -22,7 +22,7 @@ class SubSpecsOutput(BaseModel):
 
 def run_decomposer(
     gateway: Gateway, master_spec: MasterSpec, contract: Contract
-) -> tuple[dict[str, SubSpec], CompletionResult]:
+) -> tuple[SubSpecsOutput, CompletionResult]:
     ops = op_ids_of(contract.openapi)
     _, prompt = render(
         "decomposer",
@@ -45,4 +45,4 @@ def run_decomposer(
         for ep in sub.endpoints:
             if ep.op_id in contract_ops:
                 ep.method, ep.path = contract_ops[ep.op_id]
-    return out.sub_specs, res
+    return out, res

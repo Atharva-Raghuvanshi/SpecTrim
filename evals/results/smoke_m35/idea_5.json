@@ -1,0 +1,624 @@
+{
+  "session_id": "ses_3b76c081d51f",
+  "version": 1,
+  "master_spec": {
+    "summary": "The product is a bookmarking service that lets users save web pages, annotate them, and instantly retrieve any saved item using full‑text search across the extracted content. It supports organization, cross‑device sync, and offers premium enhancements for power users.",
+    "user_flows": [
+      "A user adds a new bookmark by entering a URL; the system extracts the page text, stores the bookmark, and confirms the save.",
+      "A user types a keyword into the search bar; the system returns matching bookmarks ranked by relevance within milliseconds.",
+      "A user upgrades to the premium tier to unlock unlimited storage and advanced filter options for search."
+    ],
+    "features": [
+      {
+        "id": "F1",
+        "title": "Bookmark creation with automatic content extraction",
+        "acceptance": [
+          "When a user submits a URL, the system stores the URL, page title, and extracted main text within 5 seconds.",
+          "The saved bookmark is visible in the user's list immediately after creation."
+        ]
+      },
+      {
+        "id": "F2",
+        "title": "Full‑text search across saved content",
+        "acceptance": [
+          "Entering a query returns all bookmarks whose extracted text, title, or tags contain the query terms.",
+          "Search results are returned in under 200 ms for a dataset of up to 10,000 bookmarks."
+        ]
+      },
+      {
+        "id": "F3",
+        "title": "Tagging and note taking",
+        "acceptance": [
+          "Users can add, edit, or remove tags and free‑form notes on any bookmark.",
+          "Tags and notes are searchable via the full‑text search feature."
+        ]
+      },
+      {
+        "id": "F4",
+        "title": "Organizational collections",
+        "acceptance": [
+          "Users can create, rename, and delete collections (folders) and move bookmarks between them.",
+          "Bookmarks displayed within a collection respect the same search and sorting capabilities as the global list."
+        ]
+      },
+      {
+        "id": "F5",
+        "title": "Cross‑device synchronization",
+        "acceptance": [
+          "Changes made on one device (add, edit, delete) are reflected on all other logged‑in devices within 30 seconds.",
+          "Synchronization works over both web and native mobile clients."
+        ]
+      },
+      {
+        "id": "F6",
+        "title": "Premium tier with advanced search and unlimited storage",
+        "acceptance": [
+          "Premium users can apply filters (date range, tag groups, collection) to search results.",
+          "Premium accounts are not limited by the number of bookmarks they can store."
+        ]
+      }
+    ],
+    "non_functional": [
+      "Search latency must be ≤200 ms for typical workloads.",
+      "System shall encrypt data at rest and in transit.",
+      "Availability target of 99.9 % monthly uptime.",
+      "Support for web browsers, iOS, and Android platforms.",
+      "Compliance with GDPR for user data handling."
+    ]
+  },
+  "assumptions": [
+    {
+      "id": "A1",
+      "text": "Scope of content indexed for full-text search (full page HTML, extracted text, or just title/metadata)",
+      "rationale": "blocking but question cap reached; confidence 0.90: The data model defines core persistent data and influences many components.",
+      "category": "suppressed_blocking",
+      "overridable": false
+    },
+    {
+      "id": "A2",
+      "text": "Monetization model (free, freemium with premium features, or paid subscription)",
+      "rationale": "blocking but question cap reached; confidence 0.90: Payments decisions involve money handling and affect multiple components and data integrity.",
+      "category": "suppressed_blocking",
+      "overridable": false
+    },
+    {
+      "id": "A3",
+      "text": "Choice of full-text search library or service (e.g., Lunr.js, ElasticSearch, Algolia)",
+      "rationale": "Library choice is a defaultable decision that does not force rework across multiple components.",
+      "category": "library_choice",
+      "overridable": true
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "Q1",
+      "text": "Whether users must create accounts or can use the tool anonymously",
+      "category": "auth_model",
+      "answer": null
+    },
+    {
+      "id": "Q2",
+      "text": "Where bookmark data is stored (local device vs cloud server)",
+      "category": "data_ownership",
+      "answer": null
+    },
+    {
+      "id": "Q3",
+      "text": "Primary deployment platform (browser extension, web app, mobile app)",
+      "category": "target_platform",
+      "answer": null
+    }
+  ],
+  "sub_specs": {
+    "frontend": {
+      "component": "frontend",
+      "pages": [
+        {
+          "name": "Home",
+          "endpoints": [
+            "createBookmark",
+            "searchBookmarks",
+            "upgradeToPremium"
+          ]
+        },
+        {
+          "name": "Collections",
+          "endpoints": [
+            "createCollection",
+            "deleteCollection",
+            "renameCollection",
+            "moveBookmarkToCollection"
+          ]
+        },
+        {
+          "name": "BookmarkDetail",
+          "endpoints": [
+            "getBookmark",
+            "updateBookmark",
+            "deleteBookmark"
+          ]
+        },
+        {
+          "name": "Sync",
+          "endpoints": [
+            "fetchSyncUpdates",
+            "syncChanges"
+          ]
+        }
+      ],
+      "endpoints": [],
+      "entities": [],
+      "contract_version": 1
+    },
+    "backend": {
+      "component": "backend",
+      "pages": [],
+      "endpoints": [
+        {
+          "op_id": "createBookmark",
+          "method": "post",
+          "path": "/bookmarks",
+          "uses_entities": [
+            "User",
+            "Bookmark"
+          ],
+          "description": "Create a new bookmark with URL, extract content, and store it."
+        },
+        {
+          "op_id": "createCollection",
+          "method": "post",
+          "path": "/collections",
+          "uses_entities": [
+            "User",
+            "Collection"
+          ],
+          "description": "Create a new organizational collection."
+        },
+        {
+          "op_id": "deleteBookmark",
+          "method": "delete",
+          "path": "/bookmarks/{bookmarkId}",
+          "uses_entities": [
+            "User",
+            "Bookmark"
+          ],
+          "description": "Delete an existing bookmark."
+        },
+        {
+          "op_id": "deleteCollection",
+          "method": "delete",
+          "path": "/collections/{collectionId}",
+          "uses_entities": [
+            "User",
+            "Collection"
+          ],
+          "description": "Delete an existing collection."
+        },
+        {
+          "op_id": "fetchSyncUpdates",
+          "method": "get",
+          "path": "/sync",
+          "uses_entities": [
+            "User",
+            "Bookmark",
+            "Collection"
+          ],
+          "description": "Fetch recent changes for cross‑device synchronization."
+        },
+        {
+          "op_id": "getBookmark",
+          "method": "get",
+          "path": "/bookmarks/{bookmarkId}",
+          "uses_entities": [
+            "User",
+            "Bookmark"
+          ],
+          "description": "Retrieve details of a specific bookmark."
+        },
+        {
+          "op_id": "moveBookmarkToCollection",
+          "method": "post",
+          "path": "/collections/{collectionId}/bookmarks/{bookmarkId}",
+          "uses_entities": [
+            "User",
+            "Bookmark",
+            "Collection"
+          ],
+          "description": "Move a bookmark into a specified collection."
+        },
+        {
+          "op_id": "renameCollection",
+          "method": "patch",
+          "path": "/collections/{collectionId}",
+          "uses_entities": [
+            "User",
+            "Collection"
+          ],
+          "description": "Rename an existing collection."
+        },
+        {
+          "op_id": "searchBookmarks",
+          "method": "get",
+          "path": "/search",
+          "uses_entities": [
+            "User",
+            "Bookmark"
+          ],
+          "description": "Perform full‑text search across saved bookmarks."
+        },
+        {
+          "op_id": "syncChanges",
+          "method": "post",
+          "path": "/sync",
+          "uses_entities": [
+            "User",
+            "Bookmark",
+            "Collection"
+          ],
+          "description": "Push local bookmark and collection changes for synchronization."
+        },
+        {
+          "op_id": "updateBookmark",
+          "method": "patch",
+          "path": "/bookmarks/{bookmarkId}",
+          "uses_entities": [
+            "User",
+            "Bookmark"
+          ],
+          "description": "Update bookmark metadata such as tags, notes, or title."
+        },
+        {
+          "op_id": "upgradeToPremium",
+          "method": "post",
+          "path": "/users/{userId}/upgrade",
+          "uses_entities": [
+            "User"
+          ],
+          "description": "Upgrade a user account to the premium tier."
+        }
+      ],
+      "entities": [
+        "User",
+        "Bookmark",
+        "Collection"
+      ],
+      "contract_version": 1
+    },
+    "database": {
+      "component": "database",
+      "pages": [],
+      "endpoints": [],
+      "entities": [
+        "User",
+        "Bookmark",
+        "Collection"
+      ],
+      "contract_version": 1
+    },
+    "supporting": {
+      "component": "supporting",
+      "pages": [],
+      "endpoints": [],
+      "entities": [],
+      "contract_version": 1
+    }
+  },
+  "contract": {
+    "version": 1,
+    "openapi": {
+      "openapi": "3.1.0",
+      "info": {
+        "title": "Bookmarking Service API",
+        "version": "1"
+      },
+      "paths": {
+        "/bookmarks": {
+          "post": {
+            "operationId": "createBookmark",
+            "summary": "Create a new bookmark; system extracts title and main text.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/bookmarks/{bookmarkId}": {
+          "parameters": [
+            {
+              "name": "bookmarkId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "get": {
+            "operationId": "getBookmark",
+            "summary": "Retrieve a single bookmark by its identifier.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          },
+          "patch": {
+            "operationId": "updateBookmark",
+            "summary": "Edit URL, tags, note, or move to another collection.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          },
+          "delete": {
+            "operationId": "deleteBookmark",
+            "summary": "Remove a bookmark permanently.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/search": {
+          "get": {
+            "operationId": "searchBookmarks",
+            "summary": "Full‑text search across title, extracted text, tags, and notes; supports premium filters.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/collections": {
+          "post": {
+            "operationId": "createCollection",
+            "summary": "Create a new organizational collection (folder).",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/collections/{collectionId}": {
+          "parameters": [
+            {
+              "name": "collectionId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "patch": {
+            "operationId": "renameCollection",
+            "summary": "Rename an existing collection.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          },
+          "delete": {
+            "operationId": "deleteCollection",
+            "summary": "Delete a collection; optionally cascade delete or reassign its bookmarks.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/collections/{collectionId}/bookmarks/{bookmarkId}": {
+          "parameters": [
+            {
+              "name": "collectionId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "bookmarkId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "post": {
+            "operationId": "moveBookmarkToCollection",
+            "summary": "Move a bookmark into a specified collection.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/users/{userId}/upgrade": {
+          "parameters": [
+            {
+              "name": "userId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "post": {
+            "operationId": "upgradeToPremium",
+            "summary": "Upgrade a user account to the premium tier, unlocking unlimited storage and advanced filters.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/sync": {
+          "post": {
+            "operationId": "syncChanges",
+            "summary": "Push local changes (adds/edits/deletes) to the server for cross‑device synchronization.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          },
+          "get": {
+            "operationId": "fetchSyncUpdates",
+            "summary": "Retrieve changes made on other devices since a given timestamp.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        }
+      }
+    },
+    "entities": [
+      {
+        "name": "User",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "email",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "isPremium",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "name": "plan",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "updatedAt",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      {
+        "name": "Bookmark",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "userId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "url",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "extractedText",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "tags",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "note",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "collectionId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "updatedAt",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      {
+        "name": "Collection",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "userId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "updatedAt",
+            "type": "string",
+            "required": true
+          }
+        ]
+      }
+    ]
+  },
+  "validation": {
+    "schema_ok": true,
+    "openapi_lint_ok": true,
+    "consistency_ok": true,
+    "warnings": []
+  },
+  "diff_from_previous": null
+}

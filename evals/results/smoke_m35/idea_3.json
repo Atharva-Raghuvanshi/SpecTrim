@@ -1,0 +1,563 @@
+{
+  "session_id": "ses_d985891973f4",
+  "version": 1,
+  "master_spec": {
+    "summary": "The Standup Bot automates daily team updates by prompting members to submit concise reports, storing them with required fields, and providing easy access to past entries. It sends configurable reminders, allows users to edit or delete their own submissions, and retains data for a default period while supporting administrative retention settings.",
+    "user_flows": [
+      "At the scheduled reminder time, the bot posts a prompt; a team member replies with their update containing what was done, blockers, and plans.",
+      "A user realizes a mistake, uses the edit command to modify their most recent update, and the bot confirms the change.",
+      "An admin queries the bot for a weekly summary report, and the bot returns aggregated updates for the specified date range."
+    ],
+    "features": [
+      {
+        "id": "F1",
+        "title": "Submit Daily Update",
+        "acceptance": [
+          "When a user sends a message in the designated channel using the update command, the bot records an entry containing the fields: 'What was done', 'Blockers', and 'Plans'.",
+          "The bot rejects submissions missing any required field and returns an error indicating the missing information."
+        ]
+      },
+      {
+        "id": "F2",
+        "title": "Automatic Reminder Scheduling",
+        "acceptance": [
+          "The bot sends a reminder message to the configured channel at the default time of 09:00 UTC on weekdays.",
+          "Administrators can change the reminder time and frequency via a configuration command, and the bot respects the new schedule immediately."
+        ]
+      },
+      {
+        "id": "F3",
+        "title": "Edit or Delete Own Update",
+        "acceptance": [
+          "A user can issue an edit command referencing their most recent update; the bot updates the stored entry and confirms success.",
+          "A user can issue a delete command referencing their most recent update; the bot removes the entry and confirms deletion.",
+          "The bot prevents users from editing or deleting updates that are not their own."
+        ]
+      },
+      {
+        "id": "F4",
+        "title": "Retention Policy Enforcement",
+        "acceptance": [
+          "Updates are automatically purged after 90 days by default.",
+          "An admin can modify the retention period via a configuration command, and the bot applies the new period to future purges."
+        ]
+      },
+      {
+        "id": "F5",
+        "title": "Retrieve Individual or Team Updates",
+        "acceptance": [
+          "A user can request their own updates for a given date range, and the bot returns a list ordered chronologically.",
+          "An admin can request all team updates for a given date range, and the bot returns a compiled report."
+        ]
+      },
+      {
+        "id": "F6",
+        "title": "Access Control and Auditing",
+        "acceptance": [
+          "Only users with admin role can change reminder schedules, retention settings, or request team-wide reports.",
+          "All create, edit, and delete actions are logged with timestamp, user ID, and action type."
+        ]
+      }
+    ],
+    "non_functional": [
+      "Data must be retained securely for the configured retention period and deleted permanently thereafter.",
+      "The bot should respond to user commands within 2 seconds under normal load.",
+      "The system must be available 99.5% uptime per month.",
+      "All stored updates must be encrypted at rest.",
+      "The bot must comply with GDPR principles for user data handling."
+    ]
+  },
+  "assumptions": [
+    {
+      "id": "A1",
+      "text": "What fields are required in each daily update (e.g., what was done, blockers, plans)?",
+      "rationale": "blocking but question cap reached; confidence 0.95: Required fields define the core data structure; incorrect choices lead to widespread rework.",
+      "category": "suppressed_blocking",
+      "overridable": false
+    },
+    {
+      "id": "A2",
+      "text": "How long should updates be retained in storage?",
+      "rationale": "blocking but question cap reached; confidence 0.95: Retention period impacts data storage and compliance; wrong settings can cause data loss or legal issues.",
+      "category": "suppressed_blocking",
+      "overridable": false
+    },
+    {
+      "id": "A3",
+      "text": "Should the bot send reminders automatically, and if so, at what time(s) and frequency?",
+      "rationale": "Reminder timing is a feature detail that can be adjusted without affecting core components.",
+      "category": "behavior_detail",
+      "overridable": true
+    },
+    {
+      "id": "A4",
+      "text": "Will users be able to edit or delete their previously submitted updates?",
+      "rationale": "Allowing edits/deletes is a feature detail that can be modified without core rework.",
+      "category": "behavior_detail",
+      "overridable": true
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "Q1",
+      "text": "Which chat platform(s) will the bot operate on (e.g., Slack, Microsoft Teams, Discord)?",
+      "category": "target_platform",
+      "answer": null
+    },
+    {
+      "id": "Q2",
+      "text": "How will users be authenticated or identified when submitting updates?",
+      "category": "auth_model",
+      "answer": null
+    },
+    {
+      "id": "Q3",
+      "text": "Who is allowed to view the collected updates (all team members, managers only, etc.)?",
+      "category": "data_ownership",
+      "answer": null
+    }
+  ],
+  "sub_specs": {
+    "frontend": {
+      "component": "frontend",
+      "pages": [
+        {
+          "name": "Home",
+          "endpoints": [
+            "submitUpdate",
+            "editUpdate",
+            "deleteUpdate",
+            "getUserUpdates"
+          ]
+        },
+        {
+          "name": "Admin",
+          "endpoints": [
+            "setReminderConfig",
+            "getReminderConfig",
+            "setRetentionConfig",
+            "getRetentionConfig",
+            "getTeamUpdates",
+            "getWeeklySummary",
+            "getAuditLogs"
+          ]
+        }
+      ],
+      "endpoints": [],
+      "entities": [],
+      "contract_version": 1
+    },
+    "backend": {
+      "component": "backend",
+      "pages": [],
+      "endpoints": [
+        {
+          "op_id": "submitUpdate",
+          "method": "post",
+          "path": "/updates",
+          "uses_entities": [
+            "User",
+            "Update"
+          ],
+          "description": "Record a new daily update submitted by a user."
+        },
+        {
+          "op_id": "editUpdate",
+          "method": "put",
+          "path": "/updates/{updateId}",
+          "uses_entities": [
+            "User",
+            "Update"
+          ],
+          "description": "Modify the most recent update of the requesting user."
+        },
+        {
+          "op_id": "deleteUpdate",
+          "method": "delete",
+          "path": "/updates/{updateId}",
+          "uses_entities": [
+            "User",
+            "Update"
+          ],
+          "description": "Remove the most recent update of the requesting user."
+        },
+        {
+          "op_id": "getUserUpdates",
+          "method": "get",
+          "path": "/users/{userId}/updates",
+          "uses_entities": [
+            "User",
+            "Update"
+          ],
+          "description": "Retrieve updates for a specific user within a date range."
+        },
+        {
+          "op_id": "getTeamUpdates",
+          "method": "get",
+          "path": "/updates",
+          "uses_entities": [
+            "User",
+            "Update"
+          ],
+          "description": "Admin request to retrieve all team updates for a date range."
+        },
+        {
+          "op_id": "getWeeklySummary",
+          "method": "get",
+          "path": "/reports/weekly",
+          "uses_entities": [
+            "Update"
+          ],
+          "description": "Generate an aggregated weekly summary report for the team."
+        },
+        {
+          "op_id": "setReminderConfig",
+          "method": "put",
+          "path": "/config/reminder",
+          "uses_entities": [
+            "ConfigReminder"
+          ],
+          "description": "Admin updates reminder time and frequency."
+        },
+        {
+          "op_id": "getReminderConfig",
+          "method": "get",
+          "path": "/config/reminder",
+          "uses_entities": [
+            "ConfigReminder"
+          ],
+          "description": "Retrieve current reminder configuration."
+        },
+        {
+          "op_id": "setRetentionConfig",
+          "method": "put",
+          "path": "/config/retention",
+          "uses_entities": [
+            "ConfigRetention"
+          ],
+          "description": "Admin updates data retention period."
+        },
+        {
+          "op_id": "getRetentionConfig",
+          "method": "get",
+          "path": "/config/retention",
+          "uses_entities": [
+            "ConfigRetention"
+          ],
+          "description": "Retrieve current retention configuration."
+        },
+        {
+          "op_id": "getAuditLogs",
+          "method": "get",
+          "path": "/audit-logs",
+          "uses_entities": [
+            "AuditLog"
+          ],
+          "description": "Admin fetches audit logs of create, edit, and delete actions."
+        }
+      ],
+      "entities": [
+        "User",
+        "Update",
+        "ConfigReminder",
+        "ConfigRetention",
+        "AuditLog"
+      ],
+      "contract_version": 1
+    },
+    "database": {
+      "component": "database",
+      "pages": [],
+      "endpoints": [],
+      "entities": [
+        "User",
+        "Update",
+        "ConfigReminder",
+        "ConfigRetention",
+        "AuditLog"
+      ],
+      "contract_version": 1
+    },
+    "supporting": {
+      "component": "supporting",
+      "pages": [],
+      "endpoints": [],
+      "entities": [],
+      "contract_version": 1
+    }
+  },
+  "contract": {
+    "version": 1,
+    "openapi": {
+      "openapi": "3.1.0",
+      "info": {
+        "title": "Standup Bot API",
+        "version": "1"
+      },
+      "paths": {
+        "/updates": {
+          "post": {
+            "operationId": "submitUpdate",
+            "summary": "Create a new daily update for the authenticated user. Requires fields whatDone, blockers, and plans.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          },
+          "get": {
+            "operationId": "getTeamUpdates",
+            "summary": "Admin endpoint to retrieve all team updates for a given date range (query params startDate, endDate).",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/updates/{updateId}": {
+          "parameters": [
+            {
+              "name": "updateId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "put": {
+            "operationId": "editUpdate",
+            "summary": "Edit the most recent update belonging to the authenticated user. Only owner can edit.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          },
+          "delete": {
+            "operationId": "deleteUpdate",
+            "summary": "Delete the most recent update belonging to the authenticated user. Only owner can delete.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/users/{userId}/updates": {
+          "parameters": [
+            {
+              "name": "userId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "get": {
+            "operationId": "getUserUpdates",
+            "summary": "Retrieve updates for a specific user within an optional date range (query params startDate, endDate). Users can request their own data; admins can request any user.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/reports/weekly": {
+          "get": {
+            "operationId": "getWeeklySummary",
+            "summary": "Admin endpoint that returns an aggregated weekly summary report for a specified date range (query params startDate, endDate).",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/config/reminder": {
+          "put": {
+            "operationId": "setReminderConfig",
+            "summary": "Admin command to update reminder time and frequency. Changes take effect immediately.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          },
+          "get": {
+            "operationId": "getReminderConfig",
+            "summary": "Retrieve the current reminder configuration.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/config/retention": {
+          "put": {
+            "operationId": "setRetentionConfig",
+            "summary": "Admin command to modify the data retention period (in days).",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          },
+          "get": {
+            "operationId": "getRetentionConfig",
+            "summary": "Retrieve the current retention policy configuration.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/audit-logs": {
+          "get": {
+            "operationId": "getAuditLogs",
+            "summary": "Admin endpoint to fetch audit logs with optional filters (userId, action, startDate, endDate).",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        }
+      }
+    },
+    "entities": [
+      {
+        "name": "User",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "role",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      {
+        "name": "Update",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "userId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "date",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "whatDone",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "blockers",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "plans",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "updatedAt",
+            "type": "string",
+            "required": false
+          }
+        ]
+      },
+      {
+        "name": "ConfigReminder",
+        "fields": [
+          {
+            "name": "reminderTime",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "reminderFrequency",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      {
+        "name": "ConfigRetention",
+        "fields": [
+          {
+            "name": "retentionDays",
+            "type": "integer",
+            "required": true
+          }
+        ]
+      },
+      {
+        "name": "AuditLog",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "action",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "userId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "timestamp",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "details",
+            "type": "object",
+            "required": false
+          }
+        ]
+      }
+    ]
+  },
+  "validation": {
+    "schema_ok": true,
+    "openapi_lint_ok": true,
+    "consistency_ok": true,
+    "warnings": []
+  },
+  "diff_from_previous": null
+}

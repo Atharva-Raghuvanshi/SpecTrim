@@ -1,0 +1,664 @@
+{
+  "session_id": "ses_d51d30640ba8",
+  "version": 1,
+  "master_spec": {
+    "summary": "RoomieSplit lets roommates quickly log shared expenses, automatically calculates each person's share, and tracks who owes whom. Users can choose equal, percentage‑based, or itemized splits, receive optional reminders for unpaid balances, and keep all data securely on their device with easy backup options.",
+    "user_flows": [
+      "A roommate adds a new expense, selects who paid and who participated, chooses a split method, and the app instantly updates each person's balance.",
+      "A roommate opens the balances view to see who owes them money and who they owe, then records a payment to settle part of the debt.",
+      "The system sends a reminder notification to roommates with outstanding balances according to the configured schedule."
+    ],
+    "features": [
+      {
+        "id": "F1",
+        "title": "Create Expense Entry",
+        "acceptance": [
+          "User can input amount, description, date, payer, and participants.",
+          "System stores the expense record locally upon submission.",
+          "Expense appears immediately in the balances view."
+        ]
+      },
+      {
+        "id": "F2",
+        "title": "Select Split Method",
+        "acceptance": [
+          "User can choose between equal split, custom percentages, or itemized shares.",
+          "For custom percentages, the sum of all percentages must equal 100% before saving.",
+          "For itemized shares, each participant can be assigned a specific amount or percentage per line item."
+        ]
+      },
+      {
+        "id": "F3",
+        "title": "View Current Balances",
+        "acceptance": [
+          "Balances view lists each roommate with a net amount owed or owed to the user.",
+          "Balances update in real time as new expenses or settlements are recorded.",
+          "User can filter the view by date range or by specific roommate."
+        ]
+      },
+      {
+        "id": "F4",
+        "title": "Record Payment Settlement",
+        "acceptance": [
+          "User can mark a payment as made, specifying amount, payer, and payee.",
+          "System adjusts the balances of both parties accordingly.",
+          "Settlement entries are stored locally and appear in the expense history."
+        ]
+      },
+      {
+        "id": "F5",
+        "title": "Automatic Reminder Notifications",
+        "acceptance": [
+          "System sends a push notification for any unpaid balance according to the default weekly schedule.",
+          "User can enable/disable reminders and change the frequency (daily, weekly, monthly).",
+          "Reminder content includes the amount owed and the roommate who owes it."
+        ]
+      },
+      {
+        "id": "F6",
+        "title": "Local Data Persistence with Export/Import",
+        "acceptance": [
+          "All expense, split, and settlement data are stored locally on the device.",
+          "Data is encrypted at rest using platform‑provided encryption APIs.",
+          "User can export data to a JSON file and import from such a file for backup or migration."
+        ]
+      }
+    ],
+    "non_functional": [
+      "Offline‑first: core functionality works without network connectivity.",
+      "Data privacy: no data is transmitted to external servers unless the user explicitly performs an export.",
+      "Responsive UI: interactions complete within 200 ms on typical mobile hardware.",
+      "Scalability: support up to 20 roommates and 10,000 expense records without performance degradation.",
+      "Accessibility: UI complies with WCAG 2.1 AA guidelines."
+    ]
+  },
+  "assumptions": [
+    {
+      "id": "A1",
+      "text": "Will data be stored locally on device, on a central server, or optionally self-hosted?",
+      "rationale": "blocking but question cap reached; confidence 0.90: Data ownership decisions affect storage, security, and multi-user support.",
+      "category": "suppressed_blocking",
+      "overridable": false
+    },
+    {
+      "id": "A2",
+      "text": "How should expense splits be calculated: equal split, custom percentages, or itemized shares?",
+      "rationale": "blocking but question cap reached; confidence 0.85: Expense split logic defines core data structures and relationships.",
+      "category": "suppressed_blocking",
+      "overridable": false
+    },
+    {
+      "id": "A3",
+      "text": "Should the system send automatic reminders for unpaid balances, and if so, what schedule?",
+      "rationale": "Reminder scheduling is a detail that can be defaulted without major rework.",
+      "category": "behavior_detail",
+      "overridable": true
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "Q1",
+      "text": "Should users authenticate via email/password, social login, or be anonymous?",
+      "category": "auth_model",
+      "answer": null
+    },
+    {
+      "id": "Q2",
+      "text": "Will the app integrate with payment processors to allow direct transfers, or only track balances?",
+      "category": "payments",
+      "answer": null
+    },
+    {
+      "id": "Q3",
+      "text": "Is the product a web-only application, native mobile app, or both?",
+      "category": "target_platform",
+      "answer": null
+    }
+  ],
+  "sub_specs": {
+    "frontend": {
+      "component": "frontend",
+      "pages": [
+        {
+          "name": "Home",
+          "endpoints": [
+            "viewBalances",
+            "listExpenses",
+            "listRoommates"
+          ]
+        },
+        {
+          "name": "AddExpense",
+          "endpoints": [
+            "createExpense",
+            "createRoommate",
+            "getRoommate"
+          ]
+        },
+        {
+          "name": "Settlements",
+          "endpoints": [
+            "createSettlement",
+            "listSettlements",
+            "viewBalances"
+          ]
+        },
+        {
+          "name": "Settings",
+          "endpoints": [
+            "getReminderSettings",
+            "updateReminderSettings",
+            "exportData",
+            "importData"
+          ]
+        },
+        {
+          "name": "Roommates",
+          "endpoints": [
+            "listRoommates",
+            "createRoommate",
+            "getRoommate"
+          ]
+        }
+      ],
+      "endpoints": [],
+      "entities": [],
+      "contract_version": 1
+    },
+    "backend": {
+      "component": "backend",
+      "pages": [],
+      "endpoints": [
+        {
+          "op_id": "createExpense",
+          "method": "post",
+          "path": "/expenses",
+          "uses_entities": [
+            "Expense"
+          ],
+          "description": "Create a new expense entry."
+        },
+        {
+          "op_id": "createRoommate",
+          "method": "post",
+          "path": "/roommates",
+          "uses_entities": [
+            "Roommate"
+          ],
+          "description": "Create a new roommate record."
+        },
+        {
+          "op_id": "createSettlement",
+          "method": "post",
+          "path": "/settlements",
+          "uses_entities": [
+            "Settlement"
+          ],
+          "description": "Record a payment settlement between roommates."
+        },
+        {
+          "op_id": "exportData",
+          "method": "get",
+          "path": "/export",
+          "uses_entities": [
+            "Expense",
+            "Roommate",
+            "Settlement",
+            "Balance",
+            "ReminderSettings"
+          ],
+          "description": "Export all persisted data as a JSON backup."
+        },
+        {
+          "op_id": "importData",
+          "method": "post",
+          "path": "/import",
+          "uses_entities": [
+            "Expense",
+            "Roommate",
+            "Settlement",
+            "Balance",
+            "ReminderSettings"
+          ],
+          "description": "Import data from a JSON backup file."
+        },
+        {
+          "op_id": "getExpense",
+          "method": "get",
+          "path": "/expenses/{expenseId}",
+          "uses_entities": [
+            "Expense"
+          ],
+          "description": "Retrieve a single expense by its identifier."
+        },
+        {
+          "op_id": "getRoommate",
+          "method": "get",
+          "path": "/roommates/{roommateId}",
+          "uses_entities": [
+            "Roommate"
+          ],
+          "description": "Retrieve a single roommate by its identifier."
+        },
+        {
+          "op_id": "getSettlement",
+          "method": "get",
+          "path": "/settlements/{settlementId}",
+          "uses_entities": [
+            "Settlement"
+          ],
+          "description": "Retrieve a single settlement record by its identifier."
+        },
+        {
+          "op_id": "getReminderSettings",
+          "method": "get",
+          "path": "/remindersettings",
+          "uses_entities": [
+            "ReminderSettings"
+          ],
+          "description": "Fetch the current reminder notification configuration."
+        },
+        {
+          "op_id": "listExpenses",
+          "method": "get",
+          "path": "/expenses",
+          "uses_entities": [
+            "Expense"
+          ],
+          "description": "List all expense records."
+        },
+        {
+          "op_id": "listRoommates",
+          "method": "get",
+          "path": "/roommates",
+          "uses_entities": [
+            "Roommate"
+          ],
+          "description": "List all roommates."
+        },
+        {
+          "op_id": "listSettlements",
+          "method": "get",
+          "path": "/settlements",
+          "uses_entities": [
+            "Settlement"
+          ],
+          "description": "List all settlement entries."
+        },
+        {
+          "op_id": "updateReminderSettings",
+          "method": "put",
+          "path": "/remindersettings",
+          "uses_entities": [
+            "ReminderSettings"
+          ],
+          "description": "Update reminder notification preferences."
+        },
+        {
+          "op_id": "viewBalances",
+          "method": "get",
+          "path": "/balances",
+          "uses_entities": [
+            "Balance"
+          ],
+          "description": "Calculate and return current balances for each roommate."
+        }
+      ],
+      "entities": [
+        "Roommate",
+        "Expense",
+        "Settlement",
+        "Balance",
+        "ReminderSettings"
+      ],
+      "contract_version": 1
+    },
+    "database": {
+      "component": "database",
+      "pages": [],
+      "endpoints": [],
+      "entities": [
+        "Roommate",
+        "Expense",
+        "Settlement",
+        "Balance",
+        "ReminderSettings"
+      ],
+      "contract_version": 1
+    },
+    "supporting": {
+      "component": "supporting",
+      "pages": [],
+      "endpoints": [],
+      "entities": [],
+      "contract_version": 1
+    }
+  },
+  "contract": {
+    "version": 1,
+    "openapi": {
+      "openapi": "3.1.0",
+      "info": {
+        "title": "RoomieSplit API",
+        "version": "1"
+      },
+      "paths": {
+        "/roommates": {
+          "post": {
+            "operationId": "createRoommate",
+            "summary": "Create a new roommate profile.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          },
+          "get": {
+            "operationId": "listRoommates",
+            "summary": "Retrieve all roommates.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/roommates/{roommateId}": {
+          "parameters": [
+            {
+              "name": "roommateId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "get": {
+            "operationId": "getRoommate",
+            "summary": "Retrieve a specific roommate by ID.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/expenses": {
+          "post": {
+            "operationId": "createExpense",
+            "summary": "Create a new expense entry with split details.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          },
+          "get": {
+            "operationId": "listExpenses",
+            "summary": "Get a list of all expenses.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/expenses/{expenseId}": {
+          "parameters": [
+            {
+              "name": "expenseId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "get": {
+            "operationId": "getExpense",
+            "summary": "Retrieve a specific expense by ID.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/settlements": {
+          "post": {
+            "operationId": "createSettlement",
+            "summary": "Record a payment settlement between two roommates.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          },
+          "get": {
+            "operationId": "listSettlements",
+            "summary": "List all settlement records.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/settlements/{settlementId}": {
+          "parameters": [
+            {
+              "name": "settlementId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "get": {
+            "operationId": "getSettlement",
+            "summary": "Retrieve a specific settlement by ID.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/balances": {
+          "get": {
+            "operationId": "viewBalances",
+            "summary": "View current net balances for each roommate, optionally filtered by date range or roommate.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/remindersettings": {
+          "get": {
+            "operationId": "getReminderSettings",
+            "summary": "Fetch the current reminder configuration for the user.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          },
+          "put": {
+            "operationId": "updateReminderSettings",
+            "summary": "Create or update reminder settings (enable/disable, frequency).",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/export": {
+          "get": {
+            "operationId": "exportData",
+            "summary": "Export all data (roommates, expenses, settlements) as a JSON backup.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        },
+        "/import": {
+          "post": {
+            "operationId": "importData",
+            "summary": "Import data from a JSON backup, merging or replacing local records.",
+            "responses": {
+              "200": {
+                "description": "Success"
+              }
+            }
+          }
+        }
+      }
+    },
+    "entities": [
+      {
+        "name": "Roommate",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      {
+        "name": "Expense",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "amount",
+            "type": "number",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "date",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "payerId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "participants",
+            "type": "array",
+            "required": true
+          },
+          {
+            "name": "splitMethod",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "splitDetails",
+            "type": "object",
+            "required": false
+          }
+        ]
+      },
+      {
+        "name": "Settlement",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "amount",
+            "type": "number",
+            "required": true
+          },
+          {
+            "name": "date",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "payerId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "payeeId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "expenseId",
+            "type": "string",
+            "required": false
+          }
+        ]
+      },
+      {
+        "name": "Balance",
+        "fields": [
+          {
+            "name": "roommateId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "netAmount",
+            "type": "number",
+            "required": true
+          }
+        ]
+      },
+      {
+        "name": "ReminderSettings",
+        "fields": [
+          {
+            "name": "userId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "enabled",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "name": "frequency",
+            "type": "string",
+            "required": true
+          }
+        ]
+      }
+    ]
+  },
+  "validation": {
+    "schema_ok": true,
+    "openapi_lint_ok": true,
+    "consistency_ok": true,
+    "warnings": []
+  },
+  "diff_from_previous": null
+}

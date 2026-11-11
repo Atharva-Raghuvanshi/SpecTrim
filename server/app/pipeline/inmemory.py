@@ -54,7 +54,7 @@ def run_pipeline(
         gateway, idea, answers or [], [a.model_dump() for a in gate.assumptions]
     )
     contract, res_contract = run_contract(gateway, master_spec.model_dump(), version=version)
-    sub_specs, res_decomposer = run_decomposer(gateway, master_spec, contract)
+    subs_model, res_decomposer = run_decomposer(gateway, master_spec, contract)
 
     draft = SpecPackage(
         session_id=session_id,
@@ -62,7 +62,7 @@ def run_pipeline(
         master_spec=master_spec,
         assumptions=gate.assumptions,
         open_questions=gate.questions,
-        sub_specs=sub_specs,
+        sub_specs=subs_model.sub_specs,
         contract=contract,
         validation=ValidationReport(warnings=[]),
     )
