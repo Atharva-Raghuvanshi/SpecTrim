@@ -1,14 +1,17 @@
-"""FastAPI app: sessions, answers, cancel (M4.5). SSE/MCP/exports come in Phase 6."""
+"""FastAPI app: sessions, answers, revisions, SSE, exports (Phases 4-6)."""
 from __future__ import annotations
 
+import json
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
 from fastapi import FastAPI, Header, HTTPException, Request
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, Response, StreamingResponse
 from pydantic import BaseModel, Field
 
 from app import winloop  # noqa: F401  (must run before asyncio/psycopg on Windows)
+from app.api_sse import sse_response
+from app.exports import to_markdown, to_openapi_yaml
 from app.gateway.base import Gateway
 from app.gateway.config import load_models_config
 from app.gateway.litellm_gateway import LiteLLMGateway
@@ -187,6 +190,48 @@ def create_app(gateway: Gateway | None = None) -> FastAPI:
         if old is None or new is None:
             raise HTTPException(404, "version not found")
         return JSONResponse(diff_packages(old, new))
+
+    @app.get("/sessions/{session_id}/questions")
+    async def get_questions(session_id: str, request: Request) -> JSONResponse:
+        session = await repos(request)["sessions"].get(session_id)
+        if session is None:
+            raise HTTPException(404, "session not found")
+        questions = await repos(request)["questions"].list_unanswered(session_id)
+        return JSONResponse({"questions": questions})
+
+    @app.get("/sessions/{session_id}/events")
+    async def get_events(
+        session_id: str,
+        request: Request,
+        last_event_id: str | None = Header(default=None, alias="Last-Event-ID"),
+    ) -> StreamingResponse:
+        session = await repos(request)["sessions"].get(session_id)
+        if session is None:
+            raise HTTPException(404, "session not found")
+        last_seq = int(last_event_id) if last_event_id and last_event_id.isdigit() else 0
+        events = repos(request)["events"]
+        return sse_response(request, session_id, events, last_seq)
+
+    @app.get("/sessions/{session_id}/export")
+    async def export_session(
+        session_id: str, request: Request, format: str = "json", version: int | None = None
+    ) -> Response:
+        session = await repos(request)["sessions"].get(session_id)
+        if session is None:
+            raise HTTPException(404, "session not found")
+        v = version or session["current_version"]
+        if not v:
+            raise HTTPException(404, "no versions yet")
+        package = await VersionsRepo(request.app.state.pool).get(session_id, v)
+        if package is None:
+            raise HTTPException(404, f"version {v} not found")
+        if format == "json":
+            return Response(package and json.dumps(package, indent=2), media_type="application/json")
+        if format == "markdown":
+            return Response(to_markdown(package), media_type="text/markdown")
+        if format in ("openapi", "yaml"):
+            return Response(to_openapi_yaml(package), media_type="application/yaml")
+        raise HTTPException(422, f"unknown format {format!r} (json|markdown|openapi)")
 
     return app
 
