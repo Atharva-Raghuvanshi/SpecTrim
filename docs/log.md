@@ -159,5 +159,7 @@ curl -s http://127.0.0.1:8001/v1/optimize -H "Content-Type: application/json" \
 curl -s http://127.0.0.1:8001/stats
 ```
 
-### Next step
-Project is feature-complete through M13 + M15.1 except: M9.3 public demo (needs VPS), M14 E4-E6 paired measurements (needs quota), tree-sitter repo map, E2 precision tuning. Restart point for a fresh session: run `make up`, wait for api healthy, verify proxy smoke, then tag releases if desired.
+### Final update (same session, commit 38688b9)
+- Fixed two deploy bugs found by the live smoke: Dockerfile did not COPY config/ (api crash-looped on startup); compose did not pass GROQ_API_KEY to api/worker.
+- **Real proxy smoke PASSED against the rebuilt container:** `POST /v1/chat/completions` (mode=safe) -> 200, text `proxy-ok`, provider-reported 141 tokens; identical retry -> `cache_hit: true` (P9 live); `POST /v1/optimize` -> 9 pass reports; ledger delta {requests: 2, cache_hits: 1, passthroughs: 0}. M10.1 exit check (agent works by base-URL swap alone) verified.
+- Remaining open items unchanged: M9.3 public demo (VPS), M14 E4-E6 paired runs (quota), tree-sitter repo map, E2 precision tuning.
