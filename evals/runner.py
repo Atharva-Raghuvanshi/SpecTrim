@@ -40,11 +40,13 @@ def main() -> int:
     parser.add_argument("--limit", type=int, default=30)
     parser.add_argument("--max-usd", type=float, default=1.0, dest="max_usd")
     parser.add_argument("--max-tokens", type=float, default=200000, dest="max_tokens")
+    parser.add_argument("--pace-s", type=float, default=30.0, dest="pace_s")
     args = parser.parse_args()
 
     settings = get_settings()
     gateway = LiteLLMGateway(
-        load_models_config(settings.models_config, settings.active_config)
+        load_models_config(settings.models_config, settings.active_config),
+        max_retries=6, base_delay=2.0,  # ride out Groq free-tier RPM windows
     )
     RESULTS.mkdir(parents=True, exist_ok=True)
 
@@ -111,6 +113,8 @@ def main() -> int:
             e1["invalid"] += 1
         per_prompt.append(rec)
         print(f"{row['id']}: {rec.get('valid', 'ERR')} (+{int(total_tokens)} tok)", flush=True)
+        if args.pace_s:
+            time.sleep(args.pace_s)
 
     precision = e2_tp / (e2_tp + e2_fp) if (e2_tp + e2_fp) else 0.0
     recall = e2_tp / (e2_tp + e2_fn) if (e2_tp + e2_fn) else 0.0

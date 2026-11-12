@@ -16,6 +16,7 @@ from app.gateway.base import Gateway
 from app.gateway.config import load_models_config
 from app.gateway.litellm_gateway import LiteLLMGateway
 from app.observability import REQUESTS, SESSIONS_CREATED, get_logger, setup_logging, trace_id_var
+from app.optimizer.router import build_proxy_router
 from app.pipeline.orchestrator import PipelineContext, cancel_session
 from app.pipeline.states import InvalidTransition
 from app.security import SlidingWindowRateLimiter, enforce_daily_spend, require_bearer
@@ -269,6 +270,7 @@ def create_app(gateway: Gateway | None = None) -> FastAPI:
             return Response(to_openapi_yaml(package), media_type="application/yaml")
         raise HTTPException(422, f"unknown format {format!r} (json|markdown|openapi)")
 
+    app.include_router(build_proxy_router(app))
     return app
 
 
