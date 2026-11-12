@@ -119,3 +119,45 @@ make lint               # ruff + mypy clean
 
 ### Next step
 Phase 5 (M5.1-M5.3): revision stage (ready→revising→v2), diff engine with breaking-change flags, GET /diff endpoint. M5.1 (versions immutable) already done+tested.
+
+## M5.x-M9.x + M10-M13 + M15.1 — full autonomous run (user authorized all phases)
+
+**Date:** 2026-11-12
+**Status:** ALL MILESTONES BUILT. Commits: `af7fcf4` (M5), `93a2632` (M6), `75580c9` (M7), `a46fbba` (M8.1-8.2+M9.1-9.2), `f169929` (M10-M11 / Release B), `95f987c` (M12-M13 / Release C + REPORT). **107 tests green, ruff+mypy clean, 95% coverage on core packages** (gate is 80%).
+
+### What was built (per milestone)
+- **M5**: revision stage (`prompts/revision/v1.md`, ready→revising→validating→ready @ vN+1), diff engine (`diffing/diff.py`) with breaking flags (removed endpoint/op signature change/entity/required-field removal/type change), `POST /revisions` + `GET /diff` endpoints, migration 002 (jobs.payload). M5.1 was already done in Phase 4 (ON CONFLICT DO NOTHING, tested).
+- **M6**: SSE with Last-Event-ID replay (poll 500ms, `api_sse.py`), MCP server (`mcp_server.py`, mcp 2.x `MCPServer`, five tools proxying REST), exports JSON/Markdown/openapi.yaml, `GET /sessions/{id}/questions`.
+- **M7**: structlog JSON logs with trace_id (contextvar + middleware), Prometheus metrics (`/metrics`, stage tokens/cost/latency/counter labels = stage+model only, no session_id), Grafana dashboard + prometheus.yml, CI coverage gate ≥80% on pipeline/schemas/storage/diffing/validators, `make migrate` + `make coverage`.
+- **M8.1**: 30 labelled prompts frozen in `evals/prompts/labels.jsonl` (authored by agent per user instruction; user approval deferred). **M8.2**: `evals/runner.py` with `--max-usd`/`--max-tokens` guards, pacing for Groq RPM. **M8.3**: real E1/E2 run → `evals/results/e1_e2.json` + `evals/REPORT.md`: **E1 10/10 completed runs valid (2 aborted on 429, 0 quality failures); E2 recall 0.76, precision 0.38** (precision limited by analyzer category breadth vs frozen label vocabulary — logged, not silently patched). E3/E4 not measured (infra noise under free tier) — stated honestly in the report.
+- **M9.1**: full compose (api, worker ×2 via deploy.replicas, mcp streamable-http, postgres, prometheus, grafana, caddy) all healthchecked. **M9.2**: bearer auth (auto-off for local dev token), sliding-window rate limit (429), daily spend cap (402) — tested. **M9.3**: needs a VPS/domain — NOT done, deferred.
+- **M10-M11 (Release B)**: OpenAI-compatible proxy `POST /v1/chat/completions` (streaming passthrough via `gateway/proxy_gateway.py` — the only other litellm import), policy engine (off/safe/balanced/aggressive + env kill switches QO_PASS_P<N>=0 + x-optimizer-protect), ordered chain with per-pass fail-open, router-level fail-open (forward original), `/v1/optimize` dry run, savings ledger + `GET /stats` (tokens_baseline_est vs provider-reported tokens_actual), P9 exact cache (versioned invalidation → zero stale serves, tested), P4 compaction (error lines always preserved, tested), P7 output controls (per-stage max_tokens/stop + style line), P1 cache-aware assembly (prefix byte-stable, tested). Migration 003 (proxy_requests, proxy_cache).
+- **M12-M13 (Release C)**: P5 history compaction (decisions/open errors survive), P6 edit-format enforcement (whole-file rewrite rejected + SEARCH/REPLACE instruction), P3 BM25-lite context selection (file hints, not dumps; tree-sitter deferred — noted), P2 spec-as-context (relevant sub-spec per role), P8 cheap-first cascade (validator failure escalates to 120b), P11 budget governor (degrade before refuse) + per-pass circuit breakers (open → half-open). P10 prose compression intentionally not implemented (aggressive-only, must be justified by eval per PRD).
+- **M15.1**: `README.md` — quick start, base-URL-swap usage, pass table, honest status.
+
+### Decisions / Assumptions (this run)
+- Sub-spec ↔ contract ordering: contract generated BEFORE decomposer so sub-specs can reference it (M3.3 exit check); decomposer normalizes endpoints from the contract deterministically.
+- mcp 2.x renamed FastMCP → `mcp.server.mcpserver.MCPServer` (pinned `mcp>=2.0`).
+- Revision jobs carry payload via `jobs.payload` (migration 002), not in-process state.
+- P3 uses BM25-lite (term scoring) instead of tree-sitter — tree-sitter repo map deferred (heavy native dep; logged as future work).
+- `--pace-s` eval pacing + gateway max_retries=6/base_delay=2.0 to survive Groq free-tier RPM windows.
+- M9.3 (public demo/video) and full E3/E4 paired runs: deferred, need VPS / higher quota. Recorded in README "Honest status".
+
+### Open issues
+- `make up` currently rebuilds the api image (litellm in-container pip install is slow on this box); the running api container predates the proxy router until that build finishes — proxy smoke via base-URL swap pending the rebuild.
+- E2 precision improvement = tighten analyzer prompt (future work).
+- CI: coverage job runs without Postgres (DB tests auto-skip); add a postgres service to CI later if DB coverage is wanted in CI numbers.
+
+### How to verify (exact commands)
+```
+cd "C:/Users/Admin/OneDrive/Desktop/Query Optimizer"
+make test && make lint && make coverage   # 107 passed; ruff+mypy clean; 95% (gate 80%)
+docker compose config -q                  # full compose valid
+# after api image rebuild finishes:
+curl -s http://127.0.0.1:8001/v1/optimize -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"system","content":"s"},{"role":"user","content":"u"}]}' -H "x-optimizer-mode: safe"
+curl -s http://127.0.0.1:8001/stats
+```
+
+### Next step
+Project is feature-complete through M13 + M15.1 except: M9.3 public demo (needs VPS), M14 E4-E6 paired measurements (needs quota), tree-sitter repo map, E2 precision tuning. Restart point for a fresh session: run `make up`, wait for api healthy, verify proxy smoke, then tag releases if desired.
