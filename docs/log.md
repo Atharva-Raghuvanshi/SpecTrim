@@ -163,3 +163,26 @@ curl -s http://127.0.0.1:8001/stats
 - Fixed two deploy bugs found by the live smoke: Dockerfile did not COPY config/ (api crash-looped on startup); compose did not pass GROQ_API_KEY to api/worker.
 - **Real proxy smoke PASSED against the rebuilt container:** `POST /v1/chat/completions` (mode=safe) -> 200, text `proxy-ok`, provider-reported 141 tokens; identical retry -> `cache_hit: true` (P9 live); `POST /v1/optimize` -> 9 pass reports; ledger delta {requests: 2, cache_hits: 1, passthroughs: 0}. M10.1 exit check (agent works by base-URL swap alone) verified.
 - Remaining open items unchanged: M9.3 public demo (VPS), M14 E4-E6 paired runs (quota), tree-sitter repo map, E2 precision tuning.
+
+## Gap-closing run — Step 0 orientation (2026-11-13)
+
+**Verified baseline:** `make up` (all services healthy; mcp container stopped — stdio transport cannot run detached, fixing in WP4), `make test` → **107 passed**, `make lint` → ruff+mypy clean, `make coverage` → **95%** (gate 80%). Baseline unchanged from commit `3944d58`.
+
+**Gap checklist (DoD §13 PRD v1+v2 + user WP list):**
+- [ ] WP1a FR-30: Anthropic-compatible `POST /v1/messages` (streaming) sharing chain/fail-open/ledger/cache + tests
+- [ ] WP1b FR-45: MCP `get_context` + `savings_report` tools + tests
+- [ ] WP1c PRD_v2 §9: per-pass savings, cache-hit-rate, passthrough/fail-open, proxy-latency metrics + Grafana panels
+- [ ] WP1d FR-46: measured p95 non-LLM latency for P1/P4/P5/P7/P9 + streaming first-token overhead (target <150ms)
+- [ ] WP1e FR-37: invalidation suite covers model + optimizer/prompt version + spec version
+- [ ] WP2: Postgres service in CI (DB/queue/resume/idempotency tests run, not skip) + real-process crash/resume test
+- [ ] WP3: E2 precision 0.38→(>=0.80 target): analyze FPs, prompts v2, dry-run 5, full 30 on winner; E1 validity >=95% target; update REPORT
+- [ ] WP4: real-agent proofs (base-URL swap both endpoints multi-turn tool task; MCP client transcript in docs/demo/)
+- [ ] WP5: E3 8 prompts x 2 reps x 2 arms = 32 builder runs, one builder model, automated checks
+- [ ] WP6: E4 8x2x{off,safe,balanced}=48; E5 ablation (P9/P4/P5/P1) 4x2; E6 Pareto PNG; headline + Limitations
+- [ ] WP7 (optional): tree-sitter repo map if time/quota remain
+- [ ] WP8: deploy assets + scripts/smoke_deploy.sh, DEMO_SCRIPT.md, README (results table w/ n+model, Limitations, Honest status), MILESTONES statuses, tags after exit checks
+- [ ] Final DoD audit: every §13 checkbox marked DONE/PARTIAL/NOT DONE w/ evidence; §1.5+§3 metrics w/ measured values or NOT MEASURED
+
+**Quota plan (Groq free tier):** per model 30 RPM / 1K RPD / 8K TPM / 200K TPD. gpt-oss-120b reserved for spec pipeline + P8 escalation; gpt-oss-20b + qwen/qwen3.8-27b (to be pinned + smoke-verified) are builder models. One builder model per experiment. QuotaTracker in evals/quota.py persists to evals/results/quota.json, reads x-ratelimit headers, sleeps near 80% TPM, stops at 85% TPD with "quota reached, resume tomorrow". Eval runners resumable per (task, rep, arm), infra_aborted vs quality_fail tagging.
+
+**Needs user (proceeding, not blocking):** VPS/domain for live demo+video; approval of frozen prompt set + E3/E4 task set (marked "approval pending").
