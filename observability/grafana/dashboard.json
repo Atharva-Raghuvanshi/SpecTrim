@@ -1,0 +1,47 @@
+{
+  "title": "Query Optimizer",
+  "uid": "qo-main",
+  "schemaVersion": 39,
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Sessions created",
+      "targets": [{"expr": "sum(qo_sessions_created_total)", "refId": "A"}],
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4}
+    },
+    {
+      "type": "timeseries",
+      "title": "Tokens by stage",
+      "targets": [
+        {"expr": "sum(rate(qo_tokens_in_total[5m])) by (stage)", "refId": "A", "legendFormat": "in {{stage}}"},
+        {"expr": "sum(rate(qo_tokens_out_total[5m])) by (stage)", "refId": "B", "legendFormat": "out {{stage}}"}
+      ],
+      "gridPos": {"x": 6, "y": 0, "w": 12, "h": 8}
+    },
+    {
+      "type": "timeseries",
+      "title": "Cost (USD)",
+      "targets": [{"expr": "sum(rate(qo_cost_usd_total[5m])) by (stage)", "refId": "A", "legendFormat": "{{stage}}"}],
+      "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4}
+    },
+    {
+      "type": "timeseries",
+      "title": "Stage latency p95",
+      "targets": [{"expr": "histogram_quantile(0.95, sum(rate(qo_stage_latency_seconds_bucket[5m])) by (le, stage))", "refId": "A", "legendFormat": "{{stage}}"}],
+      "gridPos": {"x": 18, "y": 4, "w": 6, "h": 4}
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP requests",
+      "targets": [{"expr": "sum(rate(qo_http_requests_total[5m])) by (path)", "refId": "A", "legendFormat": "{{path}}"}],
+      "gridPos": {"x": 0, "y": 8, "w": 12, "h": 6}
+    },
+    {
+      "type": "stat",
+      "title": "Daily spend",
+      "targets": [{"expr": "qo_daily_spend_usd", "refId": "A"}],
+      "gridPos": {"x": 12, "y": 8, "w": 6, "h": 6}
+    }
+  ]
+}

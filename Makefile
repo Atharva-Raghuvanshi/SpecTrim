@@ -4,7 +4,7 @@ else
   PY := .venv/bin/python
 endif
 
-.PHONY: venv up down logs ps test lint clean
+.PHONY: venv up down logs ps test lint migrate coverage smoke-real clean
 
 venv:
 	python -m venv .venv
@@ -29,6 +29,12 @@ test:
 lint:
 	$(PY) -m ruff check .
 	$(PY) -m mypy server/app
+
+migrate:
+	$(PY) -m app.storage.migrate
+
+coverage:
+	$(PY) -m pytest -q --cov=app.pipeline --cov=app.schemas --cov=app.storage --cov=app.diffing --cov=app.validators --cov-report=term --cov-fail-under=80
 
 smoke-real:
 	@if [ -f .env ]; then set -a; . ./.env; set +a; fi; \

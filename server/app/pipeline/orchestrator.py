@@ -83,6 +83,12 @@ async def run_stage(
         res.latency_ms,
     )
     await ctx.sessions.add_spend(session_id, res.cost_usd or 0.0)
+    from app.observability import record_stage_call
+
+    record_stage_call(
+        stage_key, res.model, res.usage.prompt_tokens, res.usage.completion_tokens,
+        res.cost_usd, res.latency_ms,
+    )
     return model_obj.model_dump()
 
 

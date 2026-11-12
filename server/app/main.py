@@ -15,6 +15,7 @@ from app.exports import to_markdown, to_openapi_yaml
 from app.gateway.base import Gateway
 from app.gateway.config import load_models_config
 from app.gateway.litellm_gateway import LiteLLMGateway
+from app.observability import REQUESTS, SESSIONS_CREATED, get_logger, setup_logging, trace_id_var
 from app.pipeline.orchestrator import PipelineContext, cancel_session
 from app.pipeline.states import InvalidTransition
 from app.settings import Settings, get_settings
@@ -50,6 +51,7 @@ def build_gateway(settings: Settings) -> Gateway:
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     app.state.settings = settings
+    setup_logging(settings.log_level)
     apply_migrations(settings.database_url)
     app.state.pool = await open_pool(settings.database_url)
     app.state.gateway = build_gateway(settings)
@@ -85,6 +87,26 @@ def create_app(gateway: Gateway | None = None) -> FastAPI:
             "events": EventsRepo(pool),
         }
 
+    @app.middleware("http")
+    async def trace_and_metrics(request: Request, call_next):  # type: ignore[no-untyped-def]
+        import uuid as _uuid
+
+        tid = request.headers.get("X-Trace-Id") or _uuid.uuid4().hex
+        token = trace_id_var.set(tid)
+        try:
+            response = await call_next(request)
+        finally:
+            trace_id_var.reset(token)
+        REQUESTS.labels(request.method, request.url.path, str(response.status_code)).inc()
+        response.headers["X-Trace-Id"] = tid
+        return response
+
+    @app.get("/metrics")
+    async def metrics() -> Response:
+        from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+
+        return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
     @app.get("/healthz", response_class=PlainTextResponse)
     async def healthz(request: Request) -> PlainTextResponse:
         pool = getattr(request.app.state, "pool", None)
@@ -106,6 +128,8 @@ def create_app(gateway: Gateway | None = None) -> FastAPI:
         r = repos(request)
         session_id, created = await r["sessions"].create_idempotent(body.idea, idempotency_key)
         if created:
+            SESSIONS_CREATED.inc()
+            get_logger("api").info("session_created", session_id=session_id)
             await r["events"].append(session_id, "session_created", {"idea": body.idea[:200]})
             await r["jobs"].enqueue(session_id)
         session = await r["sessions"].get(session_id)

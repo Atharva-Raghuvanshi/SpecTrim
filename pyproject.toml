@@ -13,6 +13,8 @@ dependencies = [
     "openapi-spec-validator>=0.7",
     "psycopg[binary,pool]>=3.1",
     "mcp>=2.0",
+    "structlog>=24.1",
+    "prometheus-client>=0.20",
 ]
 
 [project.optional-dependencies]
