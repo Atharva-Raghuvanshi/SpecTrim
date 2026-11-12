@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: qo
+    folder: Query Optimizer
+    type: file
+    options:
+      path: /etc/grafana/provisioning/dashboards

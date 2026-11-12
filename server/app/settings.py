@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     max_questions_per_round: int = 3
     lease_seconds: int = 60
     lease_renew_seconds: int = 20
+    rate_limit_per_min: int = 30
     log_level: str = "INFO"
 
 

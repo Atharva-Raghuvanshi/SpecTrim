@@ -4,8 +4,6 @@ from __future__ import annotations
 import asyncio
 import uuid
 
-from psycopg_pool import AsyncConnectionPool
-
 from app import winloop  # noqa: F401  (must run before asyncio/psycopg on Windows)
 from app.gateway.base import Gateway, GatewayRateLimited
 from app.pipeline.orchestrator import PipelineContext, run_pipeline_job, run_revision_job
@@ -15,7 +13,7 @@ from app.storage.repos import EventsRepo, SessionsRepo
 
 
 class Worker:
-    def __init__(self, pool: AsyncConnectionPool, gateway: Gateway, settings: Settings) -> None:
+    def __init__(self, pool, gateway: Gateway, settings: Settings) -> None:  # pool: Database|pool
         self.pool = pool
         self.gateway = gateway
         self.settings = settings

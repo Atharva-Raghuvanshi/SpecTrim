@@ -1,0 +1,2 @@
+{$CADDY_DOMAIN:=:80}
+reverse_proxy api:8000

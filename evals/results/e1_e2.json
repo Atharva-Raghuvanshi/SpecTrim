@@ -1,0 +1,193 @@
+{
+  "ran": 12,
+  "e1": {
+    "valid": 1,
+    "warnings": 0,
+    "invalid": 11
+  },
+  "e1_validity_rate": 0.08333333333333333,
+  "e2_micro_precision": 0.4117647058823529,
+  "e2_micro_recall": 0.8235294117647058,
+  "tokens_total_est": 38519,
+  "cost_usd_reported": 0.0,
+  "elapsed_s": 355.9,
+  "per_prompt": [
+    {
+      "id": "P01",
+      "questions": [
+        "auth_model",
+        "payments",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        0,
+        3,
+        1
+      ],
+      "valid": true
+    },
+    {
+      "id": "P02",
+      "questions": [
+        "auth_model",
+        "data_ownership",
+        "payments"
+      ],
+      "tp_fp_fn": [
+        3,
+        0,
+        0
+      ],
+      "valid": false,
+      "error": "GatewayRateLimited: rate limited after 5 attempts on groq/openai/gpt-oss-120b"
+    },
+    {
+      "id": "P03",
+      "questions": [
+        "auth_model",
+        "data_model",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        1,
+        2,
+        1
+      ],
+      "valid": false,
+      "error": "GatewayRateLimited: rate limited after 5 attempts on groq/openai/gpt-oss-120b"
+    },
+    {
+      "id": "P04",
+      "questions": [
+        "auth_model",
+        "data_ownership",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        1,
+        2,
+        0
+      ],
+      "valid": false,
+      "error": "GatewayRateLimited: rate limited after 5 attempts on groq/openai/gpt-oss-120b"
+    },
+    {
+      "id": "P05",
+      "questions": [
+        "auth_model",
+        "data_ownership",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        1,
+        2,
+        0
+      ],
+      "valid": false,
+      "error": "GatewayRateLimited: rate limited after 5 attempts on groq/openai/gpt-oss-120b"
+    },
+    {
+      "id": "P06",
+      "questions": [
+        "auth_model",
+        "payments",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        0,
+        3,
+        1
+      ],
+      "valid": false,
+      "error": "GatewayRateLimited: rate limited after 5 attempts on groq/openai/gpt-oss-120b"
+    },
+    {
+      "id": "P07",
+      "questions": [
+        "auth_model",
+        "data_ownership",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        2,
+        1,
+        0
+      ],
+      "valid": false,
+      "error": "GatewayRateLimited: rate limited after 5 attempts on groq/openai/gpt-oss-120b"
+    },
+    {
+      "id": "P08",
+      "questions": [
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        0,
+        1,
+        0
+      ],
+      "valid": false,
+      "error": "GatewayRateLimited: rate limited after 5 attempts on groq/openai/gpt-oss-120b"
+    },
+    {
+      "id": "P09",
+      "questions": [
+        "auth_model",
+        "data_ownership",
+        "payments"
+      ],
+      "tp_fp_fn": [
+        2,
+        1,
+        0
+      ],
+      "valid": false,
+      "error": "GatewayRateLimited: rate limited after 5 attempts on groq/openai/gpt-oss-120b"
+    },
+    {
+      "id": "P10",
+      "questions": [
+        "auth_model",
+        "data_model",
+        "payments"
+      ],
+      "tp_fp_fn": [
+        0,
+        3,
+        0
+      ],
+      "valid": false,
+      "error": "GatewayRateLimited: rate limited after 5 attempts on groq/openai/gpt-oss-120b"
+    },
+    {
+      "id": "P11",
+      "questions": [
+        "auth_model",
+        "data_model",
+        "data_ownership"
+      ],
+      "tp_fp_fn": [
+        1,
+        2,
+        0
+      ],
+      "valid": false,
+      "error": "GatewayRateLimited: rate limited after 5 attempts on groq/openai/gpt-oss-120b"
+    },
+    {
+      "id": "P12",
+      "questions": [
+        "auth_model",
+        "data_ownership",
+        "payments"
+      ],
+      "tp_fp_fn": [
+        3,
+        0,
+        0
+      ],
+      "valid": false,
+      "error": "GatewayRateLimited: rate limited after 5 attempts on groq/openai/gpt-oss-120b"
+    }
+  ]
+}

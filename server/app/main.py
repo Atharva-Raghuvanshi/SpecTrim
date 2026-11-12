@@ -5,7 +5,7 @@ import json
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
-from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, Response, StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -18,6 +18,7 @@ from app.gateway.litellm_gateway import LiteLLMGateway
 from app.observability import REQUESTS, SESSIONS_CREATED, get_logger, setup_logging, trace_id_var
 from app.pipeline.orchestrator import PipelineContext, cancel_session
 from app.pipeline.states import InvalidTransition
+from app.security import SlidingWindowRateLimiter, enforce_daily_spend, require_bearer
 from app.settings import Settings, get_settings
 from app.storage.db import close_pool, open_pool
 from app.storage.migrate import apply_migrations
@@ -51,6 +52,9 @@ def build_gateway(settings: Settings) -> Gateway:
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     app.state.settings = settings
+    app.state.rate_limiter = SlidingWindowRateLimiter(
+        getattr(settings, "rate_limit_per_min", 30)
+    )
     setup_logging(settings.log_level)
     apply_migrations(settings.database_url)
     app.state.pool = await open_pool(settings.database_url)
@@ -121,11 +125,19 @@ def create_app(gateway: Gateway | None = None) -> FastAPI:
 
     @app.post("/sessions", status_code=201)
     async def create_session(
-        body: CreateSession, request: Request, idempotency_key: str = Header(alias="Idempotency-Key")
+        body: CreateSession,
+        request: Request,
+        idempotency_key: str = Header(alias="Idempotency-Key"),
+        _auth: None = Depends(require_bearer),
     ) -> JSONResponse:
         if not idempotency_key.strip():
             raise HTTPException(422, "Idempotency-Key must be non-empty")
+        settings: Settings = request.app.state.settings
+        request.app.state.rate_limiter.check(
+            request.client.host if request.client else "anon"
+        )
         r = repos(request)
+        await enforce_daily_spend(r["sessions"], settings.spend_cap_usd_per_day)
         session_id, created = await r["sessions"].create_idempotent(body.idea, idempotency_key)
         if created:
             SESSIONS_CREATED.inc()
