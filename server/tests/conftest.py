@@ -43,7 +43,8 @@ def db_pool():
         pool = await open_pool(TEST_DSN)
         async with pool.connection() as conn, conn.cursor() as cur:
             await cur.execute(
-                "TRUNCATE events, questions, versions, stages, jobs, sessions, daily_spend"
+                "TRUNCATE events, questions, versions, stages, jobs, sessions, "
+                "daily_spend, proxy_requests, proxy_cache"
             )
             await conn.commit()
         return pool

@@ -81,6 +81,7 @@ class _Jobs:
             "UPDATE jobs SET status = 'leased', locked_by = %s, leased_until = now() + "
             "make_interval(secs => %s), attempts = attempts + 1 WHERE id = ("
             "  SELECT id FROM jobs WHERE status = 'pending' AND run_after <= now()"
+            "  AND kind IN ('pipeline', 'revision')"
             "  ORDER BY created_at LIMIT 1 FOR UPDATE SKIP LOCKED) "
             "RETURNING id::text, session_id, kind, payload, attempts, max_attempts"
         )

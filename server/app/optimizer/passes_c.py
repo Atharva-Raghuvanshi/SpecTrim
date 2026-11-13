@@ -30,8 +30,14 @@ def p5_history_compaction(request: dict, policy: Policy) -> tuple[dict, dict]:
     for i, m in enumerate(messages):  # decisions and open errors survive (M12.2 exit check)
         if i in kept_idx:
             continue
-        if isinstance(m.get("content"), str) and DECISION_MARKERS.search(m["content"]):
-            kept_idx.add(i)
+        content = m.get("content")
+        if not isinstance(content, str):
+            continue
+        low = content.lower()  # cheap C substring prefilter, regex confirms
+        keys = ("decision", "constraint", "must", "open error", "failing", "todo", "we will")
+        if any(k in low for k in keys):
+            if DECISION_MARKERS.search(content):
+                kept_idx.add(i)
     compacted = [m for i, m in enumerate(messages) if i in kept_idx]
     changed = len(compacted) < len(messages)
     return ({**request, "messages": compacted} if changed else request,

@@ -7,12 +7,19 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 
 from app.optimizer.policy import Policy, content_is_protected
 
 ERROR_LINE = re.compile(
     r"\b(error|ERROR|Error|failed|FAILED|Failure|Traceback|Exception|FATAL|panic)\b|^\s*at .+\(.+:\d+\)"
+)
+# C-speed multiline scan: whole error lines in one pass (perf: P4 on big logs)
+ERROR_LINES_ML = re.compile(
+    r"^.*(?:error|ERROR|Error|failed|FAILED|Failure|Traceback|Exception|FATAL|panic).*$"
+    r"|^\s*at .+\(.+:\d+\).*$",
+    re.MULTILINE,
 )
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 
@@ -63,13 +70,9 @@ def p4_tool_output_compaction(request: dict, policy: Policy) -> tuple[dict, dict
         text = ANSI_RE.sub("", content)
         lines = text.splitlines()
         if len(lines) > 40:
-            error_idx = [j for j, line in enumerate(lines) if ERROR_LINE.search(line)]
+            error_lines = [m.group(0) for m in ERROR_LINES_ML.finditer(text)]
             head, tail = lines[:10], lines[-10:]
-            kept = list(dict.fromkeys(head + tail))
-            for j in error_idx:  # error lines always preserved (M11.2 exit check)
-                if 0 <= j < len(lines):
-                    kept.append(lines[j])
-            kept = list(dict.fromkeys(kept))
+            kept = list(dict.fromkeys(head + tail + error_lines))  # errors always kept
             new_text = "\n".join(kept) + f"\n[{len(lines) - len(kept)} lines compacted]"
         else:
             seen: set[str] = set()
@@ -151,7 +154,12 @@ def p7_output_controls(request: dict, policy: Policy, stage_cfg: dict | None = N
 
 
 def cache_key(model: str, request: dict, cache_version: int) -> str:
+    """Key = model + normalized request + cache version + namespace.
+
+    Namespace (QO_CACHE_NS env) is bumped when the optimizer/prompt/spec
+    version changes: all old entries become unreachable (FR-37)."""
     material = {
+        "ns": os.environ.get("QO_CACHE_NS", "v1"),
         "model": model,
         "cache_version": cache_version,
         "messages": request.get("messages", []),

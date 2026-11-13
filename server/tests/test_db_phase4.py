@@ -153,7 +153,7 @@ def test_killed_worker_job_reclaimed(db_pool) -> None:
         sessions = SessionsRepo(db_pool)
         jobs = JobsRepo(db_pool)
         sid, _ = await sessions.create_idempotent("idea", f"k-{uuid.uuid4()}")
-        await jobs.enqueue(sid)
+        await jobs.enqueue(sid, kind="test")  # kind the live workers never claim
         # simulate a killed worker: lease it, let the lease lapse
         job = await jobs.claim("worker_dead", lease_seconds=-1)
         assert job is not None

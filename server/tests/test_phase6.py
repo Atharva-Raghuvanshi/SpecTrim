@@ -86,6 +86,8 @@ def test_mcp_server_exposes_five_tools() -> None:
         "revise_spec",
         "get_contract",
         "diff_versions",
+        "get_context",
+        "savings_report",
     }
 
 

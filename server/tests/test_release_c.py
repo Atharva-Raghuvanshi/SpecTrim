@@ -123,7 +123,7 @@ def test_breaker_half_open_after_window() -> None:
     b.record_failure()
     import time
 
-    time.sleep(0.01)
+    time.sleep(0.05)
     assert b.allow()  # half-open retry after the window
 
 

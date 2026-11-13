@@ -92,8 +92,40 @@ async def diff_versions(session_id: str, from_version: int, to_version: int) -> 
     )
 
 
+@mcp.tool()
+async def get_context(session_id: str, task: str, role: str = "backend") -> dict:
+    """Get the relevant spec context for a coding task: the sub-spec for the
+    agent role plus entities and endpoints it touches (FR-45)."""
+    s = await _call("GET", f"/sessions/{session_id}")
+    version = s.get("current_version")
+    if not version:
+        return {"error": "session has no spec version yet", "status": s.get("status")}
+    pkg = await _call("GET", f"/sessions/{session_id}/export?format=json&version={version}")
+    sub = pkg.get("sub_specs", {}).get(role)
+    if sub is None:
+        return {"error": f"no sub-spec for role {role!r}", "roles": sorted(pkg.get("sub_specs", {}))}
+    return {
+        "session_id": session_id,
+        "version": version,
+        "role": role,
+        "task": task,
+        "summary": pkg.get("master_spec", {}).get("summary", ""),
+        "entities": sub.get("entities", []),
+        "endpoints": sub.get("endpoints", []),
+        "pages": sub.get("pages", []),
+        "contract_version": sub.get("contract_version"),
+    }
+
+
+@mcp.tool()
+async def savings_report() -> dict:
+    """Savings ledger summary: baseline-est vs actual tokens, cache hits, passthroughs (FR-45)."""
+    return await _call("GET", "/stats")
+
+
 def main() -> int:
-    mcp.run()
+    transport = os.environ.get("MCP_TRANSPORT", "stdio")
+    mcp.run(transport=transport)  # type: ignore[arg-type,call-overload]
     return 0
 
 

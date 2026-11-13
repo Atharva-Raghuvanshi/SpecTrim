@@ -24,6 +24,7 @@ ps:
 	docker compose ps
 
 test:
+	@docker compose stop worker >/dev/null 2>&1 || true
 	$(PY) -m pytest
 
 lint:

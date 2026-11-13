@@ -30,6 +30,21 @@ SESSIONS_CREATED = Counter("qo_sessions_created_total", "Sessions created")
 ACTIVE_LEASES = Gauge("qo_jobs_leased", "Jobs currently leased")
 DAILY_SPEND = Gauge("qo_daily_spend_usd", "Spend today in USD")
 
+# Proxy/optimizer metrics (PRD_v2 §9)
+PROXY_OVERHEAD = Histogram(
+    "qo_proxy_overhead_seconds",
+    "Added non-LLM proxy overhead (policy+chain+cache lookup)",
+    buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.15, 0.25, 0.5, 1.0),
+)
+PROXY_CACHE_HITS = Counter("qo_proxy_cache_hits_total", "P9 exact-cache hits served")
+PROXY_PASSTHROUGH = Counter(
+    "qo_proxy_passthrough_total", "Requests forwarded unoptimized", ["reason"]
+)
+PROXY_REQUESTS = Counter("qo_proxy_requests_total", "Proxy requests handled", ["endpoint", "mode"])
+PASS_SAVINGS_EST = Counter(
+    "qo_pass_savings_tokens_est_total", "Estimated tokens removed per pass", ["pass"]
+)
+
 
 def setup_logging(level: str = "INFO") -> None:
     logging.basicConfig(format="%(message)s", stream=sys.stdout, level=level)

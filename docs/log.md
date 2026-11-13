@@ -186,3 +186,33 @@ curl -s http://127.0.0.1:8001/stats
 **Quota plan (Groq free tier):** per model 30 RPM / 1K RPD / 8K TPM / 200K TPD. gpt-oss-120b reserved for spec pipeline + P8 escalation; gpt-oss-20b + qwen/qwen3.8-27b (to be pinned + smoke-verified) are builder models. One builder model per experiment. QuotaTracker in evals/quota.py persists to evals/results/quota.json, reads x-ratelimit headers, sleeps near 80% TPM, stops at 85% TPD with "quota reached, resume tomorrow". Eval runners resumable per (task, rep, arm), infra_aborted vs quality_fail tagging.
 
 **Needs user (proceeding, not blocking):** VPS/domain for live demo+video; approval of frozen prompt set + E3/E4 task set (marked "approval pending").
+
+## WP1 — spec/code gaps vs PRDs (2026-11-13)
+
+**Status:** DONE. Commit: see git log. **115 tests pass**, ruff+mypy clean, coverage re-run pending in WP2's CI change.
+
+### Done
+- **FR-30 Anthropic proxy**: `POST /v1/messages` (non-streaming + streaming SSE). New `optimizer/anthropic.py`: request translation (system block, content-block lists, stop_sequences→stop), response translation (`type: message`, usage input/output_tokens), OpenAI-SSE→Anthropic-SSE stream translator (message_start/content_block_*/message_delta/stop). Shares the same chain, P9 cache, ledger, fail-open. Tests: translation, cache_hit flag, streaming event sequence, **injected chain failure → passthrough** (patched at router binding), protected-content header honored.
+- **FR-45 MCP tools**: `get_context(session_id, task, role)` (sub-spec + entities + endpoints per role), `savings_report()` (/stats). Tool surface test now expects 7 tools.
+- **PRD_v2 §9 metrics**: `qo_proxy_overhead_seconds` (histogram), `qo_proxy_cache_hits_total`, `qo_proxy_passthrough_total{reason}`, `qo_proxy_requests_total{endpoint,mode}`, `qo_pass_savings_tokens_est_total{pass}` + 4 Grafana panels (per-pass savings, cache hit rate, passthrough/fail-open, overhead p95).
+- **FR-37 invalidation**: cache key now includes `ns` from `QO_CACHE_NS` env (prompt/spec version bump ⇒ all entries unreachable). Tests: model-change miss, namespace invalidation semantics, existing version-bump test.
+- **FR-46 latency (measured, `scripts/bench_latency.py` → `evals/results/latency_bench.json`)**: 3000-line × 60-turn (~1MB) request, 200 reps in-process:
+  - chain_safe p95 **118.9ms**, chain_balanced p95 **110.9ms**, P4 alone p95 **105.9ms**, P5 alone p95 **11.5ms**, P1 p95 **0.09ms**, P7 p95 **0.02ms**, P9 key p95 **13.8ms** — **all under the 150ms target**.
+  - Initial run MISSED (P4 p95 434ms, P5 503ms): per-line Python regex on 180K lines. Fixed with single-pass C-level MULTILINE scan (`ERROR_LINES_ML.finditer`) for P4 and a cheap `in`-prefilter before regex for P5. Before/after logged; error-line preservation test still green.
+- **Quota guard**: payloads over `QO_MAX_REQUEST_TOKENS` (default 8000, ×1.5 with max_tokens) rejected **413** before any provider call; both-arms-429 → **502 infra_error** (never a quality failure). Tests: 413 with provider untouched, 429 classified infra.
+
+### Decisions / fixes
+- `make test` now pauses worker containers first: live workers were stealing queued jobs mid-test (real race found by the run: `test_killed_worker_job_reclaimed` flaked when Docker was up). Workers claim only `kind IN ('pipeline','revision')`; tests use `kind='test'`.
+- conftest truncate now includes proxy_requests/proxy_cache (was causing cross-test cache pollution).
+- Anthropic fail-open test patches `router.run_chain` binding (patching `chain.run_chain` doesn't affect the router's import).
+- Breaker half-open test sleep 10ms→50ms (timing flake under load).
+- mypy: `pass` is a keyword — metric labels use `**{"pass": ...}`; `_handle_chat` returns `Response`.
+
+### Verify
+```
+docker compose stop worker
+.venv/Scripts/python.exe -m pytest -q        # 115 passed
+.venv/Scripts/python.exe scripts/bench_latency.py   # all p95 OK (<150ms)
+.venv/Scripts/python.exe -m ruff check . ; .venv/Scripts/python.exe -m mypy server/app
+docker compose start worker
+```
