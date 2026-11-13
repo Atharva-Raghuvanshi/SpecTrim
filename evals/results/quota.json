@@ -1,0 +1,29 @@
+{
+  "date_utc": "2026-11-13",
+  "models": {
+    "groq/openai/gpt-oss-120b": {
+      "tokens_today": 0,
+      "requests_today": 0,
+      "last_updated_utc": "2026-11-13T14:05:10.342323+00:00",
+      "ratelimit_remaining_tokens": null,
+      "ratelimit_limit_tokens": null,
+      "ratelimit_reset_tokens_s": null
+    },
+    "openai/gpt-oss-120b": {
+      "tokens_today": 59237,
+      "requests_today": 25,
+      "last_updated_utc": "2026-11-13T14:11:54.313168+00:00",
+      "ratelimit_remaining_tokens": null,
+      "ratelimit_limit_tokens": null,
+      "ratelimit_reset_tokens_s": null
+    },
+    "openai/gpt-oss-20b": {
+      "tokens_today": 12200,
+      "requests_today": 10,
+      "last_updated_utc": "2026-11-13T14:11:54.309130+00:00",
+      "ratelimit_remaining_tokens": null,
+      "ratelimit_limit_tokens": null,
+      "ratelimit_reset_tokens_s": null
+    }
+  }
+}

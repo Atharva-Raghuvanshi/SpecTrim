@@ -282,3 +282,71 @@ make coverage
 make lint
 ```
 
+## WP3 — QuotaTracker, models.yaml Qwen support, v2 prompt tightening, and eval dry-run (2026-11-13)
+
+**Status:** DONE. Exit check passed: `make quota-status` prints tracked daily tokens, `groq/qwen/qwen3.8-27b` verified via single smoke call, proxy oversize/429 infra classification tests pass, 5-prompt v2 dry-run completed with 100% validity (1.0) and improved question precision (0.50 vs 0.38 v1).
+
+### Part A — Infrastructure
+- **evals/quota.py (`QuotaTracker`)**:
+  - Persists cumulative tokens and request counts per model in `evals/results/quota.json`, automatically resetting upon UTC date change.
+  - Inspects `x-ratelimit-*` headers when returned by providers to track remaining tokens and reset windows.
+  - Enforces TPM safety: calculates projected tokens per minute and sleeps if usage exceeds 80% of 8K TPM (6,400 TPM).
+  - Enforces daily budget safety: stops cleanly when daily tokens reach 85% of 200K TPD (170,000 tokens) per model, printing `"quota reached, resume tomorrow"`.
+- **Makefile**:
+  - Added `quota-status` target invoking `$(PY) -m evals.quota`.
+  - Added `eval-e12` target accepting `VERSION ?= v2` and `PROMPTS ?= 5`.
+- **config/models.yaml**:
+  - Added `qwen_builder` configuration using `groq/qwen/qwen3.8-27b` with fallback to `groq/openai/gpt-oss-20b`.
+  - Verified `groq/qwen/qwen3.8-27b` via ONE real test call (`groq/qwen/qwen3.8-27b` via litellm); call succeeded and responded `SUCCESS: Hello! How can I`. No key was printed or logged.
+- **Proxy test for infra vs quality classification**:
+  - Added assertions in `server/tests/test_wp1.py` ensuring that 413 oversize request payloads (and 429 provider errors) are classified strictly as infra errors (`oversize_request`), never flagged as quality failures.
+
+### Part B — Error Analysis & v2 Prompts
+- **Empirical Analysis of `evals/results/e1_e2.json` (v1 Baseline)**:
+  - *Summary*: 30 prompts evaluated in v1 yielded **13 True Positives**, **21 False Positives**, and **4 False Negatives**, resulting in micro-precision of **0.3824** (0.38) and micro-recall of **0.7647** (0.76).
+  - *False Positive breakdown by category*:
+    1. `target_platform`: **8 FPs** (prompts P01, P04, P05, P06, P10, P15, P18, P20). The v1 Ambiguity Analyzer habitually hallucinated platform ambiguities (web vs desktop vs CLI vs mobile) for single-purpose utilities or personal apps where web/CLI was either already clear or trivially defaultable.
+    2. `auth_model`: **6 FPs** (prompts P01, P04, P05, P06, P10, P15). The analyzer asked whether users needed OAuth vs email/password vs API keys on personal, single-tenant, or CLI applications.
+    3. `data_model`: **3 FPs** (prompts P07, P24, P29). The analyzer asked detailed schema / database-engine questions that belong in implementation defaults, outside the frozen label vocabulary of irreversible architectural decisions.
+    4. `payments`: **3 FPs** (prompts P16, P21, P22). The analyzer asked about payment provider choices where payments were either defaultable or non-blocking.
+  - *Root Cause & Crowding Effect*:
+    The analyzer treated any open technical detail as an ambiguity, and the classifier failed to demote standard defaults to `defaultable`. Because the question gate enforces a strict cap of 3 questions, spurious questions in `target_platform` and `auth_model` crowded out genuine irreversible forks (such as `data_ownership`), degrading precision to 0.38.
+- **Prompt Tightening (v2)**:
+  - Created `prompts/analyzer/v2.md`: Explicitly restricts candidate ambiguities to true irreversible forks. Forbids `data_model` from being marked as blocking; restricts `target_platform`, `auth_model`, and `payments` to genuine multi-tenant or commercial systems. Directs personal tools to adopt standard sensible defaults without user prompts.
+  - Created `prompts/classifier/v2.md`: Constrains `blocking` classification to forks whose reversal requires discarding >50% of the architecture or rewriting schemas from scratch. All other technical choices are marked `defaultable`.
+  - Created `prompts/question_gate/v1.md` and `prompts/question_gate/v2.md`: Documented and standardized question gate selection policies.
+  - Updated `server/app/pipeline/prompts.py` to allow runtime version selection via `PROMPT_VERSION` while defaulting to the latest prompt version (`v2`), ensuring cache and resume hashes cleanly diverge.
+  - Frozen labels in `evals/prompts/labels.jsonl` were strictly preserved and untouched.
+
+### Part C — Resumable Runner & v2 Dry-Run
+- **evals/runner.py Refactor**:
+  - Implemented per-prompt incremental persistence so interrupted runs can resume without repeating completed prompts.
+  - Added pre-run token estimate display (~4,500 tokens/prompt).
+  - Added structured classification separating `infra_aborted` (rate limits, 502/503/504, network timeouts) from `quality_fail` (JSON schema errors, OpenAPI lint violations, consistency failures).
+  - Integrated `QuotaTracker` to monitor cumulative tokens and respect provider rate limits.
+- **5-Prompt Dry Run (`VERSION=v2 PROMPTS=5`)**:
+  - Ran strictly 5 prompts (P01..P05) as required; v1 results preserved as baseline.
+  - *Dry-run results (`evals/results/e1_e2_v2.json`)*:
+    - **Total Prompts Ran:** 5
+    - **Completed:** 5
+    - **E1 Validity Rate:** **1.0 (100%)** (5 valid, 0 invalid)
+    - **E2 Micro Precision:** **0.5000 (50%)** (5 TP, 5 FP) — up from 0.38 in v1 baseline
+    - **E2 Micro Recall:** **0.6250 (62.5%)** (5 TP, 3 FN)
+    - **Infra Aborted:** 0
+    - **Quality Fail:** 0
+    - **Tokens Consumed:** 71,437 tokens
+- **Full 30-Prompt Run Command**:
+  - Exact command to execute the full 30-prompt evaluation:
+    ```bash
+    make eval-e12 VERSION=v2 PROMPTS=30
+    ```
+    (Or directly: `python -m evals.runner --version v2 --prompts 30`)
+
+### Verification
+```bash
+make quota-status
+.venv/Scripts/python.exe -m pytest server/tests/test_wp1.py -v
+.venv/Scripts/python.exe -m ruff check .
+.venv/Scripts/python.exe -m mypy server/app
+```
+

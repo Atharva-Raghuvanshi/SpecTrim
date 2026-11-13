@@ -1,0 +1,118 @@
+{
+  "ran": 5,
+  "completed": 5,
+  "infra_aborted": 0,
+  "quality_fail": 0,
+  "e1": {
+    "valid": 5,
+    "invalid": 0,
+    "validity_rate": 1.0
+  },
+  "e2": {
+    "micro_tp": 5,
+    "micro_fp": 5,
+    "micro_fn": 3,
+    "micro_precision": 0.5,
+    "micro_recall": 0.625
+  },
+  "tokens_total_est": 71437,
+  "cost_usd_reported": 0.0,
+  "elapsed_s": 404.0,
+  "per_prompt": [
+    {
+      "id": "P01",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 10859,
+      "cost_usd": 0.0,
+      "questions": [
+        "data_ownership",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        1,
+        1,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P02",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 17177,
+      "cost_usd": 0.0,
+      "questions": [
+        "payments",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        1,
+        1,
+        2
+      ],
+      "valid": true
+    },
+    {
+      "id": "P03",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 18210,
+      "cost_usd": 0.0,
+      "questions": [
+        "auth_model",
+        "data_ownership",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        2,
+        1,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P04",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 12661,
+      "cost_usd": 0.0,
+      "questions": [
+        "data_ownership"
+      ],
+      "tp_fp_fn": [
+        0,
+        1,
+        1
+      ],
+      "valid": true
+    },
+    {
+      "id": "P05",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 12530,
+      "cost_usd": 0.0,
+      "questions": [
+        "data_ownership",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        1,
+        1,
+        0
+      ],
+      "valid": true
+    }
+  ]
+}

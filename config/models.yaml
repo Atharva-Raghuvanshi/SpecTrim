@@ -37,3 +37,38 @@ configs:
         model: groq/openai/gpt-oss-120b
         temperature: 0.2
         max_tokens: 8192
+  qwen_builder:
+    default:
+      model: groq/qwen/qwen3.8-27b
+      temperature: 0.2
+      max_tokens: 4096
+      fallback_model: groq/openai/gpt-oss-20b
+    stages:
+      analyzer:
+        model: groq/qwen/qwen3.8-27b
+        temperature: 0.1
+        max_tokens: 4096
+      classifier:
+        model: groq/qwen/qwen3.8-27b
+        temperature: 0.0
+        max_tokens: 1024
+      question_gate:
+        model: groq/qwen/qwen3.8-27b
+        temperature: 0.0
+        max_tokens: 1024
+      spec_writer:
+        model: groq/qwen/qwen3.8-27b
+        temperature: 0.2
+        max_tokens: 8192
+      decomposer:
+        model: groq/qwen/qwen3.8-27b
+        temperature: 0.2
+        max_tokens: 8192
+      contract:
+        model: groq/qwen/qwen3.8-27b
+        temperature: 0.1
+        max_tokens: 8192
+      revision:
+        model: groq/qwen/qwen3.8-27b
+        temperature: 0.2
+        max_tokens: 8192

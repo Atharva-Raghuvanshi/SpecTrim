@@ -4,7 +4,7 @@ else
   PY ?= .venv/bin/python
 endif
 
-.PHONY: venv up down logs ps test lint migrate coverage smoke-real test-crash clean
+.PHONY: venv up down logs ps test lint migrate coverage smoke-real test-crash quota-status eval-e12 clean
 
 venv:
 	python -m venv .venv
@@ -40,6 +40,16 @@ coverage:
 test-crash:
 	@docker compose stop worker > /dev/null 2>&1 || true
 	$(PY) -m pytest -q server/tests/test_crash_resume.py -v
+
+quota-status:
+	$(PY) -m evals.quota
+
+VERSION ?= v2
+PROMPTS ?= 5
+
+eval-e12:
+	@if [ -f .env ]; then set -a; . ./.env; set +a; fi; \
+	$(PY) -m evals.runner --version $(VERSION) --prompts $(PROMPTS)
 
 smoke-real:
 	@if [ -f .env ]; then set -a; . ./.env; set +a; fi; \

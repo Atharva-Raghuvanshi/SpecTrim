@@ -190,3 +190,6 @@ def test_huge_payload_rejected_before_provider(app_client, monkeypatch) -> None:
     )
     assert r.status_code == 413
     assert called["n"] == 0  # provider untouched
+    body = r.json()
+    assert body["error"]["type"] == "oversize_request"
+    assert body.get("quality_fail") is not True  # infra rejection, never a quality failure
