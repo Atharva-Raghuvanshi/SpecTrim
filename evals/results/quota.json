@@ -32,6 +32,14 @@
       "ratelimit_remaining_tokens": null,
       "ratelimit_limit_tokens": null,
       "ratelimit_reset_tokens_s": null
+    },
+    "groq/openai/gpt-oss-20b": {
+      "tokens_today": 54572,
+      "requests_today": 40,
+      "last_updated_utc": "2026-11-13T18:22:30.956350+00:00",
+      "ratelimit_remaining_tokens": null,
+      "ratelimit_limit_tokens": null,
+      "ratelimit_reset_tokens_s": null
     }
   }
 }

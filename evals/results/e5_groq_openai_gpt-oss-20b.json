@@ -1,0 +1,292 @@
+{
+  "builder_model": "groq/openai/gpt-oss-20b",
+  "experiment": "e5",
+  "cells": {
+    "T1:rep0:balanced": {
+      "pass": null,
+      "infra_aborted": true,
+      "turns": 6,
+      "tokens_in": 3107,
+      "tokens_out": 360
+    },
+    "T1:rep0:balanced_no_P9": {
+      "pass": null,
+      "infra_aborted": true,
+      "turns": 6,
+      "tokens_in": 3107,
+      "tokens_out": 346
+    },
+    "T1:rep0:balanced_no_P4": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: dictionary changed size during iteration"
+    },
+    "T1:rep0:balanced_no_P5": {
+      "pass": null,
+      "infra_aborted": true,
+      "turns": 6,
+      "tokens_in": 3107,
+      "tokens_out": 346
+    },
+    "T1:rep0:balanced_no_P1": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: dictionary changed size during iteration"
+    },
+    "T1:rep1:balanced": {
+      "pass": null,
+      "infra_aborted": true,
+      "turns": 6,
+      "tokens_in": 3107,
+      "tokens_out": 346
+    },
+    "T1:rep1:balanced_no_P9": {
+      "pass": null,
+      "infra_aborted": true,
+      "turns": 6,
+      "tokens_in": 3107,
+      "tokens_out": 346
+    },
+    "T1:rep1:balanced_no_P4": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: dictionary changed size during iteration"
+    },
+    "T1:rep1:balanced_no_P5": {
+      "pass": null,
+      "infra_aborted": true,
+      "turns": 6,
+      "tokens_in": 3107,
+      "tokens_out": 346
+    },
+    "T1:rep1:balanced_no_P1": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: dictionary changed size during iteration"
+    },
+    "T3:rep0:balanced": {
+      "pass": null,
+      "infra_aborted": true,
+      "turns": 6,
+      "tokens_in": 3119,
+      "tokens_out": 325
+    },
+    "T3:rep0:balanced_no_P9": {
+      "pass": null,
+      "infra_aborted": true,
+      "turns": 6,
+      "tokens_in": 3119,
+      "tokens_out": 325
+    },
+    "T3:rep0:balanced_no_P4": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: dictionary changed size during iteration"
+    },
+    "T3:rep0:balanced_no_P5": {
+      "pass": null,
+      "infra_aborted": true,
+      "turns": 6,
+      "tokens_in": 3119,
+      "tokens_out": 325
+    },
+    "T3:rep0:balanced_no_P1": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: dictionary changed size during iteration"
+    },
+    "T3:rep1:balanced": {
+      "pass": null,
+      "infra_aborted": true,
+      "turns": 6,
+      "tokens_in": 3119,
+      "tokens_out": 325
+    },
+    "T3:rep1:balanced_no_P9": {
+      "pass": null,
+      "infra_aborted": true,
+      "turns": 6,
+      "tokens_in": 3119,
+      "tokens_out": 325
+    },
+    "T3:rep1:balanced_no_P4": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: dictionary changed size during iteration"
+    },
+    "T3:rep1:balanced_no_P5": {
+      "pass": null,
+      "infra_aborted": true,
+      "turns": 6,
+      "tokens_in": 3119,
+      "tokens_out": 325
+    },
+    "T3:rep1:balanced_no_P1": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: dictionary changed size during iteration"
+    },
+    "T6:rep0:balanced": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 278,
+      "tokens_out": 560,
+      "latency_avg_s": 0.97
+    },
+    "T6:rep0:balanced_no_P9": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 278,
+      "tokens_out": 560,
+      "latency_avg_s": 0.07
+    },
+    "T6:rep0:balanced_no_P4": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: dictionary changed size during iteration"
+    },
+    "T6:rep0:balanced_no_P5": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 278,
+      "tokens_out": 560,
+      "latency_avg_s": 0.05
+    },
+    "T6:rep0:balanced_no_P1": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: dictionary changed size during iteration"
+    },
+    "T6:rep1:balanced": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 278,
+      "tokens_out": 560,
+      "latency_avg_s": 0.11
+    },
+    "T6:rep1:balanced_no_P9": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 278,
+      "tokens_out": 560,
+      "latency_avg_s": 0.11
+    },
+    "T6:rep1:balanced_no_P4": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: dictionary changed size during iteration"
+    },
+    "T6:rep1:balanced_no_P5": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 278,
+      "tokens_out": 560,
+      "latency_avg_s": 0.1
+    },
+    "T6:rep1:balanced_no_P1": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: dictionary changed size during iteration"
+    },
+    "T7:rep0:balanced": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 286,
+      "tokens_out": 1072,
+      "latency_avg_s": 1.56
+    },
+    "T7:rep0:balanced_no_P9": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 286,
+      "tokens_out": 1072,
+      "latency_avg_s": 0.07
+    },
+    "T7:rep0:balanced_no_P4": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: dictionary changed size during iteration"
+    },
+    "T7:rep0:balanced_no_P5": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 286,
+      "tokens_out": 1072,
+      "latency_avg_s": 0.1
+    },
+    "T7:rep0:balanced_no_P1": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: dictionary changed size during iteration"
+    },
+    "T7:rep1:balanced": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 286,
+      "tokens_out": 1072,
+      "latency_avg_s": 0.05
+    },
+    "T7:rep1:balanced_no_P9": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 286,
+      "tokens_out": 1072,
+      "latency_avg_s": 0.07
+    },
+    "T7:rep1:balanced_no_P4": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: dictionary changed size during iteration"
+    },
+    "T7:rep1:balanced_no_P5": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 286,
+      "tokens_out": 1072,
+      "latency_avg_s": 0.11
+    },
+    "T7:rep1:balanced_no_P1": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: dictionary changed size during iteration"
+    }
+  },
+  "summary": {
+    "balanced": {
+      "n": 4,
+      "pass_rate": 1.0,
+      "tokens_in_avg": 282.0,
+      "tokens_out_avg": 816.0,
+      "iterations_avg": 1.0,
+      "latency_avg_s": 0.67
+    },
+    "balanced_no_P5": {
+      "n": 4,
+      "pass_rate": 1.0,
+      "tokens_in_avg": 282.0,
+      "tokens_out_avg": 816.0,
+      "iterations_avg": 1.0,
+      "latency_avg_s": 0.09
+    },
+    "balanced_no_P9": {
+      "n": 4,
+      "pass_rate": 1.0,
+      "tokens_in_avg": 282.0,
+      "tokens_out_avg": 816.0,
+      "iterations_avg": 1.0,
+      "latency_avg_s": 0.08
+    }
+  }
+}
