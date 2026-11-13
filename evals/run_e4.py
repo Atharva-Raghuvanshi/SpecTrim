@@ -59,7 +59,6 @@ TOOLS_SPEC = [
                   "description": "submit the final Python source",
                   "parameters": {"type": "object",
                                  "properties": {"code": {"type": "string"}},
-                                 "required": ["code"],
                                  "additionalProperties": False}}},
 ]
 
@@ -107,7 +106,7 @@ def tool_result(task: dict, name: str, attempt: int) -> dict:
     return {}
 
 
-def run_cell(call, task: dict, max_turns: int = 4) -> dict:
+def run_cell(call, task: dict, max_turns: int = 6) -> dict:
     """One multi-turn tool loop until submit_code or turn cap."""
     import json as _json
 
@@ -131,9 +130,12 @@ def run_cell(call, task: dict, max_turns: int = 4) -> dict:
         if tool_calls:
             fn = tool_calls[0]["function"]
             name = fn["name"]
-            args_ = _json.loads(fn.get("arguments") or "{}")
+            try:
+                args_ = _json.loads(fn.get("arguments") or "{}")
+            except _json.JSONDecodeError:
+                args_ = {}
             if name == "submit_code":
-                submitted = args_.get("code", "")
+                submitted = args_.get("code") or (msg.get("content") or "")
                 break
             tr = tool_result(task, name, attempt)
             messages.append({"role": "assistant", "content": "", "tool_calls": tool_calls})
@@ -201,6 +203,12 @@ def main() -> int:
         if out_path.is_file() else {"builder_model": args.model, "experiment": args.experiment,
                                     "cells": {}}
     )
+    # infra-aborted cells are retryable: drop them so resume re-runs them
+    dropped = [k for k, v in results["cells"].items() if v.get("infra_aborted")]
+    for k in dropped:
+        results["cells"].pop(k, None)
+    if dropped:
+        print(f"retrying {len(dropped)} infra-aborted cells")
     results["builder_model"] = args.model
 
     n_cells = len(task_ids) * args.reps * len(configs)
