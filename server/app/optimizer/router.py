@@ -83,6 +83,8 @@ async def _handle_chat(request: Request, api: str) -> Response:
                             tokens_actual, 0.0, cost_actual, 0, [])
         return _reply(api, resp)
 
+    # ---- added-overhead measurement (policy+cache+chain, excludes provider)
+    t_overhead = time.perf_counter()
     # ---- P9 cache lookup (non-streaming; exact match, version-aware)
     t_cache = time.perf_counter()
     cache_hit = None
@@ -104,6 +106,7 @@ async def _handle_chat(request: Request, api: str) -> Response:
     if not body.get("stream"):
         optimized, _ = p1_cache_aware_assembly(optimized, policy)
     PROXY_OVERHEAD.observe(time.perf_counter() - t_chain)
+    overhead_ms = int((time.perf_counter() - t_overhead) * 1000)
     _record_savings(reports)
     payload = {**optimized, "model": model}
 
@@ -129,14 +132,16 @@ async def _handle_chat(request: Request, api: str) -> Response:
             )
         tokens_actual, cost_actual = proxy_gateway.raw_usage(resp)
         await ledger.record(session_id, policy.mode, model, False, True,
-                            tokens_baseline_est, tokens_actual, 0.0, cost_actual, 0, reports)
+                            tokens_baseline_est, tokens_actual, 0.0, cost_actual,
+                            overhead_ms, reports)
         return _reply(api, resp)
 
     tokens_actual, cost_actual = proxy_gateway.raw_usage(resp)
     if "P9" in policy.enabled:
         await cache.store(model, body, resp)
     await ledger.record(session_id, policy.mode, model, False, False,
-                        tokens_baseline_est, tokens_actual, 0.0, cost_actual, 0, reports)
+                        tokens_baseline_est, tokens_actual, 0.0, cost_actual,
+                        overhead_ms, reports)
     return _reply(api, resp)
 
 

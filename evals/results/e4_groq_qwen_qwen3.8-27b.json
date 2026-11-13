@@ -1,0 +1,323 @@
+{
+  "builder_model": "groq/qwen/qwen3.8-27b",
+  "experiment": "e4",
+  "cells": {
+    "T1:rep0:off": {
+      "pass": false,
+      "stage": "behaviour",
+      "turns": 3,
+      "tokens_in": 1740,
+      "tokens_out": 225,
+      "latency_avg_s": 0.9
+    },
+    "T1:rep0:safe": {
+      "pass": false,
+      "stage": "behaviour",
+      "turns": 5,
+      "tokens_in": 3446,
+      "tokens_out": 247,
+      "latency_avg_s": 0.41
+    },
+    "T1:rep0:balanced": {
+      "pass": false,
+      "stage": "behaviour",
+      "turns": 5,
+      "tokens_in": 3446,
+      "tokens_out": 247,
+      "latency_avg_s": 0.06
+    },
+    "T1:rep1:off": {
+      "pass": false,
+      "stage": "behaviour",
+      "turns": 3,
+      "tokens_in": 1746,
+      "tokens_out": 209,
+      "latency_avg_s": 0.56
+    },
+    "T1:rep1:safe": {
+      "pass": false,
+      "stage": "behaviour",
+      "turns": 5,
+      "tokens_in": 3446,
+      "tokens_out": 247,
+      "latency_avg_s": 0.06
+    },
+    "T1:rep1:balanced": {
+      "pass": false,
+      "stage": "behaviour",
+      "turns": 5,
+      "tokens_in": 3446,
+      "tokens_out": 247,
+      "latency_avg_s": 0.06
+    },
+    "T2:rep0:off": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m70m4qk5e3tvbafv3cs9qb4e` service ti"
+    },
+    "T2:rep0:safe": {
+      "pass": false,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 470,
+      "tokens_out": 152,
+      "latency_avg_s": 0.91
+    },
+    "T2:rep0:balanced": {
+      "pass": false,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 470,
+      "tokens_out": 152,
+      "latency_avg_s": 0.05
+    },
+    "T2:rep1:off": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m70m4qk5e3tvbafv3cs9qb4e` service ti"
+    },
+    "T2:rep1:safe": {
+      "pass": false,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 470,
+      "tokens_out": 152,
+      "latency_avg_s": 0.06
+    },
+    "T2:rep1:balanced": {
+      "pass": false,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 470,
+      "tokens_out": 152,
+      "latency_avg_s": 0.05
+    },
+    "T3:rep0:off": {
+      "pass": false,
+      "stage": "syntax",
+      "turns": 1,
+      "tokens_in": 468,
+      "tokens_out": 278,
+      "latency_avg_s": 1.42
+    },
+    "T3:rep0:safe": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
+    },
+    "T3:rep0:balanced": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
+    },
+    "T3:rep1:off": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m70m4qk5e3tvbafv3cs9qb4e` service ti"
+    },
+    "T3:rep1:safe": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
+    },
+    "T3:rep1:balanced": {
+      "pass": false,
+      "stage": "behaviour",
+      "turns": 3,
+      "tokens_in": 1733,
+      "tokens_out": 326,
+      "latency_avg_s": 0.33
+    },
+    "T5:rep0:off": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m70m4qk5e3tvbafv3cs9qb4e` service ti"
+    },
+    "T5:rep0:safe": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
+    },
+    "T5:rep0:balanced": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
+    },
+    "T5:rep1:off": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m70m4qk5e3tvbafv3cs9qb4e` service ti"
+    },
+    "T5:rep1:safe": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
+    },
+    "T5:rep1:balanced": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
+    },
+    "T6:rep0:off": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m70m4qk5e3tvbafv3cs9qb4e` service ti"
+    },
+    "T6:rep0:safe": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
+    },
+    "T6:rep0:balanced": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
+    },
+    "T6:rep1:off": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m70m4qk5e3tvbafv3cs9qb4e` service ti"
+    },
+    "T6:rep1:safe": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
+    },
+    "T6:rep1:balanced": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 2,
+      "tokens_in": 1058,
+      "tokens_out": 131,
+      "latency_avg_s": 0.36
+    },
+    "T7:rep0:off": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m70m4qk5e3tvbafv3cs9qb4e` service ti"
+    },
+    "T7:rep0:safe": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
+    },
+    "T7:rep0:balanced": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
+    },
+    "T7:rep1:off": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m70m4qk5e3tvbafv3cs9qb4e` service ti"
+    },
+    "T7:rep1:safe": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
+    },
+    "T7:rep1:balanced": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
+    },
+    "T8:rep0:off": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m70m4qk5e3tvbafv3cs9qb4e` service ti"
+    },
+    "T8:rep0:safe": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
+    },
+    "T8:rep0:balanced": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
+    },
+    "T8:rep1:off": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m70m4qk5e3tvbafv3cs9qb4e` service ti"
+    },
+    "T8:rep1:safe": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
+    },
+    "T8:rep1:balanced": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
+    },
+    "T4:rep0:off": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m70m4qk5e3tvbafv3cs9qb4e` service ti"
+    },
+    "T4:rep0:safe": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 468,
+      "tokens_out": 115,
+      "latency_avg_s": 0.71
+    },
+    "T4:rep0:balanced": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 468,
+      "tokens_out": 115,
+      "latency_avg_s": 0.07
+    },
+    "T4:rep1:off": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m70m4qk5e3tvbafv3cs9qb4e` service ti"
+    },
+    "T4:rep1:safe": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 468,
+      "tokens_out": 115,
+      "latency_avg_s": 0.06
+    },
+    "T4:rep1:balanced": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 468,
+      "tokens_out": 115,
+      "latency_avg_s": 0.06
+    }
+  },
+  "summary": {
+    "balanced": {
+      "n": 8,
+      "pass_rate": 0.375,
+      "tokens_in_avg": 1444.875,
+      "tokens_out_avg": 185.625,
+      "iterations_avg": 2.375,
+      "latency_avg_s": 0.13
+    },
+    "off": {
+      "n": 3,
+      "pass_rate": 0.0,
+      "tokens_in_avg": 1318.0,
+      "tokens_out_avg": 237.33333333333334,
+      "iterations_avg": 2.3333333333333335,
+      "latency_avg_s": 0.96
+    },
+    "safe": {
+      "n": 6,
+      "pass_rate": 0.3333333333333333,
+      "tokens_in_avg": 1461.3333333333333,
+      "tokens_out_avg": 171.33333333333334,
+      "iterations_avg": 2.3333333333333335,
+      "latency_avg_s": 0.37
+    }
+  }
+}

@@ -393,3 +393,32 @@ python -m evals.agents.mcp_client   # or: make demo-mcp
 .venv/Scripts/python.exe -m mypy server/app
 ```
 
+
+## WP9 — web UI + dashboard (2026-11-13)
+
+**Status:** DONE. **126 tests pass**, ruff+mypy clean. `make ui-smoke` target runs the WP9 suite.
+
+### Done
+- **UI at `/ui`** (`server/app/ui/`): vanilla HTML/CSS/JS, no build step, no CDN/fonts, served via StaticFiles. Design tokens as CSS variables (8px grid, one accent, radius/shadows), dark default + light toggle + prefers-color-scheme, system fonts, tabular numerals. Sidebar (Overview/Specs/New spec/Connect), top bar (mode selector, health pill, range 1h/24h/7d, auto-refresh 10s, Grafana link). Responsive to phone width; focus-visible rings; prefers-reduced-motion honored; copy buttons on snippets.
+- **Charts: hand-written SVG** (sparkline, line+area, h-bars, donut) — no vendored library needed. Each chart has a `.chart-fallback` text summary for screen readers.
+- **`/ui/api/*` read-only endpoints**: summary (KPIs incl. cost saved or 'unpriced', cache hit rate, passthroughs, overhead p95), series (date_bin buckets), per-pass savings, recent requests (sortable/paginated), benchmarks (reads latest evals/results e4/e5 files; NOT MEASURED when absent), sessions list/detail/openapi.yaml, health.
+- **Overhead latency is now real data**: proxy records chain+cache overhead_ms per request; UI/Grafana show ledger p50/p95 (Prometheus not required for the dashboard).
+- **Specs viewer**: tabs (master spec / assumptions / sub-specs / contract endpoint table) with version selector via session detail + export links; diff line with breaking-change flags.
+- **New spec**: idea form → POST /sessions → EventSource progress with Last-Event-ID reconnect (seq persisted per session), question form when awaiting_user.
+- **Connect**: MCP streamable-HTTP URL built from host; copy snippets for Claude Desktop / Cursor / Claude Code / OpenCode each tagged "verify against client docs"; OpenAI (`/v1`) and Anthropic base URLs.
+- **Honesty rules**: live numbers labelled "Estimated · ledger" with tooltip (baseline-est is chars/4 estimate); separate "Measured benchmark" card reads real E4/E5 result files with n + model, shows NOT MEASURED otherwise. Never smooths numbers.
+- **Login**: bearer token in sessionStorage only; never rendered.
+- **Demo data**: `proxy_demo_requests` table (migration 004), `scripts/seed_demo_traffic.py` refuses without UI_DEMO=1; demo rows NEVER touch /stats, REPORT, or the benchmark card; UI shows a "Demo data" banner.
+- **Tests**: 10 new (endpoint shapes, 422 on bad range, benchmarks NOT MEASURED vs real E4 file, demo isolation vs /stats, XSS escaping guard on app.js, seed refusal, sessions list/detail).
+
+### Decisions
+- Hand-written SVG over vendored Chart.js: zero external files, license-free, chart needs are simple (per user's allowance for "small hand-written SVG helpers").
+- Playwright NOT installed on this box → screenshots skipped (per instructions, said so). UI verified via 10 endpoint/markup tests + ui-smoke.
+- `GET /sessions` list endpoint added for the Specs page.
+
+### Verify
+```
+make ui-smoke                 # 10 passed
+docker compose stop worker; .venv/Scripts/python.exe -m pytest -q; docker compose start worker   # 126 passed
+UI_DEMO=1 .venv/Scripts/python -m scripts.seed_demo_traffic   # then open http://127.0.0.1:8001/ui
+```

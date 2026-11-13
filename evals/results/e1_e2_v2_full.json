@@ -1,23 +1,23 @@
 {
-  "ran": 6,
-  "completed": 6,
+  "ran": 13,
+  "completed": 13,
   "infra_aborted": 0,
   "quality_fail": 0,
   "e1": {
-    "valid": 6,
+    "valid": 13,
     "invalid": 0,
     "validity_rate": 1.0
   },
   "e2": {
-    "micro_tp": 7,
-    "micro_fp": 5,
-    "micro_fn": 2,
-    "micro_precision": 0.5833333333333334,
-    "micro_recall": 0.7777777777777778
+    "micro_tp": 15,
+    "micro_fp": 10,
+    "micro_fn": 4,
+    "micro_precision": 0.6,
+    "micro_recall": 0.7894736842105263
   },
-  "tokens_total_est": 85211,
+  "tokens_total_est": 174833,
   "cost_usd_reported": 0.0,
-  "elapsed_s": 501.5,
+  "elapsed_s": 1053.5,
   "per_prompt": [
     {
       "id": "P01",
@@ -129,6 +129,137 @@
         1,
         2,
         0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P07",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 13323,
+      "cost_usd": 0.0,
+      "questions": [
+        "data_ownership",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        1,
+        1,
+        1
+      ],
+      "valid": true
+    },
+    {
+      "id": "P08",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 11601,
+      "cost_usd": 0.0,
+      "questions": [],
+      "tp_fp_fn": [
+        0,
+        0,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P09",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 14160,
+      "cost_usd": 0.0,
+      "questions": [
+        "auth_model",
+        "data_ownership",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        2,
+        1,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P10",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 10763,
+      "cost_usd": 0.0,
+      "questions": [
+        "data_ownership"
+      ],
+      "tp_fp_fn": [
+        0,
+        1,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P11",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 12090,
+      "cost_usd": 0.0,
+      "questions": [
+        "auth_model",
+        "data_ownership"
+      ],
+      "tp_fp_fn": [
+        1,
+        1,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P12",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 13985,
+      "cost_usd": 0.0,
+      "questions": [
+        "auth_model",
+        "data_ownership",
+        "payments"
+      ],
+      "tp_fp_fn": [
+        3,
+        0,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P13",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 13700,
+      "cost_usd": 0.0,
+      "questions": [
+        "auth_model",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        1,
+        1,
+        1
       ],
       "valid": true
     }

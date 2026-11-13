@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import json
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import AsyncIterator
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, Response, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from app import winloop  # noqa: F401  (must run before asyncio/psycopg on Windows)
@@ -24,6 +26,7 @@ from app.settings import Settings, get_settings
 from app.storage.db import close_pool, open_pool
 from app.storage.migrate import apply_migrations
 from app.storage.repos import EventsRepo, JobsRepo, QuestionsRepo, SessionsRepo, VersionsRepo
+from app.ui_api import build_ui_router
 
 
 class CreateSession(BaseModel):
@@ -149,6 +152,21 @@ def create_app(gateway: Gateway | None = None) -> FastAPI:
         code = 201 if created else 200
         return JSONResponse({"id": session_id, "status": session["status"]}, status_code=code)
 
+    @app.get("/sessions")
+    async def list_sessions(request: Request, limit: int = 50) -> JSONResponse:
+        pool = request.app.state.pool
+        async with pool.connection() as conn, conn.cursor() as cur:
+            await cur.execute(
+                "SELECT id, status, current_version, idea, created_at FROM sessions "
+                "ORDER BY created_at DESC LIMIT %s",
+                (limit,),
+            )
+            rows = await cur.fetchall()
+        return JSONResponse({"sessions": [
+            {"id": r[0], "status": r[1], "current_version": r[2],
+             "idea": r[3][:80], "created_at": r[4].isoformat()} for r in rows
+        ]})
+
     @app.get("/sessions/{session_id}")
     async def get_session(session_id: str, request: Request) -> JSONResponse:
         session = await repos(request)["sessions"].get(session_id)
@@ -271,6 +289,10 @@ def create_app(gateway: Gateway | None = None) -> FastAPI:
         raise HTTPException(422, f"unknown format {format!r} (json|markdown|openapi)")
 
     app.include_router(build_proxy_router(app))
+    app.include_router(build_ui_router(app))
+    ui_dir = Path(__file__).resolve().parent / "ui"
+    if ui_dir.is_dir():
+        app.mount("/ui", StaticFiles(directory=str(ui_dir), html=True), name="ui")
     return app
 
 

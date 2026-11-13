@@ -34,6 +34,11 @@ lint:
 migrate:
 	$(PY) -m app.storage.migrate
 
+ui-smoke:
+	@docker compose stop worker >/dev/null 2>&1 || true
+	$(PY) -m pytest -q server/tests/test_wp9.py -v
+	@docker compose start worker >/dev/null 2>&1 || true
+
 coverage:
 	$(PY) -m pytest -q --cov=app.pipeline --cov=app.schemas --cov=app.storage --cov=app.diffing --cov=app.validators --cov-report=term --cov-fail-under=80
 

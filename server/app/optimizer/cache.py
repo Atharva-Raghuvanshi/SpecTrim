@@ -92,3 +92,104 @@ class SavingsLedger:
             "cache_hits": int(hits),
             "passthroughs": int(passthroughs),
         }
+
+
+    RANGE_INTERVALS = {"1h": "1 minute", "24h": "30 minutes", "7d": "6 hours"}
+    RANGE_SPANS = {"1h": "1 hour", "24h": "24 hours", "7d": "7 days"}
+
+    async def series(self, rng: str, demo: bool = False) -> list[dict]:
+        """Time buckets for the range: baseline-est vs actual, hits, latency."""
+        bucket = self.RANGE_INTERVALS.get(rng, "30 minutes")
+        span = {"1h": "1 hour", "24h": "24 hours", "7d": "7 days"}[rng]
+        table = "proxy_demo_requests" if demo else "proxy_requests"
+        q = (
+            f"SELECT date_bin(make_interval(secs => %s), created_at, '2000-01-01') AS b, "
+            f"SUM(tokens_baseline_est), COALESCE(SUM(tokens_actual),0), COUNT(*), "
+            f"COALESCE(SUM(cache_hit::int),0), "
+            f"percentile_cont(0.5) WITHIN GROUP (ORDER BY latency_ms), "
+            f"percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms) "
+            f"FROM {table} WHERE created_at > now() - INTERVAL '{span}' "
+            f"GROUP BY b ORDER BY b"
+        )
+        secs = {"1 minute": 60, "30 minutes": 1800, "6 hours": 21600}[bucket]
+        async with self.pool.connection() as conn, conn.cursor() as cur:
+            await cur.execute(q, (secs,))
+            rows = await cur.fetchall()
+        return [
+            {"bucket": r[0].isoformat(), "tokens_baseline_est": int(r[1] or 0),
+             "tokens_actual": int(r[2] or 0), "requests": int(r[3]),
+             "cache_hits": int(r[4]), "latency_p50_ms": int(r[5] or 0),
+             "latency_p95_ms": int(r[6] or 0)}
+            for r in rows
+        ]
+
+    async def passes(self, rng: str, demo: bool = False) -> list[dict]:
+        span = {"1h": "1 hour", "24h": "24 hours", "7d": "7 days"}[rng]
+        table = "proxy_demo_requests" if demo else "proxy_requests"
+        q = (
+            f"SELECT pr->>'pass', SUM((pr->>'tokens_before_est')::int - "
+            f"(pr->>'tokens_after_est')::int), COUNT(*) FROM {table}, "
+            f"jsonb_array_elements(pass_reports) pr "
+            f"WHERE created_at > now() - INTERVAL '{span}' "
+            f"AND COALESCE(pr->>'skipped','') = '' "
+            f"GROUP BY pr->>'pass' ORDER BY 2 DESC"
+        )
+        async with self.pool.connection() as conn, conn.cursor() as cur:
+            await cur.execute(q)
+            rows = await cur.fetchall()
+        return [{"pass": r[0], "tokens_saved_est": max(0, int(r[1] or 0)), "uses": int(r[2])}
+                for r in rows]
+
+    async def recent(self, demo: bool = False, limit: int = 50, offset: int = 0) -> dict:
+        table = "proxy_demo_requests" if demo else "proxy_requests"
+        async with self.pool.connection() as conn, conn.cursor() as cur:
+            await cur.execute(
+                f"SELECT COUNT(*) FROM {table}",
+            )
+            total = int((await cur.fetchone())[0])
+            await cur.execute(
+                f"SELECT created_at, model, mode, tokens_baseline_est, COALESCE(tokens_actual,0), "
+                f"pass_reports, cache_hit, passthrough, latency_ms FROM {table} "
+                f"ORDER BY created_at DESC LIMIT %s OFFSET %s",
+                (limit, offset),
+            )
+            rows = await cur.fetchall()
+        items = []
+        for r in rows:
+            reports = list(r[5] or [])
+            saved = max(0, int(r[3]) - int(r[4]))
+            items.append({
+                "time": r[0].isoformat(), "model": r[1], "mode": r[2],
+                "tokens_baseline_est": int(r[3]), "tokens_actual": int(r[4]),
+                "saved_pct": round(100 * saved / r[3], 1) if r[3] else 0,
+                "passes_applied": sum(1 for x in reports if not x.get("skipped")),
+                "cache_hit": bool(r[6]), "passthrough": bool(r[7]),
+                "latency_ms": int(r[8] or 0),
+            })
+        return {"total": total, "items": items}
+
+    async def summary(self, rng: str, demo: bool = False) -> dict:
+        span = {"1h": "1 hour", "24h": "24 hours", "7d": "7 days"}[rng]
+        table = "proxy_demo_requests" if demo else "proxy_requests"
+        q = (
+            f"SELECT COALESCE(SUM(tokens_baseline_est),0), COALESCE(SUM(tokens_actual),0), "
+            f"COUNT(*), COALESCE(SUM(cache_hit::int),0), COALESCE(SUM(passthrough::int),0), "
+            f"COALESCE(SUM(cost_actual),0), COUNT(cost_actual), "
+            f"percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms) "
+            f"FROM {table} WHERE created_at > now() - INTERVAL '{span}'"
+        )
+        async with self.pool.connection() as conn, conn.cursor() as cur:
+            await cur.execute(q)
+            r = await cur.fetchone()
+        base, actual, n, hits, passthroughs, cost, cost_n, p95 = r
+        saved = int(base) - int(actual)
+        return {
+            "range": rng,
+            "tokens_saved_est": saved if saved > 0 else 0,
+            "tokens_saved_pct_est": round(100 * saved / base, 1) if base else 0,
+            "cost_saved_usd": float(cost) if cost_n else None,
+            "requests": int(n), "cache_hits": int(hits),
+            "cache_hit_rate": round(100 * hits / n, 1) if n else 0,
+            "passthroughs": int(passthroughs),
+            "latency_p95_ms": int(p95 or 0),
+        }
