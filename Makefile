@@ -4,7 +4,7 @@ else
   PY ?= .venv/bin/python
 endif
 
-.PHONY: venv up down logs ps test lint migrate coverage smoke-real test-crash quota-status eval-e12 clean
+.PHONY: venv up down logs ps test lint migrate coverage smoke-real test-crash quota-status eval-e12 demo-proxy demo-mcp clean
 
 venv:
 	python -m venv .venv
@@ -54,6 +54,12 @@ eval-e12:
 smoke-real:
 	@if [ -f .env ]; then set -a; . ./.env; set +a; fi; \
 	$(PY) -m app.gateway.smoke
+
+demo-proxy:
+	$(PY) -m evals.agents.tool_agent
+
+demo-mcp:
+	$(PY) -m evals.agents.mcp_client
 
 clean:
 	rm -rf .venv .pytest_cache .ruff_cache

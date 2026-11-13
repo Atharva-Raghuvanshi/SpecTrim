@@ -350,3 +350,46 @@ make quota-status
 .venv/Scripts/python.exe -m mypy server/app
 ```
 
+## WP4 — Base-URL swap proof, real tool agent, MCP client proof, and documentation (2026-11-13)
+
+**Status:** DONE. Exit check passed: multi-turn tool agent succeeded across both OpenAI `/v1/chat/completions` and Anthropic `/v1/messages` endpoints with before/after `/stats` captured in `docs/demo/proxy_proof.md`; real MCP client invoked `create_spec`, `get_context`, and `savings_report` via official MCP SDK with transcript in `docs/demo/mcp_transcript.md`; README updated with reproduction steps; core tests 31 passed; ruff and mypy clean.
+
+### What was done
+- **Part A — Base-URL swap proof with real multi-turn tool agent (`evals/agents/tool_agent.py` & `docs/demo/proxy_proof.md`)**:
+  - Implemented `evals/agents/tool_agent.py` exercising conversational multi-turn arithmetic tool calling (`calculate`).
+  - Added tool translation support in `server/app/optimizer/anthropic.py` (`from_anthropic` maps Anthropic tools and tool results to internal OpenAI format; `to_anthropic` maps OpenAI tool calls to Anthropic `tool_use` blocks with `stop_reason="tool_use"`).
+  - Executed tool agent against `http://127.0.0.1:8001/v1` (`openai.OpenAI`) and `http://127.0.0.1:8001` (`anthropic.Anthropic`) using model `groq/openai/gpt-oss-20b` in mode `safe`.
+  - Captured `/stats` before and after the run:
+    - Initial stats: `{"requests": 2, "tokens_baseline_est": 38, "tokens_actual": 322, "tokens_saved_est": 0, "cache_hits": 1, "passthroughs": 0}`
+    - Final stats: `{"requests": 10, "tokens_baseline_est": 1412, "tokens_actual": 2560, "tokens_saved_est": 0, "cache_hits": 2, "passthroughs": 0}`
+    - Consumed only 2,238 real tokens across 8 requests (well under the 30K budget limit; every request < 8K).
+  - Wrote full proof and dialog transcripts to `docs/demo/proxy_proof.md`.
+- **Part B — Real MCP client calling `create_spec`, `get_context`, `savings_report` (`evals/agents/mcp_client.py` & `docs/demo/mcp_transcript.md`)**:
+  - Fixed keyword argument collision bug in `server/app/mcp_server.py::_call` when extra headers are supplied.
+  - Implemented `evals/agents/mcp_client.py` using official Python MCP SDK (`mcp.ClientSession` and `stdio_client`).
+  - Executed protocol initialization and discovered all 7 tools: `create_spec`, `answer_questions`, `revise_spec`, `get_contract`, `diff_versions`, `get_context`, `savings_report`.
+  - Called `create_spec` with `'Command Line Habit Tracker with SQLite storage'`.
+  - Called `get_context` on seeded session `'ses_0d9ca49a6000'` for role `'backend'`, returning summary, 3 entities (`Habit`, `Completion`, `ReminderSettings`), and 11 OpenAPI endpoints.
+  - Called `savings_report`, returning the live `/stats` ledger response.
+  - Wrote complete JSON-RPC transcript to `docs/demo/mcp_transcript.md`.
+- **Part C — Reproduction & Makefile targets**:
+  - Added `demo-proxy` and `demo-mcp` targets in `Makefile`.
+  - Updated `README.md` with exact reproduction steps for running both demos and exploring the generated proofs.
+
+### Decisions / Assumptions
+- Used official `anthropic` and `openai` Python SDKs directly against the proxy endpoints, verifying that standard client libraries work with only `base_url` modified.
+- Fixed `_call` in `mcp_server.py` to merge caller-provided headers into defaults instead of passing duplicate kwargs to `httpx.AsyncClient.request`.
+- Pinned `tool_agent` requests to `groq/openai/gpt-oss-20b` with max_tokens=150 to keep total token expenditure minimal (<3K total).
+
+### Open issues
+- None.
+
+### Verify commands
+```bash
+python -m evals.agents.tool_agent    # or: make demo-proxy
+python -m evals.agents.mcp_client   # or: make demo-mcp
+.venv/Scripts/python.exe -m pytest server/tests/test_wp1.py server/tests/test_validators.py server/tests/test_schemas.py server/tests/test_diff.py -v
+.venv/Scripts/python.exe -m ruff check .
+.venv/Scripts/python.exe -m mypy server/app
+```
+

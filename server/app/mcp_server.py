@@ -23,8 +23,13 @@ def _headers() -> dict:
 
 
 async def _call(method: str, path: str, **kwargs: object) -> dict:
+    headers = dict(_headers())
+    if "headers" in kwargs:
+        extra = kwargs.pop("headers")
+        if isinstance(extra, dict):
+            headers.update(extra)
     async with httpx.AsyncClient(base_url=API_BASE, timeout=120) as client:
-        resp = await client.request(method, path, headers=_headers(), **kwargs)  # type: ignore[arg-type]
+        resp = await client.request(method, path, headers=headers, **kwargs)  # type: ignore[arg-type]
         resp.raise_for_status()
         data: dict = resp.json()
         return data

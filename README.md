@@ -33,14 +33,22 @@ Try the spec agent end to end (real model):
 Point your agent at the proxy — that is the only change:
 
 ```
-base URL: http://localhost:8001        (instead of https://api.openai.com/v1)
+OpenAI base URL:    http://localhost:8001/v1        (instead of https://api.openai.com/v1)
+Anthropic base URL: http://localhost:8001           (instead of https://api.anthropic.com)
 ```
 
 ```bash
+# OpenAI-compatible completion
 curl http://localhost:8001/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "x-optimizer-mode: safe" \
   -d '{"model":"groq/openai/gpt-oss-20b","messages":[{"role":"user","content":"hi"}]}'
+
+# Anthropic-compatible completion
+curl http://localhost:8001/v1/messages \
+  -H "Content-Type: application/json" \
+  -H "x-optimizer-mode: safe" \
+  -d '{"model":"groq/openai/gpt-oss-20b","max_tokens":100,"messages":[{"role":"user","content":"hi"}]}'
 ```
 
 - Modes: `off` (passthrough + metrics), `safe` (lossless passes), `balanced` (default), `aggressive`.
@@ -48,6 +56,50 @@ curl http://localhost:8001/v1/chat/completions \
 - `POST /v1/optimize` — dry run: returns the rewritten payload and per-pass reports without calling a model.
 - `GET /stats` — savings ledger: `tokens_baseline_est` vs provider-reported `tokens_actual`, cache hits, passthroughs.
 - **Fail-open:** any optimizer failure forwards your original request unchanged.
+
+### Exact Reproduction: Multi-Turn Tool Agent Proof
+
+Run a real tool-using multi-turn agent through BOTH `POST /v1/chat/completions` and `POST /v1/messages` in mode `safe`:
+
+```bash
+python -m evals.agents.tool_agent
+# or: make demo-proxy
+```
+
+What this does:
+1. Queries `/stats` before the run to establish baseline token usage and requests.
+2. Runs an `openai.OpenAI` client pointing to `http://localhost:8001/v1` with a `calculate` tool:
+   - Turn 1: User asks arithmetic question -> model calls tool -> tool executes -> model returns answer.
+   - Turn 2: Follow-up question -> model calls tool again -> tool executes -> model returns final answer.
+3. Runs an `anthropic.Anthropic` client pointing to `http://localhost:8001` with the same `calculate` tool across multiple turns.
+4. Queries `/stats` after the run and generates the before/after ledger comparison.
+5. Saves the full request/response transcript to [`docs/demo/proxy_proof.md`](docs/demo/proxy_proof.md).
+
+### MCP Server & Client Reproduction
+
+The service exposes 7 spec and savings tools over stdio JSON-RPC (`python -m app.mcp_server`):
+- `create_spec(idea)`: starts a spec generation session.
+- `get_context(session_id, task, role)`: fetches role-tailored sub-spec, entities, and endpoints for coding agents (FR-45).
+- `savings_report()`: retrieves the current token savings ledger metrics from `/stats`.
+- `answer_questions(session_id, answers)`: answers blocking questions.
+- `revise_spec(session_id, feedback, feedback_type)`: submits a revision request.
+- `get_contract(session_id, version)`: returns the versioned OpenAPI 3.1 contract.
+- `diff_versions(session_id, from_version, to_version)`: diffs two spec versions and flags breaking changes.
+
+To verify with a real MCP client using the official Python MCP SDK:
+
+```bash
+python -m evals.agents.mcp_client
+# or: make demo-mcp
+```
+
+What this does:
+1. Spawns `app.mcp_server` via standard stdio transport using `mcp.client.stdio.stdio_client`.
+2. Completes the MCP protocol initialization handshake and discovers available tools.
+3. Executes `create_spec` with an idea to verify session initiation.
+4. Executes `get_context` on a ready session to extract role-tailored sub-specs.
+5. Executes `savings_report` to inspect ledger statistics.
+6. Saves the complete JSON-RPC transcript to [`docs/demo/mcp_transcript.md`](docs/demo/mcp_transcript.md).
 
 ### Passes (ordered chain)
 
@@ -65,9 +117,10 @@ curl http://localhost:8001/v1/chat/completions \
 | P11 | Budget governor + per-pass circuit breakers | C ✅ |
 | P10 | Prose compression | not implemented (aggressive-only; needs evaluation first) |
 
-### MCP server
+### Transcripts and Demos
 
-`python -m app.mcp_server` exposes five spec tools over stdio: `create_spec`, `answer_questions`, `revise_spec`, `get_contract`, `diff_versions`.
+- **Proxy Multi-Turn Tool Agent Proof:** [`docs/demo/proxy_proof.md`](docs/demo/proxy_proof.md)
+- **MCP Client Transcript:** [`docs/demo/mcp_transcript.md`](docs/demo/mcp_transcript.md)
 
 ## API surface
 
