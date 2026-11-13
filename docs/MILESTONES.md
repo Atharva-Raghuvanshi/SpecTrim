@@ -1,5 +1,7 @@
 # Milestones
 
+**STATUS (2026-11-13):** Release A ✅ tagged `release-a` · Release B ✅ tagged `release-b` · Release C built (E4/E5 measured, resumable remainder) · see docs/log.md for the full DoD audit.
+
 Source: docs/PRD.md §10 (phases 1-9) and docs/PRD_v2.md §11 (phases 10-15).
 Hours are PRD estimates. Each milestone fits one focused session.
 Protocol: finish a milestone (exit check + tests green + lint clean + docs/log.md + commit as `M<id>: <summary>`), then STOP and wait for "next".
