@@ -1,0 +1,136 @@
+{
+  "ran": 6,
+  "completed": 6,
+  "infra_aborted": 0,
+  "quality_fail": 0,
+  "e1": {
+    "valid": 6,
+    "invalid": 0,
+    "validity_rate": 1.0
+  },
+  "e2": {
+    "micro_tp": 7,
+    "micro_fp": 5,
+    "micro_fn": 2,
+    "micro_precision": 0.5833333333333334,
+    "micro_recall": 0.7777777777777778
+  },
+  "tokens_total_est": 85211,
+  "cost_usd_reported": 0.0,
+  "elapsed_s": 501.5,
+  "per_prompt": [
+    {
+      "id": "P01",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 13673,
+      "cost_usd": 0.0,
+      "questions": [
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        0,
+        1,
+        1
+      ],
+      "valid": true
+    },
+    {
+      "id": "P02",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 17924,
+      "cost_usd": 0.0,
+      "questions": [
+        "auth_model",
+        "data_ownership",
+        "payments"
+      ],
+      "tp_fp_fn": [
+        3,
+        0,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P03",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 10776,
+      "cost_usd": 0.0,
+      "questions": [
+        "auth_model",
+        "data_ownership",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        2,
+        1,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P04",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 14416,
+      "cost_usd": 0.0,
+      "questions": [],
+      "tp_fp_fn": [
+        0,
+        0,
+        1
+      ],
+      "valid": true
+    },
+    {
+      "id": "P05",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 14576,
+      "cost_usd": 0.0,
+      "questions": [
+        "data_ownership",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        1,
+        1,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P06",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 13846,
+      "cost_usd": 0.0,
+      "questions": [
+        "auth_model",
+        "data_ownership",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        1,
+        2,
+        0
+      ],
+      "valid": true
+    }
+  ]
+}

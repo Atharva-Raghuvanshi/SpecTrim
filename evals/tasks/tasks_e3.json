@@ -1,0 +1,14 @@
+{
+  "version": "e3-v1",
+  "note": "Frozen E3 task set (approval pending). Small single-file tasks; automated checks run the generated file.",
+  "tasks": [
+    {"id": "T1", "prompt": "Write a Python module with a function `add(a, b)` and `multiply(a, b)`, plus a `Calculator` class wrapping them."},
+    {"id": "T2", "prompt": "Write a Python module with `is_palindrome(s)` that ignores case and spaces, and `count_vowels(s)`."},
+    {"id": "T3", "prompt": "Write a Python module implementing a `Stack` class with push/pop/peek/is_empty; raise IndexError on empty pop."},
+    {"id": "T4", "prompt": "Write a Python module with `fibonacci(n)` returning the first n Fibonacci numbers as a list (n>=1)."},
+    {"id": "T5", "prompt": "Write a Python module with a `Inventory` class: add_item(name, qty), remove_item(name, qty) raising ValueError when insufficient, get_qty(name) returning 0 for unknown."},
+    {"id": "T6", "prompt": "Write a Python module with `flatten(nested_list)` that flattens arbitrarily nested lists into a flat list."},
+    {"id": "T7", "prompt": "Write a Python module with a `LRUCache` class (capacity k): get(key), put(key, value); evict least-recently-used."},
+    {"id": "T8", "prompt": "Write a Python module with `word_frequencies(text)` returning a dict of lowercase word -> count, ignoring punctuation."}
+  ]
+}
