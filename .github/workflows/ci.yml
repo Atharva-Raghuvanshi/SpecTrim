@@ -6,6 +6,29 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: qo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app -d qo"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # DB tests and crash/resume test use this DSN; migrations applied before pytest
+      TEST_DATABASE_URL: postgresql://app:app@localhost:5432/qo
+      DATABASE_URL: postgresql://app:app@localhost:5432/qo
+      # No real LLM calls in CI (hard rule); FakeGateway everywhere
+      GROQ_API_KEY: ""
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -14,7 +37,11 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install -e ".[dev]"
       - run: ruff check .
+      - name: Apply DB migrations
+        run: python -m app.storage.migrate
       - name: Test with coverage gate (>=80% on core packages)
         run: pytest -q --cov=app.pipeline --cov=app.schemas --cov=app.storage --cov=app.diffing --cov=app.validators --cov-report=term --cov-fail-under=80
+      - name: Crash/resume real-process test (make test-crash)
+        run: make test-crash PY=python
       # CI makes zero real LLM calls (hard rule); FakeGateway everywhere.
-      # DB-backed tests skip automatically (no Postgres service in this job).
+      # DB-backed tests now run via the postgres service above.

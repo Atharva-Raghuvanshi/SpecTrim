@@ -1,10 +1,10 @@
 ifeq ($(OS),Windows_NT)
-  PY := .venv/Scripts/python
+  PY ?= .venv/Scripts/python
 else
-  PY := .venv/bin/python
+  PY ?= .venv/bin/python
 endif
 
-.PHONY: venv up down logs ps test lint migrate coverage smoke-real clean
+.PHONY: venv up down logs ps test lint migrate coverage smoke-real test-crash clean
 
 venv:
 	python -m venv .venv
@@ -36,6 +36,10 @@ migrate:
 
 coverage:
 	$(PY) -m pytest -q --cov=app.pipeline --cov=app.schemas --cov=app.storage --cov=app.diffing --cov=app.validators --cov-report=term --cov-fail-under=80
+
+test-crash:
+	@docker compose stop worker > /dev/null 2>&1 || true
+	$(PY) -m pytest -q server/tests/test_crash_resume.py -v
 
 smoke-real:
 	@if [ -f .env ]; then set -a; . ./.env; set +a; fi; \

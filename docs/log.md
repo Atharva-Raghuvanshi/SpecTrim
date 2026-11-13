@@ -169,12 +169,12 @@ curl -s http://127.0.0.1:8001/stats
 **Verified baseline:** `make up` (all services healthy; mcp container stopped — stdio transport cannot run detached, fixing in WP4), `make test` → **107 passed**, `make lint` → ruff+mypy clean, `make coverage` → **95%** (gate 80%). Baseline unchanged from commit `3944d58`.
 
 **Gap checklist (DoD §13 PRD v1+v2 + user WP list):**
-- [ ] WP1a FR-30: Anthropic-compatible `POST /v1/messages` (streaming) sharing chain/fail-open/ledger/cache + tests
-- [ ] WP1b FR-45: MCP `get_context` + `savings_report` tools + tests
-- [ ] WP1c PRD_v2 §9: per-pass savings, cache-hit-rate, passthrough/fail-open, proxy-latency metrics + Grafana panels
-- [ ] WP1d FR-46: measured p95 non-LLM latency for P1/P4/P5/P7/P9 + streaming first-token overhead (target <150ms)
-- [ ] WP1e FR-37: invalidation suite covers model + optimizer/prompt version + spec version
-- [ ] WP2: Postgres service in CI (DB/queue/resume/idempotency tests run, not skip) + real-process crash/resume test
+- [x] WP1a FR-30: Anthropic-compatible `POST /v1/messages` (streaming) sharing chain/fail-open/ledger/cache + tests
+- [x] WP1b FR-45: MCP `get_context` + `savings_report` tools + tests
+- [x] WP1c PRD_v2 §9: per-pass savings, cache-hit-rate, passthrough/fail-open, proxy-latency metrics + Grafana panels
+- [x] WP1d FR-46: measured p95 non-LLM latency for P1/P4/P5/P7/P9 + streaming first-token overhead (target <150ms)
+- [x] WP1e FR-37: invalidation suite covers model + optimizer/prompt version + spec version
+- [x] WP2: Postgres service in CI (DB/queue/resume/idempotency tests run, not skip) + real-process crash/resume test
 - [ ] WP3: E2 precision 0.38→(>=0.80 target): analyze FPs, prompts v2, dry-run 5, full 30 on winner; E1 validity >=95% target; update REPORT
 - [ ] WP4: real-agent proofs (base-URL swap both endpoints multi-turn tool task; MCP client transcript in docs/demo/)
 - [ ] WP5: E3 8 prompts x 2 reps x 2 arms = 32 builder runs, one builder model, automated checks
@@ -216,3 +216,69 @@ docker compose stop worker
 .venv/Scripts/python.exe -m ruff check . ; .venv/Scripts/python.exe -m mypy server/app
 docker compose start worker
 ```
+
+## WP2 — Postgres service in CI + real-process crash/resume test (2026-11-13)
+
+**Status:** DONE. **116 tests pass**, ruff+mypy clean, coverage **95% (94.84%)** (gate >= 80%).
+
+### Done
+- **CI Postgres 16 service container (`.github/workflows/ci.yml`)**:
+  - Added `services.postgres` with `image: postgres:16`, `POSTGRES_USER=app`, `POSTGRES_PASSWORD=app`, `POSTGRES_DB=qo`, port 5432, and health check.
+  - Set `TEST_DATABASE_URL` and `DATABASE_URL` env vars pointing to `postgresql://app:app@localhost:5432/qo`.
+  - Added `Apply DB migrations` step before running tests.
+  - Hard rule preserved: `GROQ_API_KEY=""`, zero real LLM calls in CI, FakeGateway used everywhere.
+  - DB-backed tests (`test_db_phase4.py`, `test_wp1.py`, `test_crash_resume.py`) run in CI instead of skipping.
+- **Real-process crash/resume test (`server/tests/test_crash_resume.py` + `server/tests/worker_runner.py`)**:
+  - `tests.worker_runner`: Dedicated worker subprocess running the real `Worker` claim loop with a paced `PacedFakeGateway` (0.5s delay per stage).
+  - Starts the worker subprocess, enqueues a job, waits until mid-pipeline (1 <= stages_before < 5 stages persisted to DB), and kills the worker subprocess via `SIGTERM`/`terminate()`.
+  - Simulates lease expiry, executes `JobsRepo.reclaim_expired()`, and drives the pipeline to completion via the in-process runner.
+  - Asserts that stages 1..k completed before the kill are NOT re-executed (`stage not in [c["stage"] for c in resume_gw.calls]`), remaining stages ARE executed, session finishes at status `ready` with `current_version == 1`, and all 5 stages exist in DB.
+- **Makefile**:
+  - Added `test-crash` target: `@docker compose stop worker > /dev/null 2>&1 || true; $(PY) -m pytest -q server/tests/test_crash_resume.py -v`.
+  - Made `PY ?=` overrideable so CI can invoke `make test-crash PY=python`.
+- **CI**:
+  - Added `make test-crash PY=python` step to `.github/workflows/ci.yml`.
+- **Coverage**:
+  - Ran full test suite with coverage gate: **95% (94.84%)** across `app.pipeline`, `app.schemas`, `app.storage`, `app.diffing`, `app.validators` (exceeds the >= 80% gate).
+  - Output:
+    ```
+    Name                                    Stmts   Miss  Cover
+    -----------------------------------------------------------
+    server\app\diffing\diff.py                 46      3    93%
+    server\app\pipeline\__init__.py             0      0   100%
+    server\app\pipeline\hashing.py             10      0   100%
+    server\app\pipeline\inmemory.py            37      0   100%
+    server\app\pipeline\orchestrator.py       146      6    96%
+    server\app\pipeline\prompts.py             23      2    91%
+    server\app\pipeline\states.py              22      0   100%
+    server\app\schemas\__init__.py              0      0   100%
+    server\app\schemas\envelope.py             49      3    94%
+    server\app\schemas\package.py              74      0   100%
+    server\app\storage\db.py                   23      3    87%
+    server\app\storage\migrate.py              29     10    66%
+    server\app\storage\repos.py               160      6    96%
+    server\app\validators\__init__.py           0      0   100%
+    server\app\validators\consistency.py       31      1    97%
+    server\app\validators\openapi_lint.py       9      0   100%
+    -----------------------------------------------------------
+    TOTAL                                     659     34    95%
+    Required test coverage of 80% reached. Total coverage: 94.84%
+    116 passed, 1 warning in 45.12s
+    ```
+
+### Decisions / Assumptions
+- `worker_runner.py` uses a clean canned response dictionary without blocking ambiguities so the full 5-stage pipeline runs to `ready` in a single job.
+- Stage pacing (0.5s per stage in the worker subprocess) ensures deterministic mid-pipeline killing without race flakes.
+- `PY ?=` in Makefile allows CI to inject system python (`PY=python`) while maintaining local `.venv` defaults.
+
+### Open issues
+- None.
+
+### Verify commands
+```
+docker compose stop worker
+make test-crash
+make coverage
+make lint
+```
+
