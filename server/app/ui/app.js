@@ -160,6 +160,7 @@ async function refreshOverview() {
       api("/ui/api/benchmarks"),
     ]);
     $("demo-banner").classList.toggle("hidden", !summary.demo);
+    window.__ledgerSavedEst = summary.tokens_saved_est;
     renderKpis(summary);
     renderCharts(series, passes, reqs);
     renderRequests(reqs);
@@ -254,14 +255,31 @@ function renderBench(b) {
   const one = (exp) => {
     const d = b[exp];
     if (!d || !d.summary) return `<p class="muted">${exp.toUpperCase()}: NOT MEASURED</p>`;
+    const p = d.paired;
+    const pairedHtml = p && p.paired_n
+      ? `<p class="muted">Paired (all modes completed): n=${p.paired_n}, ` +
+        Object.entries(p.per_config).map(([cfg, s]) =>
+          `${escapeHtml(cfg)}: ${s.tokens_in_avg} tok-in` +
+          (s.tokens_in_delta_pct != null ? ` (${s.tokens_in_delta_pct > 0 ? "+" : ""}${s.tokens_in_delta_pct}%)` : "")
+        ).join(", ") +
+        `, tasks with differing outcomes: ${p.tasks_with_different_outcomes}</p>`
+      : `<p class="muted">${exp.toUpperCase()} paired: NOT MEASURED</p>`;
     const rows = Object.entries(d.summary).map(([cfg, s]) =>
       `<tr><td>${escapeHtml(cfg)}</td><td>${s.n}</td><td>${(100 * s.pass_rate).toFixed(1)}%</td>` +
       `<td>${num(s.tokens_in_avg)}</td><td>${num(s.tokens_out_avg)}</td><td>${s.iterations_avg}</td></tr>`);
     return `<p>${exp.toUpperCase()} — model: <code>${escapeHtml(d.builder_model || "")}</code>, cells: ${d.n_cells}</p>
       <table><thead><tr><th>config</th><th>n</th><th>pass rate</th><th>tokens in avg</th><th>tokens out avg</th><th>iterations</th></tr></thead>
-      <tbody>${rows.join("")}</tbody></table>`;
+      <tbody>${rows.join("")}</tbody></table>${pairedHtml}`;
   };
-  el.innerHTML = one("e4") + one("e5");
+  let warning = "";
+  const e4 = b.e4, ledgerSaved = (window.__ledgerSavedEst || 0) > 0;
+  const balDelta = e4 && e4.paired && e4.paired.per_config &&
+    e4.paired.per_config.balanced && e4.paired.per_config.balanced.tokens_in_delta_pct;
+  if (ledgerSaved && balDelta != null && balDelta > 0) {
+    warning = `<div class="banner">⚠ Ledger estimates savings while the paired E4 measurement shows balanced input tokens INCREASED ` +
+      `(+${balDelta}% vs off) — the ledger baseline is an estimate; trust the paired measurement.</div>`;
+  }
+  el.innerHTML = warning + one("e4") + one("e5");
 }
 
 /* ---------- specs ---------- */

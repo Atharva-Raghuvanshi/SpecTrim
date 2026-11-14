@@ -12,7 +12,7 @@ RESULTS = Path(__file__).resolve().parent / "results"
 
 
 def load(name: str) -> dict | None:
-    files = sorted(RESULTS.glob(name))
+    files = sorted(RESULTS.glob(name), key=lambda p: p.stat().st_mtime)
     if not files:
         return None
     return json.loads(files[-1].read_text(encoding="utf-8"))
@@ -21,7 +21,9 @@ def load(name: str) -> dict | None:
 def e_section() -> str:
     lines = []
     for exp, label in (("e4", "E4 token benchmark"), ("e5", "E5 pass ablation")):
-        files = sorted(RESULTS.glob(f"{exp}_*.json"))
+        files = sorted(
+            (f for f in RESULTS.glob(f"{exp}_*.json") if "diagnosis" not in f.name),
+            key=lambda p: p.stat().st_mtime)
         if not files:
             lines.append(f"## {label}\n\n**NOT MEASURED** (no result file yet).\n")
             continue
@@ -48,7 +50,7 @@ def e_section() -> str:
 def main() -> int:
     v2 = load("e1_e2_v2_full.json")
     e3 = None
-    e3_files = sorted(RESULTS.glob("e3_*.json"))
+    e3_files = sorted(RESULTS.glob("e3_*.json"), key=lambda p: p.stat().st_mtime)
     if e3_files:
         e3 = json.loads(e3_files[-1].read_text(encoding="utf-8"))
 

@@ -128,9 +128,8 @@ def test_frozen_content_protection_header(app_client, monkeypatch) -> None:
         headers={"x-optimizer-mode": "safe", "x-optimizer-protect": "step 5"},
     )
     assert r.status_code == 200
-    print("DEBUG response:", r.text[:300])
-    print("DEBUG seen:", {k: str(v)[:120] for k, v in seen.items()})
-    assert "step 79" in seen["messages"][0]["content"]  # NOT compacted: protected
+    tool_msgs = [m for m in seen["messages"] if m["role"] == "tool"]
+    assert tool_msgs and "step 79" in tool_msgs[0]["content"]
 
 
 def test_fr37_invalidation_on_model_version(app_client, monkeypatch) -> None:

@@ -73,7 +73,10 @@ def build_ui_router(app):  # type: ignore[no-untyped-def]
         """Latest measured benchmark cells from evals/results (never demo data)."""
         out: dict = {"e4": None, "e5": None}
         for exp in ("e4", "e5"):
-            files = sorted(EVALS_RESULTS.glob(f"{exp}_*.json"))
+            files = sorted(
+                (f for f in EVALS_RESULTS.glob(f"{exp}_*.json")
+                 if "diagnosis" not in f.name),
+                key=lambda p: p.stat().st_mtime)
             if not files:
                 continue
             data = json.loads(files[-1].read_text(encoding="utf-8"))
@@ -81,6 +84,7 @@ def build_ui_router(app):  # type: ignore[no-untyped-def]
                 "file": files[-1].name,
                 "builder_model": data.get("builder_model"),
                 "summary": data.get("summary"),
+                "paired": data.get("paired"),
                 "n_cells": len(data.get("cells", {})),
             }
         if out["e4"] is None and out["e5"] is None:

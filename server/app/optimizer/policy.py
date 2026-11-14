@@ -8,8 +8,14 @@ MODES = ("off", "safe", "balanced", "aggressive")
 PASS_ORDER = ["P9", "P4", "P5", "P2", "P3", "P10", "P1", "P7", "P6"]
 
 PASS_MODE_FLOOR = {  # modes in which each pass may run (PRD v2 §5)
-    "P9": "safe", "P4": "safe", "P7": "safe", "P1": "safe",
+    "P9": "safe", "P4": "safe", "P7": "safe",
     "P2": "balanced", "P5": "balanced", "P3": "balanced", "P6": "balanced",
+    # P1 default OFF in safe/balanced (WP11 diagnosis): its reordering detaches
+    # tool messages from the assistant message carrying their tool_call_id
+    # (invalid OpenAI tool ordering), which coincided with retry loops and
+    # first-turn failures in E4 paired cells (evals/results/e4_diagnosis.json).
+    # Re-enable only after tool-sequence-aware reordering is implemented.
+    "P1": "aggressive",
     "P10": "aggressive",
 }
 

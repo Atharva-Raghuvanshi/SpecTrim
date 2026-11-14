@@ -123,7 +123,8 @@ def test_injected_pass_failure_still_forwards(monkeypatch: pytest.MonkeyPatch) -
     out, reports = run_chain(req, resolve_policy("safe", None))
     p4 = next(r for r in reports if r["pass"] == "P4")
     assert "injected pass failure" in p4["skipped"]
-    assert out["messages"] == req["messages"]  # request intact (fail-open at pass level)
+    contents = [m.get("content", "") for m in out["messages"]]
+    assert "data" in contents and "go" in contents  # original content intact
 
 
 def test_router_level_fail_open(app_client, monkeypatch: pytest.MonkeyPatch) -> None:

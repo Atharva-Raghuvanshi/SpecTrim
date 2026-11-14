@@ -174,4 +174,5 @@ def cache_key(model: str, request: dict, cache_version: int) -> str:
 PASS_FUNCTIONS = {
     "P4": p4_tool_output_compaction,
     "P1": p1_cache_aware_assembly,
+    "P7": p7_output_controls,
 }

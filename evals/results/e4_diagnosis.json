@@ -1,0 +1,181 @@
+{
+  "per_cell": [
+    {
+      "cell": "T1:rep0:off",
+      "turns": 3,
+      "tokens_in": 1740,
+      "tokens_out": 225,
+      "tokens_per_turn": 580,
+      "pass": false
+    },
+    {
+      "cell": "T1:rep0:safe",
+      "turns": 5,
+      "tokens_in": 3446,
+      "tokens_out": 247,
+      "tokens_per_turn": 689,
+      "pass": false
+    },
+    {
+      "cell": "T1:rep0:balanced",
+      "turns": 5,
+      "tokens_in": 3446,
+      "tokens_out": 247,
+      "tokens_per_turn": 689,
+      "pass": false
+    },
+    {
+      "cell": "T1:rep1:off",
+      "turns": 3,
+      "tokens_in": 1746,
+      "tokens_out": 209,
+      "tokens_per_turn": 582,
+      "pass": false
+    },
+    {
+      "cell": "T1:rep1:safe",
+      "turns": 5,
+      "tokens_in": 3446,
+      "tokens_out": 247,
+      "tokens_per_turn": 689,
+      "pass": false
+    },
+    {
+      "cell": "T1:rep1:balanced",
+      "turns": 5,
+      "tokens_in": 3446,
+      "tokens_out": 247,
+      "tokens_per_turn": 689,
+      "pass": false
+    },
+    {
+      "cell": "T2:rep0:off",
+      "turns": 1,
+      "tokens_in": 470,
+      "tokens_out": 300,
+      "tokens_per_turn": 470,
+      "pass": false
+    },
+    {
+      "cell": "T2:rep0:safe",
+      "turns": 1,
+      "tokens_in": 470,
+      "tokens_out": 152,
+      "tokens_per_turn": 470,
+      "pass": false
+    },
+    {
+      "cell": "T2:rep0:balanced",
+      "turns": 1,
+      "tokens_in": 470,
+      "tokens_out": 152,
+      "tokens_per_turn": 470,
+      "pass": false
+    },
+    {
+      "cell": "T2:rep1:off",
+      "turns": 4,
+      "tokens_in": 2528,
+      "tokens_out": 164,
+      "tokens_per_turn": 632,
+      "pass": true
+    },
+    {
+      "cell": "T2:rep1:safe",
+      "turns": 1,
+      "tokens_in": 470,
+      "tokens_out": 152,
+      "tokens_per_turn": 470,
+      "pass": false
+    },
+    {
+      "cell": "T2:rep1:balanced",
+      "turns": 1,
+      "tokens_in": 470,
+      "tokens_out": 152,
+      "tokens_per_turn": 470,
+      "pass": false
+    },
+    {
+      "cell": "T4:rep0:off",
+      "turns": 1,
+      "tokens_in": 468,
+      "tokens_out": 130,
+      "tokens_per_turn": 468,
+      "pass": true
+    },
+    {
+      "cell": "T4:rep0:safe",
+      "turns": 1,
+      "tokens_in": 468,
+      "tokens_out": 115,
+      "tokens_per_turn": 468,
+      "pass": true
+    },
+    {
+      "cell": "T4:rep0:balanced",
+      "turns": 1,
+      "tokens_in": 468,
+      "tokens_out": 115,
+      "tokens_per_turn": 468,
+      "pass": true
+    },
+    {
+      "cell": "T4:rep1:off",
+      "turns": 1,
+      "tokens_in": 468,
+      "tokens_out": 107,
+      "tokens_per_turn": 468,
+      "pass": true
+    },
+    {
+      "cell": "T4:rep1:safe",
+      "turns": 1,
+      "tokens_in": 468,
+      "tokens_out": 115,
+      "tokens_per_turn": 468,
+      "pass": true
+    },
+    {
+      "cell": "T4:rep1:balanced",
+      "turns": 1,
+      "tokens_in": 468,
+      "tokens_out": 115,
+      "tokens_per_turn": 468,
+      "pass": true
+    }
+  ],
+  "mechanism": {
+    "input_roles": [
+      "system",
+      "user",
+      "assistant",
+      "assistant",
+      "tool",
+      "user"
+    ],
+    "ordering_violations": [
+      {
+        "index": 4,
+        "tool_call_id": "call_1",
+        "prev_role": "assistant",
+        "prev_tool_call_ids": [
+          "call_2"
+        ]
+      }
+    ],
+    "valid_openai_ordering": false,
+    "passes_applied": [
+      {
+        "pass": "P4",
+        "changed": false,
+        "skipped": ""
+      },
+      {
+        "pass": "P1",
+        "changed": true,
+        "skipped": ""
+      }
+    ]
+  }
+}

@@ -24,7 +24,7 @@ from app.observability import (
 from app.optimizer.anthropic import from_anthropic, to_anthropic, translate_stream_to_anthropic
 from app.optimizer.cache import ResponseCache, SavingsLedger
 from app.optimizer.chain import run_chain
-from app.optimizer.passes import _est_tokens, p1_cache_aware_assembly
+from app.optimizer.passes import _est_tokens
 from app.optimizer.policy import PROTECTED_HEADER, resolve_policy
 from app.security import require_bearer
 
@@ -103,8 +103,6 @@ async def _handle_chat(request: Request, api: str) -> Response:
     # ---- chain (fail-open inside; reports always)
     t_chain = time.perf_counter()
     optimized, reports = run_chain(body, policy)
-    if not body.get("stream"):
-        optimized, _ = p1_cache_aware_assembly(optimized, policy)
     PROXY_OVERHEAD.observe(time.perf_counter() - t_chain)
     overhead_ms = int((time.perf_counter() - t_overhead) * 1000)
     _record_savings(reports)

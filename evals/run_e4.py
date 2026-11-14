@@ -106,7 +106,7 @@ def tool_result(task: dict, name: str, attempt: int) -> dict:
     return {}
 
 
-def run_cell(call, task: dict, max_turns: int = 6) -> dict:
+def run_cell(call, task: dict, max_turns: int = 8) -> dict:
     """One multi-turn tool loop until submit_code or turn cap."""
     import json as _json
 
@@ -173,7 +173,43 @@ def summarize(results: dict) -> None:
             "latency_avg_s": round(sum(r["latency_avg_s"] for r in recs) / n, 2),
         }
     results["summary"] = summary
-    print(json.dumps(summary, indent=2))
+
+    # PAIRED analysis: only bases where every config of the run completed
+    configs = sorted(by_mode.keys())
+    bases: dict[str, dict[str, dict]] = {}
+    for cell, rec in results["cells"].items():
+        if rec.get("pass") is None:
+            continue
+        base, cfg = cell.rsplit(":", 1)
+        bases.setdefault(base, {})[cfg] = rec
+    paired_bases = {b: m for b, m in bases.items() if len(m) == len(configs)}
+    paired = {}
+    diff_outcomes = 0
+    for cfg in configs:
+        recs = [m[cfg] for m in paired_bases.values()]
+        paired[cfg] = {
+            "n": len(recs),
+            "pass_rate": sum(r["pass"] for r in recs) / len(recs) if recs else None,
+            "tokens_in_avg": round(sum(r["tokens_in"] for r in recs) / len(recs)) if recs else None,
+            "tokens_out_avg": round(sum(r["tokens_out"] for r in recs) / len(recs)) if recs else None,
+        }
+    for m in paired_bases.values():
+        outs = {m[c]["pass"] for c in configs}
+        if len(outs) > 1:
+            diff_outcomes += 1
+    base_cfg = configs[0] if "off" not in configs else "off"
+    if paired.get(base_cfg, {}).get("tokens_in_avg"):
+        ref = paired[base_cfg]["tokens_in_avg"]
+        for cfg in configs:
+            if paired[cfg]["tokens_in_avg"]:
+                paired[cfg]["tokens_in_delta_pct"] = round(
+                    100 * (paired[cfg]["tokens_in_avg"] - ref) / ref, 1)
+    results["paired"] = {
+        "bases": sorted(paired_bases), "paired_n": len(paired_bases),
+        "tasks_with_different_outcomes": diff_outcomes,
+        "per_config": paired,
+    }
+    print(json.dumps({"summary": summary, "paired": results["paired"]}, indent=2))
 
 
 def main() -> int:
@@ -183,11 +219,14 @@ def main() -> int:
     parser.add_argument("--reps", type=int, default=2)
     parser.add_argument("--max-tokens", type=float, default=170000, dest="max_tokens")
     parser.add_argument("--pace-s", type=float, default=2.0, dest="pace_s")
+    parser.add_argument("--tasks-file", default=None, dest="tasks_file")
     args = parser.parse_args()
 
     quota = QuotaTracker()
-    tasks = json.loads(TASKS.read_text(encoding="utf-8"))["tasks"]
-    by_id = {t["id"]: t for t in tasks}
+    json.loads(TASKS.read_text(encoding="utf-8"))["tasks"]
+    tasks_src = args.tasks_file or str(TASKS)
+    all_tasks = json.loads(Path(tasks_src).read_text(encoding="utf-8"))["tasks"]
+    by_id_all = {t["id"]: t for t in all_tasks}
     task_ids = E5_TASKS if args.experiment == "e5" else E4_TASKS
 
     if args.experiment == "e4":
@@ -201,7 +240,7 @@ def main() -> int:
     results: dict = (
         json.loads(out_path.read_text(encoding="utf-8"))
         if out_path.is_file() else {"builder_model": args.model, "experiment": args.experiment,
-                                    "cells": {}}
+                                    "tasks_file": tasks_src, "cells": {}}
     )
     # infra-aborted cells are retryable: drop them so resume re-runs them
     dropped = [k for k, v in results["cells"].items() if v.get("infra_aborted")]
@@ -220,15 +259,15 @@ def main() -> int:
     from fastapi.testclient import TestClient
 
     with TestClient(create_app()) as client:  # lifespan: settings, gateway, pool
-        run_all(client, quota, args, task_ids, by_id, configs, results, out_path)
+        run_all(client, quota, args, task_ids, by_id_all, configs, results, out_path)
     summarize(results)
     out_path.write_text(json.dumps(results, indent=2), encoding="utf-8")
     return 0
 
 
-def run_all(client, quota, args, task_ids, by_id, configs, results, out_path) -> None:  # noqa: ANN001,ANN201
+def run_all(client, quota, args, task_ids, by_id_all, configs, results, out_path) -> None:  # noqa: ANN001,ANN201
     for tid in task_ids:
-        task = by_id[tid]
+        task = by_id_all[tid]
         for rep in range(args.reps):
             for cfg_name, disabled in configs:
                 cell = f"{tid}:rep{rep}:{cfg_name}"

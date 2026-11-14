@@ -95,7 +95,7 @@ def audit_e3() -> dict:
 
 
 def audit_e4_paired() -> dict:
-    files = sorted(RESULTS.glob("e4_*.json"))
+    files = sorted(RESULTS.glob("e4_*.json"), key=lambda p: p.stat().st_mtime)
     if not files:
         return {"status": "NOT MEASURED"}
     d = json.loads(files[-1].read_text(encoding="utf-8"))
