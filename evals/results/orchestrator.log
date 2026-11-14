@@ -1,0 +1,5 @@
+.venv/Scripts/python -u -m evals.orchestr
+removing stale lock from dead PID 10952
+[2026-11-14 22:09:07Z] STAGE PLAN S1-E1E2-v2: est 45000 tok, 25754 tok free on openai/gpt-oss-120b
+[2026-11-14 22:09:07Z] S1-E1E2-v2: model exhausted; probing hourly
+[2026-11-14 22:09:07Z] probing openai/gpt-oss-120b hourly for quota reset…

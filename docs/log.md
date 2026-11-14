@@ -625,3 +625,25 @@ mypy server/app → Success (55 files)
 All buckets under the 150ms target. **GC-heavy case** (default GC, no pre-collection, 200 reps without collect): p95 ~290ms at 180K — generational GC pauses dominate at large sizes; mitigation (GC tuning or chunked passes) logged as future work. Profile at 100K: P4 cumulative 26ms total (splitlines 9ms; allocations ≤12KiB) — **no actionable hot spot; no code change made; no pass-version bump** (behavior unchanged). Golden regression corpus added (server/tests/golden/p4_golden.json + test_p4_golden.py) to keep future optimizations byte-identical.
 
 **PART 3 — stamps:** E1/E2 cells re-verified valid under the content-hash stamp (prompts/labels/models unchanged). Proxy cells invalidated by the WP12/WP13 changes: E4 25 v1partial cells + E5 12 dev-set cells + E3 12 cells (pre-WP11/WP12 registry) — all re-run by the orchestrator (queued).
+
+## WP13 PART 7 (WP14 relaunch) — eval-daily detached launch confirmation (2026-11-15)
+```
+$ nohup make eval-daily > evals/results/orchestrator.log 2>&1 &
+$ make eval-status
+== eval-daily status ==
+orchestrator: RUNNING pid=53988
+STOP file: absent
+stages:
+  S1 E1/E2 v2 remainder: 22/30 cells
+  S2 E4b primary off+balanced: 0/16 cells
+  S2b E4b primary safe: 0/24 cells
+  S3b E5 trial + ablation on e4b: 0 cells
+  S4a E3b specs: 0/3 cells
+  S4b E3b builder cells: 0/12 cells
+  S5 E4 tiny dev/regression: 0/48 cells
+tokens used today (2026-11-14): (per-model, normalized display)
+last 5 result files: e4_v1partial…, e1_e2_v2_full…, latency_bench…, e4b_sanity…, e3b_…
+docs/STATUS.md: current stage S1 (hourly probe for quota reset)
+orchestrator.log: STAGE PLAN S1 … 25,754 tok free → model exhausted; probing hourly
+```
+The orchestrator runs detached (log: evals/results/orchestrator.log), probes hourly, and continues S1→S6 as quotas reset. `make eval-stop` halts it cleanly after the current cell.
