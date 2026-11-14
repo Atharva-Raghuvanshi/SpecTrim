@@ -86,6 +86,7 @@ class LiteLLMGateway:
                     messages=messages,
                     temperature=cfg.temperature,
                     max_tokens=cfg.max_tokens,
+                    timeout=120,  # a hung provider call must not stall the run
                 )
             except Exception as exc:  # noqa: BLE001 - gateway wraps all provider errors
                 if _is_rate_limited(exc):

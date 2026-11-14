@@ -9,7 +9,7 @@ import litellm
 
 def raw_completion(payload: dict[str, Any]) -> dict[str, Any]:
     """One non-streaming call; returns an OpenAI-shaped dict with provider usage."""
-    resp = litellm.completion(**payload)
+    resp = litellm.completion(**payload, timeout=120)
     out = resp.model_dump() if hasattr(resp, "model_dump") else dict(resp)
     return out
 
@@ -23,7 +23,7 @@ def raw_usage(resp: dict[str, Any]) -> tuple[int, float | None]:
 
 def raw_stream(payload: dict[str, Any]) -> Iterator[str]:
     """SSE passthrough of a streaming call."""
-    stream = litellm.completion(**payload, stream=True)
+    stream = litellm.completion(**payload, stream=True, timeout=120)
     for chunk in stream:
         data = chunk.model_dump() if hasattr(chunk, "model_dump") else chunk
         yield f"data: {json.dumps(data)}\n\n"
