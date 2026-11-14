@@ -1,0 +1,161 @@
+{
+  "generated_utc": "2026-11-14T12:28:53.718112+00:00",
+  "e1_e2": {
+    "e1_e2_v1": {
+      "attempted": 12,
+      "completed_n": 10,
+      "valid_ids": [
+        "P01",
+        "P02",
+        "P03",
+        "P04",
+        "P05",
+        "P06",
+        "P07",
+        "P08",
+        "P09",
+        "P10"
+      ],
+      "invalid_ids": [],
+      "quota_aborted_ids": [
+        "P11",
+        "P12"
+      ],
+      "validity_of_completed": "10/10 = 100%",
+      "validity_of_attempted": "10/12 = 83%",
+      "e2_note": "P/R computed only over completed prompts with categories; see per_prompt tp_fp_fn"
+    },
+    "e1_e2_v2": {
+      "attempted": 24,
+      "completed_n": 18,
+      "valid_ids": [
+        "P01",
+        "P02",
+        "P03",
+        "P04",
+        "P05",
+        "P06",
+        "P07",
+        "P08",
+        "P09",
+        "P10",
+        "P11",
+        "P12",
+        "P13",
+        "P14",
+        "P15",
+        "P16",
+        "P17",
+        "P18"
+      ],
+      "invalid_ids": [],
+      "quota_aborted_ids": [
+        "P19",
+        "P20",
+        "P21",
+        "P22",
+        "P23",
+        "P24"
+      ],
+      "validity_of_completed": "18/18 = 100%",
+      "validity_of_attempted": "18/24 = 75%",
+      "e2_note": "P/R computed only over completed prompts with categories; see per_prompt tp_fp_fn"
+    }
+  },
+  "e3": {
+    "builder_model": "groq/openai/gpt-oss-20b",
+    "cells_total": 32,
+    "raw_completed_n": 12,
+    "raw_completed_ids": [
+      "T1:rep0:raw",
+      "T1:rep1:raw",
+      "T2:rep0:raw",
+      "T2:rep1:raw",
+      "T3:rep0:raw",
+      "T3:rep1:raw",
+      "T4:rep0:raw",
+      "T4:rep1:raw",
+      "T5:rep0:raw",
+      "T6:rep1:raw",
+      "T8:rep0:raw",
+      "T8:rep1:raw"
+    ],
+    "optimized_completed_n": 11,
+    "optimized_completed_ids": [
+      "T1:rep0:optimized",
+      "T1:rep1:optimized",
+      "T2:rep0:optimized",
+      "T2:rep1:optimized",
+      "T3:rep0:optimized",
+      "T3:rep1:optimized",
+      "T4:rep0:optimized",
+      "T4:rep1:optimized",
+      "T5:rep0:optimized",
+      "T5:rep1:optimized",
+      "T7:rep0:optimized"
+    ],
+    "paired_n": 9,
+    "paired_outcomes": {
+      "optimized_won": 0,
+      "raw_won": 0,
+      "tie": 9
+    },
+    "raw_pass_rate": 0.8333333333333334,
+    "optimized_pass_rate": 0.7272727272727273,
+    "note": "n=11-12, Fisher's exact p\u22480.64 \u2014 the raw-vs-optimized difference is NOT statistically significant; no claim either way."
+  },
+  "e4_paired": {
+    "cells_total": 48,
+    "completed_total": 29,
+    "completed_by_mode": {
+      "off": 15,
+      "safe": 6,
+      "balanced": 8
+    },
+    "paired_bases": [
+      "T1:rep0",
+      "T1:rep1",
+      "T2:rep0",
+      "T2:rep1",
+      "T4:rep0",
+      "T4:rep1"
+    ],
+    "paired_n": 6,
+    "paired": {
+      "off": {
+        "n": 6,
+        "pass_rate": 0.5,
+        "tokens_in_avg": 1237,
+        "tokens_out_avg": 189,
+        "tokens_in_avg_passed": 1155.0,
+        "tokens_in_avg_failed": 1319.0
+      },
+      "safe": {
+        "n": 6,
+        "pass_rate": 0.333,
+        "tokens_in_avg": 1461,
+        "tokens_out_avg": 171,
+        "tokens_in_avg_passed": 468.0,
+        "tokens_in_avg_failed": 1958.0
+      },
+      "balanced": {
+        "n": 6,
+        "pass_rate": 0.333,
+        "tokens_in_avg": 1461,
+        "tokens_out_avg": 171,
+        "tokens_in_avg_passed": 468.0,
+        "tokens_in_avg_failed": 1958.0
+      }
+    },
+    "tasks_with_different_outcomes": 1,
+    "balanced_tokens_in_delta_pct": 18.1
+  },
+  "e5_pass_firings": {
+    "ledger_rows": 0,
+    "pass_firings": {},
+    "window": [
+      "2026-11-13T15:00:00+00:00",
+      "2026-11-14T23:59:59+00:00"
+    ]
+  }
+}

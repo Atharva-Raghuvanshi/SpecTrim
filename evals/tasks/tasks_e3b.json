@@ -1,0 +1,9 @@
+{
+  "version": "e3b-v1",
+  "note": "Non-trivial multi-file E3 tasks (approval pending). Builder must output 2-3 files separated by '### FILE: name.py' lines. Automated checks import across files.",
+  "tasks": [
+    {"id": "B1", "prompt": "Write a tiny expense-splitter as TWO Python files: 'storage.py' with an Ledger class (add_expense(payer, amount, participants), balances() returning dict name->net) and 'cli.py' that imports Ledger from storage and exposes main() printing balances for a hardcoded demo. Separate the files with '### FILE: name.py' marker lines."},
+    {"id": "B2", "prompt": "Write a URL shortener core as TWO Python files: 'models.py' with a ShortLink dataclass and an InMemoryStore class (create(url)->code, resolve(code)->url|None) and 'api.py' with a handle_create(url, store) and handle_resolve(code, store) functions that return dicts. Include input validation raising ValueError for bad urls. Separate with '### FILE: name.py' markers."},
+    {"id": "B3", "prompt": "Write a task-queue simulation as TWO Python files: 'queue.py' with a PriorityQueue class (push(task_id, priority), pop() -> task_id|None raising KeyError when empty, __len__) and 'worker.py' with a Worker class that takes a queue and a handler dict {task_id: fn}, runs run_once() executing the popped task, and tracks processed list. Separate with '### FILE: name.py' markers."}
+  ]
+}

@@ -43,8 +43,10 @@ def db_pool():
         pool = await open_pool(TEST_DSN)
         async with pool.connection() as conn, conn.cursor() as cur:
             await cur.execute(
-                "TRUNCATE events, questions, versions, stages, jobs, sessions, "
-                "daily_spend, proxy_requests, proxy_cache"
+                "TRUNCATE events, questions, versions, stages, jobs, sessions, daily_spend"
+                # NOTE: proxy_requests/proxy_cache are NOT truncated — the ledger is
+                # evidence (WP10 audit). Tests that need clean proxy state use
+                # unique model names instead.
             )
             await conn.commit()
         return pool

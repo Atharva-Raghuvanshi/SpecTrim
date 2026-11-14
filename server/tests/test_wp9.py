@@ -80,9 +80,10 @@ def test_demo_rows_isolated_from_stats(ui_client) -> None:
 
     from scripts.seed_demo_traffic import seed
 
+    before = ui_client.get("/stats").json()["requests"]
     asyncio.get_event_loop().run_until_complete(seed(ui_client.app.state.pool, 5))
     real = ui_client.get("/stats").json()  # /stats must never include demo rows
-    assert real["requests"] == 0
+    assert real["requests"] == before  # demo seeding does not move real stats
     import os
 
     os.environ["UI_DEMO"] = "1"

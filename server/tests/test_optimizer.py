@@ -1,6 +1,8 @@
 """Release B tests: passes (M11.x), chain fail-open (M10.2), cache (M11.1), ledger (M10.3)."""
 from __future__ import annotations
 
+import uuid
+
 import pytest
 from app.optimizer.chain import run_chain
 from app.optimizer.passes import (
@@ -158,7 +160,8 @@ def test_cache_hit_then_zero_stale_after_invalidation(app_client, monkeypatch: p
         return {"id": f"cmpl-{calls['n']}", "usage": {"total_tokens": 5}}
 
     monkeypatch.setattr(proxy_gateway, "raw_completion", fake_completion)
-    body = {"model": "m-test", "messages": [{"role": "user", "content": "deterministic prompt"}]}
+    body = {"model": f"m-{uuid.uuid4().hex[:8]}",
+            "messages": [{"role": "user", "content": "deterministic prompt"}]}
     import asyncio
 
     r1 = client.post("/v1/chat/completions", json=body, headers={"x-optimizer-mode": "safe"})
@@ -170,7 +173,7 @@ def test_cache_hit_then_zero_stale_after_invalidation(app_client, monkeypatch: p
     from app.optimizer.cache import ResponseCache
 
     asyncio.get_event_loop().run_until_complete(
-        ResponseCache(client.app.state.pool).invalidate_model("m-test")
+        ResponseCache(client.app.state.pool).invalidate_model(body["model"])
     )
     monkeypatch.setattr(
         proxy_gateway, "raw_completion",

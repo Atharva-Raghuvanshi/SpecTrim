@@ -431,7 +431,12 @@ UI_DEMO=1 .venv/Scripts/python -m scripts.seed_demo_traffic   # then open http:/
 - [x] **All P0 requirements implemented; P1 done or explicitly deferred** — DONE. P0s complete (gateway, schemas, pipeline, durability, versioning, interfaces, observability, proxy). Deferred items explicitly listed: PDF/URL intake (P1), tree-sitter repo map (P1, BM25-lite shipped), P10 prose compression (P2), E5-justified defaults.
 - [x] **Every mandatory test passes in CI; coverage gate met** — DONE. 126 tests (CI runs them incl. DB tests via Postgres service container); coverage 95% vs 80% gate.
 - [x] **Crash/resume demonstrated in a test** — DONE. Real-process test: worker subprocess killed mid-pipeline, stages 1..k not re-executed (server/tests/test_crash_resume.py). (Video: not recorded — no VPS.)
-- [x] **evals/REPORT.md has measured E1, E2, E3** — DONE. E1: 18 valid / 30 attempted (100% of completed; 12 quota-aborted, resumable). E2: precision 0.38→0.50 (v2 dry-run, 5 prompts) / recall 0.76 (v1, 12) — full v2 30-prompt run blocked by org-wide TPM contention, retried by auto-finish. E3 measured: **negative lift −10.6pts** (raw 83.3% n=12 vs optimized 72.7% n=11) — reported honestly; spec context adds noise on trivially small tasks.
+- [ ] **evals/REPORT.md has measured E1, E2, E3** — **PARTIAL.** Reconciled (WP10 audit, evals/results/audit.json):
+  - E1 v1: 10 valid / 10 completed (P01-P10) of 12 attempted (P11-P12 quota-aborted) → 100% of completed, 83% of attempted.
+  - E1 v2: 18 valid / 18 completed (P01-P18) of 24 attempted (P19-P24 quota-aborted) → 100% of completed, 75% of attempted.
+  - E2 v1: micro P 0.382 / R 0.765 over the 10 completed prompts (tp=13 fp=21 fn=4) — NOT n=12.
+  - E2 v2 dry-run: P 0.50 / R 0.625 over P01-P05 (tp=5 fp=5 fn=3); v1 on the same 5: P 0.40 / R 0.75 → precision +0.10, recall −0.125 at n=5 (not significant).
+  - E3: 32 cells; raw 12 completed, optimized 11; **paired n=9 with 9 ties** (0 wins/0 losses) — the raw-vs-optimized rate gap comes from unpaired cells; Fisher p≈0.64 → NO significant difference, no claim either way.
 - [x] **MCP tool call from a real coding agent demonstrated** — DONE. Official MCP SDK client called create_spec/get_context/savings_report; transcript docs/demo/mcp_transcript.md.
 - [ ] **Public demo live** — NOT DONE (needs VPS/domain; user provides). All deploy assets ready: docs/DEPLOY.md, scripts/smoke_deploy.sh, Caddyfile, full compose.
 - [x] **README states known limits honestly** — DONE (Measured results table with n+model, Honest status, Limitations).
@@ -439,8 +444,11 @@ UI_DEMO=1 .venv/Scripts/python -m scripts.seed_demo_traffic   # then open http:/
 ### PRD_v2.md §13 DoD additions
 - [x] **Proxy works with a real coding agent by base-URL swap** — DONE. Multi-turn tool agent through both /v1/chat/completions and /v1/messages; docs/demo/proxy_proof.md with /stats deltas.
 - [x] **Fail-open proven by injected-failure test** — DONE. Pass-level + router-level + chain-level injected failures all forward the original (tests).
-- [x] **Savings Ledger + dashboard show baseline-est vs actual per pass** — DONE. /stats, /ui dashboard (per-pass chart), Grafana panels.
-- [x] **E4, E5, E6 measured and reported honestly** — DONE (partial quota). E4: off 60% n=15 / safe 33% n=6 / balanced 37.5% n=8 — balanced cut input tokens 22% vs off (1853→1445 avg) with a pass-rate dip; small n. E5: ablation shows **no measurable token/pass effect on small tasks** (identical 282 tokens-in, 100% pass) — per PRD rule, P4/P5 stay enabled but with honest no-effect finding; bigger sessions needed for signal. E6: pareto.png + table. 23 E4 cells + 28 E5 cells remain quota-aborted, auto-retried by the resumable runner.
+- [ ] **Savings Ledger + dashboard show baseline-est vs actual per pass** — **PARTIAL.** Infrastructure works (live smoke recorded ledger deltas), but the E4/E5 experiment ledger rows were destroyed by a test-fixture TRUNCATE bug (proxy_requests wiped on every test run; fixed in WP10 — fixture no longer truncates proxy tables). Per-pass experiment evidence therefore comes from result JSONs only until the re-runs complete.
+- [ ] **E4, E5, E6 measured and reported honestly** — **PARTIAL.** WP10 paired analysis (audit.json):
+  - E4 paired cells (off+safe+balanced all completed): n=6 (T1:rep0/1, T2:rep0/1, T4:rep0/1) — off 50% pass / safe 33% / balanced 33%; balanced tokens_in +18.1% vs off (1461 vs 1237 — NOT a saving); 1 task with different outcomes. Tokens-in failed vs passed: off 1319/1155, safe 1958/468, balanced 1958/468 — failures burn ~4x more tokens (retry loop), so failed runs must never count as savings. Everything else: NOT MEASURED.
+  - E5 pass-firing audit: ledger evidence lost (truncation bug above); from result JSONs, tokens_in is identical (282) across balanced / no_P5 / no_P9 arms → **P4, P5, P1, P9 did not trigger on these tiny tasks → ablation rows for them are NOT VALID: pass did not trigger.** Trigger requirements: P4 needs tool outputs >40 lines; P5 needs >6 messages of history; P1 needs ≥2 reorderable messages; P9 needs repeated identical requests. no_P4/no_P1 arms: 0 measured cells.
+  - E6 pareto.png generated from the partial points.
 - [x] **README before/after + which passes enabled by default and why** — DONE (pass table + measured results + honest status).
 
 ### PRD §1.5 / PRD_v2 §3 metrics — measured values
@@ -461,16 +469,17 @@ UI_DEMO=1 .venv/Scripts/python -m scripts.seed_demo_traffic   # then open http:/
 | Fail-open correctness | 100% | **100%** (injected-failure tests) |
 | Cache correctness | 0 stale serves | **0** (invalidation test suite) |
 
-### Resume-safe claims (measured only)
-1. "Spec pipeline: 100% validity on completed runs (18/30 attempted on Groq free tier; remainder quota-resumable)."
-2. "Question recall 0.76; precision improved 0.38→0.50 with prompts v2 (dry-run n=5)."
-3. "Proxy adds 111-119ms p95 non-LLM overhead (<150ms target), with 100% fail-open correctness and 0 stale cache serves (tested)."
-4. "E4 (partial): balanced mode cut input tokens 22% vs off; pass-rate impact −22pts on trivial fixtures (n=8-15) — needs more reps on larger tasks."
-5. "E5: no measurable token or pass-rate effect from P9/P5 on small tasks (n=4 each) — honest ablation finding."
-6. "E3: negative downstream lift (−10.6pts) on trivial tasks — spec context is not beneficial for one-liner fixtures."
+### Resume-safe claims (WP10 rewrite — only what survives reconciliation + paired analysis + significance)
+1. "Spec pipeline validity: 100% of completed eval runs (v1 10/10, v2 18/18); 75-83% of attempted runs (remainder quota-aborted, auto-resumable)."
+2. "E2: v1 micro precision 0.382 / recall 0.765 (n=10 completed); v2 dry-run precision 0.50 / recall 0.625 (n=5); v1-on-same-5 P 0.40 / R 0.75 — precision +0.10 / recall −0.125 at n=5 is NOT significant. No precision/recall claim beyond that."
+3. "Proxy adds 111-119ms p95 non-LLM overhead (target <150ms, 200 reps, in-process bench), with 100% fail-open correctness and 0 stale cache serves (injected-failure + invalidation test suites)."
+4. "E4 paired (n=6 cells where all three modes completed): balanced tokens_in +18.1% vs off and pass rate 33% vs off 50% — i.e., on these tiny tasks balanced showed NO token saving and a pass-rate dip; NOT statistically meaningful, and 19 cells NOT MEASURED. Failures burn ~4x the tokens of passes in every mode (retry loop)."
+5. "E5 ablation: NOT VALID for P4/P5/P1/P9 — the passes did not trigger on the tiny fixtures (identical tokens across arms; ledger evidence lost to a fixture bug now fixed). Trigger sizes documented. no_P4/no_P1 arms never ran."
+6. "E3: paired n=9 with 9 ties — no significant difference between raw and optimized (Fisher p≈0.64); the apparent 10.6-pt rate gap comes from unpaired cells and must not be claimed as either harm or benefit."
 7. "126 tests green incl. real-process crash/resume; 94.84% coverage on core packages; zero real LLM calls in CI."
+8. "P9 cache: 0 stale serves across model/namespace/version invalidation (unit tests); live smoke recorded a cache hit. NOT a measured saving claim."
 
 ### Remaining (needs external resources)
 - VPS/domain → public demo + video (WP8 deploy assets ready).
-- Quota headroom → WP3 last 12 prompts, E3 re-run on non-trivial tasks, E4 23 cells, E5 28 cells (auto-finish orchestrator retries automatically: `python -m evals.auto_finish`).
+- Quota → WP3 prompts P19-P30 (12), E4 19 cells, E5 28 cells + pass-triggering fixtures, E3 rerun on ≥3 non-trivial multi-file tasks (tasks_e3b.json added; runner order fixed to E1/E2 → E4 → E5 → E3b, single runner at a time, QuotaTracker-gated, estimates printed).
 - Task-set/prompt-set approval (user) — marked pending everywhere.

@@ -7,6 +7,8 @@ import pytest
 
 pytestmark = pytest.mark.usefixtures("db_pool")
 
+import uuid as _uuid
+
 ANTH_REQ = {
     "model": "m-anth",
     "max_tokens": 128,
@@ -32,10 +34,11 @@ def _install(monkeypatch, responses):  # type: ignore[no-untyped-def]
 
 def test_anthropic_non_streaming_translation(app_client, monkeypatch) -> None:
     client, _ = app_client
+    req = {**ANTH_REQ, "model": f"m-anth-{_uuid.uuid4().hex[:8]}"}
     _install(monkeypatch, [{"id": "cmpl-a", "model": "m",
                             "choices": [{"message": {"content": "hi there"}}],
                             "usage": {"prompt_tokens": 3, "completion_tokens": 2}}])
-    r = client.post("/v1/messages", json=ANTH_REQ, headers={"x-optimizer-mode": "safe"})
+    r = client.post("/v1/messages", json=req, headers={"x-optimizer-mode": "safe"})
     body = r.json()
     assert r.status_code == 200
     assert body["type"] == "message" and body["role"] == "assistant"
@@ -46,17 +49,19 @@ def test_anthropic_non_streaming_translation(app_client, monkeypatch) -> None:
 
 def test_anthropic_cache_hit_flag(app_client, monkeypatch) -> None:
     client, _ = app_client
+    req = {**ANTH_REQ, "model": f"m-anth-{_uuid.uuid4().hex[:8]}"}
     resp = {"id": "cmpl-a", "model": "m", "choices": [{"message": {"content": "same"}}],
             "usage": {"prompt_tokens": 3, "completion_tokens": 2}}
     _install(monkeypatch, [resp])
-    r1 = client.post("/v1/messages", json=ANTH_REQ, headers={"x-optimizer-mode": "safe"})
-    r2 = client.post("/v1/messages", json=ANTH_REQ, headers={"x-optimizer-mode": "safe"})
+    r1 = client.post("/v1/messages", json=req, headers={"x-optimizer-mode": "safe"})
+    r2 = client.post("/v1/messages", json=req, headers={"x-optimizer-mode": "safe"})
     assert r1.json().get("cache_hit") is None  # first: miss
     assert r2.json()["cache_hit"] is True  # second: exact hit
 
 
 def test_anthropic_streaming_emits_anthropic_events(app_client, monkeypatch) -> None:
     client, _ = app_client
+    stream_model = f"m-anth-{_uuid.uuid4().hex[:8]}"
 
     from app.gateway import proxy_gateway
 
@@ -68,7 +73,7 @@ def test_anthropic_streaming_emits_anthropic_events(app_client, monkeypatch) -> 
         yield "data: [DONE]\n\n"
 
     monkeypatch.setattr(proxy_gateway, "raw_stream", fake_stream)
-    req = {**ANTH_REQ, "stream": True}
+    req = {**ANTH_REQ, "model": stream_model, "stream": True}
     with client.stream("POST", "/v1/messages", json=req,
                        headers={"x-optimizer-mode": "safe"}) as r:
         body = "".join(chunk.decode() for chunk in r.iter_bytes())[:4000]
@@ -81,6 +86,7 @@ def test_anthropic_streaming_emits_anthropic_events(app_client, monkeypatch) -> 
 def test_anthropic_injected_pass_failure_passthrough(app_client, monkeypatch) -> None:
     """Fail-open on /v1/messages: broken chain still forwards the original."""
     client, _ = app_client
+    req = {**ANTH_REQ, "model": f"m-anth-{_uuid.uuid4().hex[:8]}"}
     import app.optimizer.chain as chain_mod
     from app.gateway import proxy_gateway
 
@@ -97,7 +103,7 @@ def test_anthropic_injected_pass_failure_passthrough(app_client, monkeypatch) ->
         return good
 
     monkeypatch.setattr(proxy_gateway, "raw_completion", fake_completion)
-    r = client.post("/v1/messages", json=ANTH_REQ, headers={"x-optimizer-mode": "safe"})
+    r = client.post("/v1/messages", json=req, headers={"x-optimizer-mode": "safe"})
     assert r.status_code == 200
     assert r.json()["content"][0]["text"] == "ok"
     assert calls["n"] == 1  # forwarded once, no error surfaced
@@ -118,10 +124,13 @@ def test_frozen_content_protection_header(app_client, monkeypatch) -> None:
     big_log = "\n".join(f"step {i}" for i in range(80)) + "\nERROR: x"
     r = client.post(
         "/v1/chat/completions",
-        json={"model": "m", "messages": [{"role": "tool", "content": big_log}]},
+        json={"model": f"m-{_uuid.uuid4().hex[:8]}",
+              "messages": [{"role": "tool", "content": big_log}]},
         headers={"x-optimizer-mode": "safe", "x-optimizer-protect": "step 5"},
     )
     assert r.status_code == 200
+    print("DEBUG response:", r.text[:300])
+    print("DEBUG seen:", {k: str(v)[:120] for k, v in seen.items()})
     assert "step 79" in seen["messages"][0]["content"]  # NOT compacted: protected
 
 
@@ -132,8 +141,10 @@ def test_fr37_invalidation_on_model_version(app_client, monkeypatch) -> None:
         {"id": "cmpl-1", "choices": [{"message": {"content": "a"}}], "usage": {}},
         {"id": "cmpl-2", "choices": [{"message": {"content": "b"}}], "usage": {}},
     ])
-    body_a = {"model": "m1", "messages": [{"role": "user", "content": "same"}]}
-    body_b = {"model": "m2", "messages": [{"role": "user", "content": "same"}]}
+    import uuid as _u
+
+    body_a = {"model": f"m1-{_u.uuid4().hex[:8]}", "messages": [{"role": "user", "content": "same"}]}
+    body_b = {"model": f"m2-{_u.uuid4().hex[:8]}", "messages": [{"role": "user", "content": "same"}]}
     r1 = client.post("/v1/chat/completions", json=body_a, headers={"x-optimizer-mode": "safe"})
     r2 = client.post("/v1/chat/completions", json=body_b, headers={"x-optimizer-mode": "safe"})
     assert r1.json()["id"] == "cmpl-1"
