@@ -80,6 +80,11 @@ MULTI_SNIPPETS: dict[str, str] = {
         "assert w.processed == ['t1']",
         "print('CHECK-OK')",
     ]),
+    "L4": NL.join([
+        "from deploy import run_deploy",
+        "assert run_deploy('prod') == 'deployed prod'",
+        "print('CHECK-OK')",
+    ]),
 }
 
 

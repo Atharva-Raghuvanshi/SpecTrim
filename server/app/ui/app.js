@@ -180,6 +180,8 @@ function renderKpis(s) {
     { l: "Cache hit rate", v: s.cache_hit_rate + "%" },
     { l: "Requests proxied", v: num(s.requests) },
     { l: "Fail-open / passthrough", v: num(s.passthroughs) },
+    { l: "Validity-guard events", v: num(s.invalid_after_pass_events) + " / " + num(s.invalid_original_events),
+      d: "reverted passes / invalid originals" },
     { l: "Added latency p95", v: s.latency_p95_ms + " ms" },
   ];
   $("kpis").innerHTML = kpis.map((k) =>

@@ -59,6 +59,33 @@ def cells_done(name: str) -> int:
     return sum(1 for c in d.get("cells", {}).values() if c.get("pass") is not None)
 
 
+def e4b_enabled() -> bool:
+    """E4b runs by default once the sanity check passes (WP13 step 4)."""
+    f = RESULTS / "e4b_sanity.json"
+    if not f.is_file():
+        return False
+    return json.loads(f.read_text(encoding="utf-8")).get("ok") is True
+
+
+def e5_passes_fired() -> list:
+    """Passes that actually fired in the one-cell trial (WP13 order 3)."""
+    f = RESULTS / "e5_trial.json"
+    if not f.is_file():
+        return []
+    fired = json.loads(f.read_text(encoding="utf-8")).get("fired", [])
+    return [p for p in fired if p != "P9" or fired.count("P9") > 1]  # P9 fires on 2nd identical request
+
+
+def e5_e4b_done() -> bool:
+    files = list(RESULTS.glob("e5_tasks_e4b_*.json"))
+    if not files:
+        return False
+    d = json.loads(files[0].read_text(encoding="utf-8"))
+    cells = d.get("cells", {})
+    n_cfgs = len({k.rsplit(":", 1)[1] for k in cells})
+    return len(cells) >= 8 * n_cfgs and n_cfgs >= 2  # balanced + >=1 fired ablation
+
+
 def wp3_done() -> bool:
     f = RESULTS / "e1_e2_v2_full.json"
     if not f.is_file():
@@ -69,8 +96,9 @@ def wp3_done() -> bool:
 
 PHASES = [
     {
+        # WP13 order (1): E1/E2 v2 remainder (P25-P30 + any stale)
         "name": "E1E2-v2",
-        "est_tokens": 80000,
+        "est_tokens": 45000,
         "gate": lambda: quota("openai/gpt-oss-120b") >= 45000,
         "cmd": lambda: ["-m", "evals.runner", "--version", "v2", "--max-tokens", "400000",
                         "--pace-s", "45", "--output", "evals/results/e1_e2_v2_full.json"],
@@ -78,41 +106,52 @@ PHASES = [
         "model": "openai/gpt-oss-120b",
     },
     {
-        "name": "E4",
-        "est_tokens": 9000,
-        "gate": lambda: quota("groq/qwen/qwen3.8-27b") >= 9000,
+        # WP13 order (2): E4b primary — off vs balanced first, then safe
+        "name": "E4b-primary",
+        "est_tokens": 45000,
+        "gate": lambda: e4b_enabled() and quota("groq/qwen/qwen3.8-27b") >= 9000,
         "cmd": lambda: ["-m", "evals.run_e4", "--model", "groq/qwen/qwen3.8-27b",
-                        "--experiment", "e4", "--pace-s", "2"],
-        "done": lambda: cells_done("e4") >= 48,
+                        "--experiment", "e4", "--tasks-file",
+                        str(ROOT / "evals" / "tasks" / "tasks_e4b.json"),
+                        "--configs", "off,balanced,safe", "--pace-s", "2"],
+        "done": lambda: cells_done("e4_tasks_e4b") >= 24,
         "model": "groq/qwen/qwen3.8-27b",
     },
     {
-        "name": "E5",
+        # WP13 order (3): E5 on the E4b tasks ONLY — one-cell trial first; passes
+        # that never fire are skipped from the ablation arms.
+        "name": "E5-on-e4b",
         "est_tokens": 3500,
-        "gate": lambda: quota("openai/gpt-oss-20b") >= 3500,
+        "gate": lambda: e4b_enabled() and quota("groq/openai/gpt-oss-20b") >= 3500
+        and e5_passes_fired() != [],
         "cmd": lambda: ["-m", "evals.run_e4", "--model", "groq/openai/gpt-oss-20b",
-                        "--experiment", "e5", "--pace-s", "2"],
-        "done": lambda: cells_done("e5") >= 40,
+                        "--experiment", "e5", "--tasks-file",
+                        str(ROOT / "evals" / "tasks" / "tasks_e4b.json"),
+                        "--passes", ",".join(e5_passes_fired()), "--pace-s", "2"],
+        "done": lambda: e5_e4b_done(),
         "model": "groq/openai/gpt-oss-20b",
     },
     {
+        # WP13 order (4): E3b non-trivial multi-file
         "name": "E3b",
         "est_tokens": 40000,
         "gate": lambda: quota("openai/gpt-oss-120b") >= 20000
-        and quota("openai/gpt-oss-20b") >= 30000,
+        and quota("groq/openai/gpt-oss-20b") >= 30000,
         "cmd": lambda: ["-m", "evals.run_e3b", "--max-tokens", "170000", "--pace-s", "45"],
         "done": lambda: cells_done("e3b") >= 12,
         "model": "openai/gpt-oss-120b",
     },
     {
-        "name": "E4b-primary",
-        "est_tokens": 40000,
-        "gate": lambda: os.environ.get("E4B_ENABLED") == "1"
-        and quota("groq/qwen/qwen3.8-27b") >= 40000,
+        # WP13 order (5): tiny-task E4 as dev/regression set, max 2 reps.
+        # Runs LAST and only if quota remains after the primary work.
+        "name": "E4-dev-regression",
+        "est_tokens": 9000,
+        "gate": lambda: quota("groq/qwen/qwen3.8-27b") >= 9000,
         "cmd": lambda: ["-m", "evals.run_e4", "--model", "groq/qwen/qwen3.8-27b",
                         "--experiment", "e4", "--tasks-file",
-                        str(ROOT / "evals" / "tasks" / "tasks_e4b.json"), "--pace-s", "2"],
-        "done": lambda: os.environ.get("E4B_ENABLED") != "1",
+                        str(ROOT / "evals" / "tasks" / "tasks_e3.json"),
+                        "--reps", "2", "--pace-s", "2"],
+        "done": lambda: cells_done("e4_tasks_e3") >= 48,
         "model": "groq/qwen/qwen3.8-27b",
     },
     {

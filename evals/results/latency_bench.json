@@ -4,51 +4,51 @@
     {
       "name": "chain_safe (P9miss,P4,P1,P7)",
       "reps": 200,
-      "median_ms": 90.078,
-      "p95_ms": 118.913,
-      "max_ms": 147.043
+      "median_ms": 261.018,
+      "p95_ms": 294.599,
+      "max_ms": 328.323
     },
     {
       "name": "chain_balanced (+P5,P2,P3,P6)",
       "reps": 200,
-      "median_ms": 85.453,
-      "p95_ms": 110.911,
-      "max_ms": 139.618
+      "median_ms": 257.029,
+      "p95_ms": 299.254,
+      "max_ms": 346.513
     },
     {
       "name": "P4 alone",
       "reps": 200,
-      "median_ms": 81.388,
-      "p95_ms": 105.933,
-      "max_ms": 344.691
+      "median_ms": 262.673,
+      "p95_ms": 304.454,
+      "max_ms": 388.905
     },
     {
       "name": "P5 alone",
       "reps": 200,
-      "median_ms": 9.655,
-      "p95_ms": 11.537,
-      "max_ms": 20.992
+      "median_ms": 20.746,
+      "p95_ms": 26.727,
+      "max_ms": 32.582
     },
     {
       "name": "P1 alone",
       "reps": 200,
-      "median_ms": 0.085,
-      "p95_ms": 0.088,
-      "max_ms": 0.122
+      "median_ms": 0.421,
+      "p95_ms": 0.672,
+      "max_ms": 1.707
     },
     {
       "name": "P7 alone",
       "reps": 200,
-      "median_ms": 0.02,
-      "p95_ms": 0.021,
-      "max_ms": 0.068
+      "median_ms": 0.087,
+      "p95_ms": 0.133,
+      "max_ms": 0.233
     },
     {
       "name": "P9 cache-key compute",
       "reps": 200,
-      "median_ms": 10.286,
-      "p95_ms": 13.77,
-      "max_ms": 20.064
+      "median_ms": 27.075,
+      "p95_ms": 35.16,
+      "max_ms": 47.048
     }
   ],
   "input_tokens_est_before": 661802,

@@ -483,3 +483,31 @@ UI_DEMO=1 .venv/Scripts/python -m scripts.seed_demo_traffic   # then open http:/
 - VPS/domain → public demo + video (WP8 deploy assets ready).
 - Quota → WP3 prompts P19-P30 (12), E4 19 cells, E5 28 cells + pass-triggering fixtures, E3 rerun on ≥3 non-trivial multi-file tasks (tasks_e3b.json added; runner order fixed to E1/E2 → E4 → E5 → E3b, single runner at a time, QuotaTracker-gated, estimates printed).
 - Task-set/prompt-set approval (user) — marked pending everywhere.
+
+## WP13 — stamp semantics + experiment order (2026-11-15)
+
+**Status:** DONE (code + analysis). Orchestrator relaunched sequentially: E1/E2 remainder runs now (~45K tok), E4b/E5/E3b resume after the UTC quota reset. Commit: see git log. 142+ tests green (9 new stamp tests).
+
+### Stamp semantics v2 (evals/stamp.py rewritten)
+- Content-hash only: E1/E2 = prompt versions + model config + label-set version; proxy experiments (E3b/E4/E4b/E5) = pass registry + policy floors + model config + prompt versions + task-set version. **Git commit stored as provenance, never compared.** 9 tests (docs-only commit keeps cells valid; policy change invalidates proxy only; label change invalidates E1/E2 only; task change invalidates proxy only).
+- **Migration:** the 18-24 completed E1/E2 v2 cells were verified unchanged (prompts/labels/models.yaml untouched since commit b62766d per git log) and migrated to the new stamp — KEPT, no re-run. 6 prompts (P25-P30) + any stale remain → ~45K tok.
+- **E4/E5 old cells do NOT match** (ran before the WP11 P1-floor change): E4 25 completed cells stale (~48K tok re-run est, dev/regression set); E5 dev-set cells invalid anyway (passes never triggered) → per WP13, E5 moves to the E4b tasks and the dev-set E5 is NOT re-run.
+
+### Orchestrator order (WP13 step 3)
+1. E1/E2 v2 remainder → 2. E4b primary off vs balanced (then safe) → 3. E5 on E4b tasks only, one-cell pass-firing trial first (`evals/e5_trial.py` → e5_trial.json; passes that never fire are skipped from ablation arms) → 4. E3b → 5. tiny-task E4 dev/regression max 2 reps (LAST, quota-remainder only). **E5 on tiny tasks is never re-run.** Single-instance lockfile; one runner at a time; estimates printed per phase.
+
+### E4b sanity gate (WP13 step 4)
+`evals/sanity_e4b.py`: known-good solutions PASS, known-bad FAIL for all 4 tasks, worst-case off-mode request < 6K tokens (L1 4352, L2 5475, L3 4725, L4 5477 after trimming L4 to 1000 log lines) → `e4b_sanity.json ok=true` → E4b enabled by default (auto_finish gate reads the sanity file).
+
+### Validity-guard latency + counters (WP13 step 5)
+- Guard cost measured: **0.4ms p95** — negligible. Chain p95 on the 180K-line bench input: ~290ms warm — **MISSES the 150ms target**; the dominant cost is P4+P5 string processing at this input size with GC pauses (guard is 0.4ms of it; direct P4 30-rep p95 was 106ms). Honest miss recorded; mitigation (chunked scanning) logged as future work.
+- New counters: `qo_proxy_invalid_after_pass_total{pass}` and `qo_proxy_invalid_original_total`; Grafana stat panel added; UI KPI card "Validity-guard events" added; ledger summary now reports both event counts.
+- Fired so far: **0 / 0** (no violations in real traffic yet — the guard has only fired in tests).
+
+### Verify
+```
+.venv/Scripts/python.exe -m pytest server/tests/test_wp13.py server/tests/test_wp12.py -q
+.venv/Scripts/python.exe -m evals.sanity_e4b         # ok=true
+.venv/Scripts/python.exe scripts/bench_latency.py    # recorded p95s (P4 GC-spikes noted)
+.venv/Scripts/python.exe -m evals.auto_finish        # sequential, quota-aware
+```

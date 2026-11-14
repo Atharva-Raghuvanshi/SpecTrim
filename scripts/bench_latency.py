@@ -26,8 +26,12 @@ def big_request(tool_lines: int = 3000, turns: int = 60) -> dict:
     msgs = [{"role": "system", "content": "You are a coding agent. " * 20}]
     for i in range(turns):
         msgs.append({"role": "user", "content": f"turn {i}: " + "x" * 200})
+        msgs.append({"role": "assistant", "content": "",
+                     "tool_calls": [{"id": f"c{i}", "type": "function",
+                                     "function": {"name": "run_tests", "arguments": "{}"}}]})
         tool_log = "\n".join(f"line {j}: log" for j in range(tool_lines))
-        msgs.append({"role": "tool", "content": tool_log + "\nERROR: something"})
+        msgs.append({"role": "tool", "content": tool_log + "\nERROR: something",
+                     "tool_call_id": f"c{i}"})
     msgs.append({"role": "user", "content": "continue"})
     return {"model": "m", "messages": msgs}
 

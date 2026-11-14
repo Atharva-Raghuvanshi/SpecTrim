@@ -32,7 +32,7 @@ from app.stages.classifier import run_classifier  # noqa: E402
 from app.stages.question_gate import run_question_gate  # noqa: E402
 
 from evals.quota import QuotaTracker  # noqa: E402
-from evals.stamp import get_stamp, stamp_matches  # noqa: E402
+from evals.stamp import labels_hash, models_hash, prompts_hash, result_stamp, stamp_matches  # noqa: E402
 
 LABELS_FILE = Path(__file__).resolve().parent / "prompts" / "labels.jsonl"
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
@@ -105,7 +105,9 @@ def main() -> int:
     )
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     quota = QuotaTracker()
-    stamp = get_stamp()
+    stamp = result_stamp("e1e2", {
+        "prompts": prompts_hash(), "models": models_hash(), "labels": labels_hash(),
+    })
 
     # Determine output file
     if args.output:
@@ -123,8 +125,7 @@ def main() -> int:
         try:
             prev = json.loads(out_path.read_text(encoding="utf-8"))
             for r in prev.get("per_prompt", []):
-                # Only resume completed runs under the CURRENT code stamp
-                # (WP12: older-stamp prompts are stale and re-run)
+                # Resume completed runs whose stamp matches the current content hashes
                 if not r.get("infra_aborted") and stamp_matches(r.get("stamp"), stamp):
                     existing_records[r["id"]] = r
         except Exception:

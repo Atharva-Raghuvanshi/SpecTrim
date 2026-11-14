@@ -40,6 +40,12 @@ PROXY_CACHE_HITS = Counter("qo_proxy_cache_hits_total", "P9 exact-cache hits ser
 PROXY_PASSTHROUGH = Counter(
     "qo_proxy_passthrough_total", "Requests forwarded unoptimized", ["reason"]
 )
+PROXY_INVALID_AFTER_PASS = Counter(
+    "qo_proxy_invalid_after_pass_total", "Passes that broke the request (reverted)", ["pass"]
+)
+PROXY_INVALID_ORIGINAL = Counter(
+    "qo_proxy_invalid_original_total", "Original requests already invalid at intake"
+)
 PROXY_REQUESTS = Counter("qo_proxy_requests_total", "Proxy requests handled", ["endpoint", "mode"])
 PASS_SAVINGS_EST = Counter(
     "qo_pass_savings_tokens_est_total", "Estimated tokens removed per pass", ["pass"]

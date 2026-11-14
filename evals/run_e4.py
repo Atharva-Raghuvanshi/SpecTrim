@@ -29,7 +29,14 @@ from app.optimizer.passes import PASS_FUNCTIONS  # noqa: E402
 from checks import check_generated  # noqa: E402
 
 from evals.quota import QuotaTracker  # noqa: E402
-from evals.stamp import get_stamp, stamp_matches  # noqa: E402
+from evals.stamp import (  # noqa: E402
+    models_hash,
+    prompts_hash,
+    proxy_registry_hash,
+    result_stamp,
+    stamp_matches,
+    tasks_hash,
+)
 
 TASKS = Path(__file__).resolve().parent / "tasks" / "tasks_e3.json"
 RESULTS = Path(__file__).resolve().parent / "results"
@@ -93,6 +100,11 @@ def make_call(client, model: str, mode: str, disabled: list[str] | None = None):
                 removed.pop(pid, None)
 
     return call
+
+
+def by_id_from(tasks_file: Path, task_id: str) -> dict:
+    tasks = json.loads(Path(tasks_file).read_text(encoding="utf-8"))["tasks"]
+    return next(t for t in tasks if t["id"] == task_id)
 
 
 def tool_result(task: dict, name: str, attempt: int) -> dict:
@@ -221,6 +233,11 @@ def main() -> int:
     parser.add_argument("--max-tokens", type=float, default=170000, dest="max_tokens")
     parser.add_argument("--pace-s", type=float, default=2.0, dest="pace_s")
     parser.add_argument("--tasks-file", default=None, dest="tasks_file")
+    parser.add_argument("--configs", default="off,safe,balanced",
+                        help="comma-separated mode order (quota priority order)")
+    parser.add_argument("--max-cells", type=int, default=0, dest="max_cells")
+    parser.add_argument("--passes", default="P9,P4,P5,P1",
+                        help="passes to ablate in E5 (only ones that fired)")
     args = parser.parse_args()
 
     quota = QuotaTracker()
@@ -231,13 +248,17 @@ def main() -> int:
     task_ids = E5_TASKS if args.experiment == "e5" else E4_TASKS
 
     if args.experiment == "e4":
-        configs: list[tuple[str, str | None]] = [("off", None), ("safe", None), ("balanced", None)]
-    else:  # E5 ablation: balanced minus one pass each
+        order = [c.strip() for c in args.configs.split(",") if c.strip()]
+        configs: list[tuple[str, str | None]] = [(m, None) for m in order]
+    else:  # E5 ablation: balanced minus one pass each; pass list from --passes
+        fired = [p.strip() for p in (args.passes or "").split(",") if p.strip()]
         configs = [("balanced", None)] + [
-            (f"balanced_no_{pid}", [pid]) for pid in ("P9", "P4", "P5", "P1")
+            (f"balanced_no_{pid}", [pid]) for pid in fired
         ]
 
-    out_path = RESULTS / f"{args.experiment}_{args.model.replace('/', '_')}.json"
+    tasks_version = json.loads(
+        Path(tasks_src).read_text(encoding="utf-8")).get("version", "dev")
+    out_path = RESULTS / f"{args.experiment}_{tasks_version}_{args.model.replace('/', '_')}.json"
     results: dict = (
         json.loads(out_path.read_text(encoding="utf-8"))
         if out_path.is_file() else {"builder_model": args.model, "experiment": args.experiment,
@@ -245,8 +266,12 @@ def main() -> int:
     )
     # infra-aborted cells are retryable; cells from an older code stamp are
     # stale and re-run (WP12: never pair/average across stamps)
-    stamp = get_stamp()
+    stamp = result_stamp("e4", {
+        "registry": proxy_registry_hash(), "models": models_hash(),
+        "prompts": prompts_hash(), "tasks": tasks_hash(tasks_src),
+    })
     results["stamp"] = stamp
+    results["tasks_version"] = tasks_version
     dropped = [
         k for k, v in results["cells"].items()
         if v.get("infra_aborted") or not stamp_matches(v.get("stamp"), stamp)
@@ -267,13 +292,16 @@ def main() -> int:
     from fastapi.testclient import TestClient
 
     with TestClient(create_app()) as client:  # lifespan: settings, gateway, pool
-        run_all(client, quota, args, task_ids, by_id_all, configs, results, out_path)
+        run_all(client, quota, args, task_ids, by_id_all, configs, results, out_path,
+                max_cells=args.max_cells)
     summarize(results)
     out_path.write_text(json.dumps(results, indent=2), encoding="utf-8")
     return 0
 
 
-def run_all(client, quota, args, task_ids, by_id_all, configs, results, out_path) -> None:  # noqa: ANN001,ANN201
+def run_all(client, quota, args, task_ids, by_id_all, configs, results, out_path,
+            max_cells: int = 0) -> None:  # noqa: ANN001,ANN201
+    budget = max_cells
     for tid in task_ids:
         task = by_id_all[tid]
         for rep in range(args.reps):
@@ -281,6 +309,9 @@ def run_all(client, quota, args, task_ids, by_id_all, configs, results, out_path
                 cell = f"{tid}:rep{rep}:{cfg_name}"
                 if cell in results["cells"]:
                     continue
+                if budget <= 0:
+                    print("cell budget reached for this invocation; resume later")
+                    return
                 if not quota.check_tpd(args.model, 9000):
                     print("quota reached, resume tomorrow")
                     out_path.write_text(json.dumps(results, indent=2), encoding="utf-8")
@@ -296,6 +327,7 @@ def run_all(client, quota, args, task_ids, by_id_all, configs, results, out_path
                 quota.record_usage(args.model, rec.get("tokens_in", 0) + rec.get("tokens_out", 0))
                 out_path.write_text(json.dumps(results, indent=2), encoding="utf-8")
                 print(f"{cell}: pass={rec.get('pass')} tok_in={rec.get('tokens_in')}", flush=True)
+                budget -= 1
                 time.sleep(args.pace_s)
 
 

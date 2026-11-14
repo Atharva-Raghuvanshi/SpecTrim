@@ -17,6 +17,8 @@ from app.gateway import proxy_gateway
 from app.observability import (
     PASS_SAVINGS_EST,
     PROXY_CACHE_HITS,
+    PROXY_INVALID_AFTER_PASS,
+    PROXY_INVALID_ORIGINAL,
     PROXY_OVERHEAD,
     PROXY_PASSTHROUGH,
     PROXY_REQUESTS,
@@ -57,6 +59,10 @@ async def _handle_chat(request: Request, api: str) -> Response:
     model = str(body.get("model") or DEFAULT_MODEL)
     session_id = request.headers.get("x-session-id")
     tokens_baseline_est = _est_tokens(json.dumps(body.get("messages", [])))
+    from app.optimizer.validate import validate_internal as _validate
+
+    if _validate(body):
+        PROXY_INVALID_ORIGINAL.inc()
     # Quota guard: reject payloads over the per-request token budget before any
     # provider call (413 = infra, never a quality failure).
     import os as _os
@@ -107,6 +113,7 @@ async def _handle_chat(request: Request, api: str) -> Response:
     overhead_ms = int((time.perf_counter() - t_overhead) * 1000)
     broken = next((r["pass"] for r in reports if r.get("invalid_after_pass")), None)
     if broken is not None:
+        PROXY_INVALID_AFTER_PASS.labels(**{"pass": broken}).inc()
         # WP12 validity guard: a pass broke the request -> forward the ORIGINAL
         PROXY_PASSTHROUGH.labels(reason=f"invalid_after_pass:{broken}").inc()
         if body.get("stream"):

@@ -5,6 +5,6 @@
     {"id": "L1", "prompt": "Fix the failing build in bigbuild.py so all checks pass, then submit the corrected file.", "tool_log_lines": 800, "fail_turns": 5},
     {"id": "L2", "prompt": "Diagnose the integration test failure shown in the log and submit the fixed module.", "tool_log_lines": 1100, "fail_turns": 5},
     {"id": "L3", "prompt": "The build log shows a missing import and a type error; submit the corrected file.", "tool_log_lines": 900, "fail_turns": 5},
-    {"id": "L4", "prompt": "Trace the runtime error in the deploy log, fix the module, and submit.", "tool_log_lines": 1300, "fail_turns": 5}
+    {"id": "L4", "prompt": "Trace the runtime error in the deploy log, fix the module, and submit.", "tool_log_lines": 1000, "fail_turns": 5}
   ]
 }

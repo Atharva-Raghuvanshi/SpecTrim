@@ -35,7 +35,19 @@
         1,
         1
       ],
-      "valid": true
+      "valid": true,
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P02",
@@ -55,7 +67,19 @@
         0,
         0
       ],
-      "valid": true
+      "valid": true,
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P03",
@@ -75,7 +99,19 @@
         1,
         0
       ],
-      "valid": true
+      "valid": true,
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P04",
@@ -91,7 +127,19 @@
         0,
         1
       ],
-      "valid": true
+      "valid": true,
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P05",
@@ -110,7 +158,19 @@
         1,
         0
       ],
-      "valid": true
+      "valid": true,
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P06",
@@ -130,7 +190,19 @@
         2,
         0
       ],
-      "valid": true
+      "valid": true,
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P07",
@@ -149,7 +221,19 @@
         1,
         1
       ],
-      "valid": true
+      "valid": true,
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P08",
@@ -165,7 +249,19 @@
         0,
         0
       ],
-      "valid": true
+      "valid": true,
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P09",
@@ -185,7 +281,19 @@
         1,
         0
       ],
-      "valid": true
+      "valid": true,
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P10",
@@ -203,7 +311,19 @@
         1,
         0
       ],
-      "valid": true
+      "valid": true,
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P11",
@@ -222,7 +342,19 @@
         1,
         0
       ],
-      "valid": true
+      "valid": true,
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P12",
@@ -242,7 +374,19 @@
         0,
         0
       ],
-      "valid": true
+      "valid": true,
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P13",
@@ -261,7 +405,19 @@
         1,
         1
       ],
-      "valid": true
+      "valid": true,
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P14",
@@ -281,7 +437,19 @@
         1,
         0
       ],
-      "valid": true
+      "valid": true,
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P15",
@@ -300,7 +468,19 @@
         1,
         0
       ],
-      "valid": true
+      "valid": true,
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P16",
@@ -319,7 +499,19 @@
         0,
         0
       ],
-      "valid": true
+      "valid": true,
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P17",
@@ -337,7 +529,19 @@
         1,
         0
       ],
-      "valid": true
+      "valid": true,
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P18",
@@ -357,7 +561,19 @@
         0,
         0
       ],
-      "valid": true
+      "valid": true,
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P19",
@@ -377,7 +593,19 @@
         1
       ],
       "valid": false,
-      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b"
+      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b",
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P20",
@@ -388,7 +616,19 @@
       "tokens": 0,
       "cost_usd": 0.0,
       "valid": false,
-      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b"
+      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b",
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P21",
@@ -408,7 +648,19 @@
         0
       ],
       "valid": false,
-      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b"
+      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b",
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P22",
@@ -419,7 +671,19 @@
       "tokens": 0,
       "cost_usd": 0.0,
       "valid": false,
-      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b"
+      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b",
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P23",
@@ -440,7 +704,19 @@
         0
       ],
       "valid": false,
-      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b"
+      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b",
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     },
     {
       "id": "P24",
@@ -451,7 +727,30 @@
       "tokens": 0,
       "cost_usd": 0.0,
       "valid": false,
-      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b"
+      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b",
+      "stamp": {
+        "content": "06179761b50a",
+        "provenance_commit": "139c0fa",
+        "inputs": {
+          "kind": "e1e2",
+          "prompts": "385aab27fd06",
+          "models": "5edfb7a65006",
+          "labels": "9d2c2ee40d4d",
+          "version": "wp13"
+        }
+      },
+      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
     }
-  ]
+  ],
+  "stamp": {
+    "content": "06179761b50a",
+    "provenance_commit": "139c0fa",
+    "inputs": {
+      "kind": "e1e2",
+      "prompts": "385aab27fd06",
+      "models": "5edfb7a65006",
+      "labels": "9d2c2ee40d4d",
+      "version": "wp13"
+    }
+  }
 }

@@ -181,7 +181,7 @@ class SavingsLedger:
         async with self.pool.connection() as conn, conn.cursor() as cur:
             await cur.execute(q)
             r = await cur.fetchone()
-        base, actual, n, hits, passthroughs, cost, cost_n, p95 = r
+        base, actual, n, hits, passthroughs, cost, cost_n, p95, inv_ap, inv_orig = r
         saved = int(base) - int(actual)
         return {
             "range": rng,
@@ -191,5 +191,7 @@ class SavingsLedger:
             "requests": int(n), "cache_hits": int(hits),
             "cache_hit_rate": round(100 * hits / n, 1) if n else 0,
             "passthroughs": int(passthroughs),
+            "invalid_after_pass_events": int(inv_ap or 0),
+            "invalid_original_events": int(inv_orig or 0),
             "latency_p95_ms": int(p95 or 0),
         }

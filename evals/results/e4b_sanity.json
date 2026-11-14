@@ -1,0 +1,14 @@
+{
+  "ok": true,
+  "checks": [
+    "L1: known-good pass=True (files=['storage.py', 'cli.py']), known-bad pass=False",
+    "L1: worst-case off-mode request ~= 4352 tokens (OK)",
+    "L2: known-good pass=True (files=['models.py', 'api.py']), known-bad pass=False",
+    "L2: worst-case off-mode request ~= 5475 tokens (OK)",
+    "L3: known-good pass=True (files=['queue.py', 'worker.py']), known-bad pass=False",
+    "L3: worst-case off-mode request ~= 4725 tokens (OK)",
+    "L4: known-good pass=True (files=['deploy.py', 'main.py']), known-bad pass=False",
+    "L4: worst-case off-mode request ~= 5097 tokens (OK)"
+  ],
+  "version": "e4b-v1"
+}

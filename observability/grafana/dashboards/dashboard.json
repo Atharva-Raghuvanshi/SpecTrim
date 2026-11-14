@@ -62,6 +62,15 @@
       "gridPos": {"x": 12, "y": 14, "w": 6, "h": 6}
     },
     {
+      "type": "stat",
+      "title": "Validity-guard events (reverted passes / invalid originals)",
+      "targets": [
+        {"expr": "sum(qo_proxy_invalid_after_pass_total)", "refId": "A"},
+        {"expr": "sum(qo_proxy_invalid_original_total)", "refId": "B"}
+      ],
+      "gridPos": {"x": 0, "y": 20, "w": 6, "h": 4}
+    },
+    {
       "type": "timeseries",
       "title": "Added proxy overhead p95 (target <150ms)",
       "targets": [{"expr": "histogram_quantile(0.95, sum(rate(qo_proxy_overhead_seconds_bucket[5m])) by (le))", "refId": "A", "legendFormat": "p95"}],
