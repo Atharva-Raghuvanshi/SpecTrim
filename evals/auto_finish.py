@@ -51,7 +51,9 @@ def wp3_done() -> bool:
     if not f.is_file():
         return False
     d = json.loads(f.read_text(encoding="utf-8"))
-    return d.get("ran", 0) >= 30
+    # complete only when all 30 ran AND precision/recall were actually computed
+    # (quota-aborted prompts leave them None -> retryable)
+    return d.get("ran", 0) >= 30 and d.get("e2_micro_precision") is not None
 
 
 def e3_done() -> bool:
