@@ -90,7 +90,7 @@ PHASES = [
      # pace 45s: keeps each ~5K-token call inside Groq's 8K TPM window
      lambda: ["-m", "evals.runner", "--version", "v2", "--max-tokens", "400000",
               "--pace-s", "45", "--output", "evals/results/e1_e2_v2_full.json"],
-     lambda: quota("openai/gpt-oss-120b") >= 100000),
+     lambda: quota("openai/gpt-oss-120b") >= 75000),
     ("E3", e3_done,
      lambda: ["-m", "evals.run_e3", "--builder", "groq/openai/gpt-oss-20b",
               "--max-tokens", "170000"],
