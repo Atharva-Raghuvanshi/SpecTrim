@@ -74,6 +74,10 @@ def main() -> int:
     parser.add_argument("--reps", type=int, default=2)
     parser.add_argument("--max-tokens", type=float, default=170000, dest="max_tokens")
     parser.add_argument("--pace-s", type=float, default=45.0, dest="pace_s")
+    parser.add_argument("--specs-only", action="store_true",
+                        help="generate spec contexts (120b) and exit; no builder cells")
+    parser.add_argument("--specs-ready", action="store_true",
+                        help="skip spec generation (already on disk from --specs-only)")
     args = parser.parse_args()
 
     settings = get_settings()
@@ -99,10 +103,20 @@ def main() -> int:
     stale = [k for k, v in results["cells"].items() if not stamp_matches(v.get("stamp"), stamp)]
     for k in stale:
         results["cells"].pop(k, None)
-    if stale:
-        print(f"rerunning {len(stale)} cells from an older code stamp")
+    kept = len(results["cells"])
+    print(f"stamp: kept {kept} cells, re-run {len(stale)} cells "
+          f"[registry {stamp['inputs']['registry'][:8]}]")
 
-    specs = load_or_make_specs(gateway, quota, args.builder)
+    if args.specs_ready:
+        specs = json.loads(SPECS.read_text(encoding="utf-8"))
+        print(f"specs loaded from disk ({len(specs)} tasks)")
+    else:
+        specs = load_or_make_specs(gateway, quota, args.builder)
+        if args.specs_only:
+            print(f"spec generation complete ({len(specs)} tasks); "
+                  f"builder cells run via --specs-ready")
+            out_path.write_text(json.dumps(results, indent=2), encoding="utf-8")
+            return 0
     n_cells = len(tasks) * args.reps * 2
     print(f"E3b estimate: {n_cells} builder cells x ~4K tokens ~= "
           f"{n_cells * 4 // 1}K + ~{len(tasks) * 30}K spec-gen; budget 170K/day/model")
@@ -146,6 +160,8 @@ def main() -> int:
                 print(f"{cell}: {rec}", flush=True)
                 time.sleep(args.pace_s)
 
+    from evals.stats import paired_summary
+
     raw = [c["pass"] for k, c in results["cells"].items()
            if k.endswith(":raw") and c.get("pass") is not None]
     opt = [c["pass"] for k, c in results["cells"].items()
@@ -154,6 +170,8 @@ def main() -> int:
         "pass_rate_raw": sum(raw) / len(raw) if raw else None, "n_raw": len(raw),
         "pass_rate_optimized": sum(opt) / len(opt) if opt else None, "n_opt": len(opt),
     }
+    results["paired"] = paired_summary(
+        results["cells"], ["raw", "optimized"])
     print(json.dumps(results["summary"], indent=2))
     out_path.write_text(json.dumps(results, indent=2), encoding="utf-8")
     return 0

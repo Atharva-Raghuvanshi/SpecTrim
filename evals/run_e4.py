@@ -217,11 +217,9 @@ def summarize(results: dict) -> None:
             if paired[cfg]["tokens_in_avg"]:
                 paired[cfg]["tokens_in_delta_pct"] = round(
                     100 * (paired[cfg]["tokens_in_avg"] - ref) / ref, 1)
-    results["paired"] = {
-        "bases": sorted(paired_bases), "paired_n": len(paired_bases),
-        "tasks_with_different_outcomes": diff_outcomes,
-        "per_config": paired,
-    }
+    from evals.stats import paired_summary
+
+    results["paired"] = paired_summary(results["cells"], configs)
     print(json.dumps({"summary": summary, "paired": results["paired"]}, indent=2))
 
 
@@ -238,6 +236,9 @@ def main() -> int:
     parser.add_argument("--max-cells", type=int, default=0, dest="max_cells")
     parser.add_argument("--passes", default="P9,P4,P5,P1",
                         help="passes to ablate in E5 (only ones that fired)")
+    parser.add_argument("--passes-from-trial", action="store_true",
+                        dest="passes_from_trial",
+                        help="read the fired pass list from e5_trial.json")
     args = parser.parse_args()
 
     quota = QuotaTracker()
@@ -250,8 +251,13 @@ def main() -> int:
     if args.experiment == "e4":
         order = [c.strip() for c in args.configs.split(",") if c.strip()]
         configs: list[tuple[str, str | None]] = [(m, None) for m in order]
-    else:  # E5 ablation: balanced minus one pass each; pass list from --passes
+    else:  # E5 ablation: balanced minus one pass each; pass list from trial
         fired = [p.strip() for p in (args.passes or "").split(",") if p.strip()]
+        if args.passes_from_trial:
+            trial = RESULTS / "e5_trial.json"
+            if trial.is_file():
+                fired = json.loads(trial.read_text(encoding="utf-8")).get("fired", fired)
+            print(f"E5 ablation arms from trial: {fired}")
         configs = [("balanced", None)] + [
             (f"balanced_no_{pid}", [pid]) for pid in fired
         ]
@@ -278,9 +284,13 @@ def main() -> int:
     ]
     for k in dropped:
         results["cells"].pop(k, None)
-    if dropped:
-        print(f"rerunning {len(dropped)} stale/aborted cells under stamp "
-              f"{stamp['commit']}/{stamp['registry']}")
+    kept = len(results["cells"])
+    kept_tok = sum(c.get("tokens_in", 0) + c.get("tokens_out", 0)
+                   for c in results["cells"].values())
+    rerun_est = len(dropped) * 9000
+    print(f"stamp: kept {kept} cells (~{kept_tok // 1000}K tok), "
+          f"re-run {len(dropped)} cells (est ~{rerun_est // 1000}K tok) "
+          f"[registry {stamp['inputs']['registry'][:8]}]")
     results["builder_model"] = args.model
 
     n_cells = len(task_ids) * args.reps * len(configs)
@@ -302,6 +312,8 @@ def main() -> int:
 def run_all(client, quota, args, task_ids, by_id_all, configs, results, out_path,
             max_cells: int = 0) -> None:  # noqa: ANN001,ANN201
     budget = max_cells
+    stop_file = Path(__file__).resolve().parents[1] / "results" / "STOP"
+    consecutive_bad = 0
     for tid in task_ids:
         task = by_id_all[tid]
         for rep in range(args.reps):
@@ -309,6 +321,10 @@ def run_all(client, quota, args, task_ids, by_id_all, configs, results, out_path
                 cell = f"{tid}:rep{rep}:{cfg_name}"
                 if cell in results["cells"]:
                     continue
+                if stop_file.is_file():
+                    print(f"[{time.strftime('%H:%M:%S')}] STOP file seen; "
+                          f"exiting cleanly after persisted state", flush=True)
+                    return
                 if budget <= 0:
                     print("cell budget reached for this invocation; resume later")
                     return
@@ -328,6 +344,14 @@ def run_all(client, quota, args, task_ids, by_id_all, configs, results, out_path
                 out_path.write_text(json.dumps(results, indent=2), encoding="utf-8")
                 print(f"{cell}: pass={rec.get('pass')} tok_in={rec.get('tokens_in')}", flush=True)
                 budget -= 1
+                if rec.get("pass") is None and not rec.get("infra_aborted"):
+                    consecutive_bad += 1
+                else:
+                    consecutive_bad = 0
+                if consecutive_bad >= 3:
+                    print("SAFETY STOP: 3 consecutive non-429 failures; "
+                          "write the blocker and investigate", flush=True)
+                    raise SystemExit(2)
                 time.sleep(args.pace_s)
 
 

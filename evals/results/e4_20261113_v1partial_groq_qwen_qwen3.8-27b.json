@@ -265,42 +265,14 @@
     }
   },
   "paired": {
-    "bases": [
-      "T1:rep0",
-      "T2:rep0",
-      "T3:rep0",
-      "T3:rep1",
-      "T5:rep0",
-      "T5:rep1"
-    ],
-    "paired_n": 6,
-    "tasks_with_different_outcomes": 1,
-    "per_config": {
-      "balanced": {
-        "n": 6,
-        "pass_rate": 0.8333333333333334,
-        "tokens_in_avg": 1618,
-        "tokens_out_avg": 173,
-        "tokens_in_delta_pct": 38.5
-      },
-      "off": {
-        "n": 6,
-        "pass_rate": 0.6666666666666666,
-        "tokens_in_avg": 1168,
-        "tokens_out_avg": 230,
-        "tokens_in_delta_pct": 0.0
-      },
-      "safe": {
-        "n": 6,
-        "pass_rate": 0.8333333333333334,
-        "tokens_in_avg": 1618,
-        "tokens_out_avg": 173,
-        "tokens_in_delta_pct": 38.5
-      }
-    }
+    "paired_n": 0,
+    "per_config": {},
+    "per_task_outcomes": {},
+    "tasks_with_different_outcomes": 0
   },
   "stamp": {
     "commit": "459bf0b",
     "registry": "0b335bc3c059"
-  }
+  },
+  "paired_note": "paired over current-stamp cells only"
 }

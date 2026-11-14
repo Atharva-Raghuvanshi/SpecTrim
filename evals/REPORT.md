@@ -3,10 +3,10 @@
 _Generated from evals/results/*.json — only measured numbers appear here; anything missing is NOT MEASURED. Frozen labels: evals/prompts/labels.jsonl (user approval pending)._
 
 ## E1/E2 — spec quality + question quality (prompts v2)
-- ran: 24/30 prompts · model: gpt-oss-120b pipeline (Groq free tier)
-- E1 validity: 18/24 (0%); invalid: 0; quota-aborted: 6 (resume-safe)
+- ran: 22/30 prompts · model: gpt-oss-120b pipeline (Groq free tier)
+- E1 validity: 22/22 (0%); invalid: 0; quota-aborted: 8 (resume-safe)
 - E2 precision: None · recall: None (micro, category-level)
-- tokens_total_est: 247604
+- tokens_total_est: 302801
 
 ## E3 — downstream lift
 - builder model: `groq/openai/gpt-oss-20b`

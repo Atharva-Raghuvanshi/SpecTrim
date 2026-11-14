@@ -34,6 +34,15 @@ lint:
 migrate:
 	$(PY) -m app.storage.migrate
 
+eval-daily:
+	$(PY) -u -m evals.orchestr
+
+eval-status:
+	$(PY) -m evals.status
+
+eval-stop:
+	@$(PY) -c "from pathlib import Path; Path('evals/results/STOP').write_text('stop requested')"; echo "STOP file created (orchestrator exits after the current cell)"
+
 ui-smoke:
 	@docker compose stop worker >/dev/null 2>&1 || true
 	$(PY) -m pytest -q server/tests/test_wp9.py -v

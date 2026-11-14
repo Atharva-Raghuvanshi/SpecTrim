@@ -175,7 +175,9 @@ class SavingsLedger:
             f"SELECT COALESCE(SUM(tokens_baseline_est),0), COALESCE(SUM(tokens_actual),0), "
             f"COUNT(*), COALESCE(SUM(cache_hit::int),0), COALESCE(SUM(passthrough::int),0), "
             f"COALESCE(SUM(cost_actual),0), COUNT(cost_actual), "
-            f"percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms) "
+            f"percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms), "
+            f"SUM(CASE WHEN pass_reports::text LIKE '%invalid_after_pass%' THEN 1 ELSE 0 END), "
+            f"SUM(CASE WHEN pass_reports::text LIKE '%invalid_original%' THEN 1 ELSE 0 END) "
             f"FROM {table} WHERE created_at > now() - INTERVAL '{span}'"
         )
         async with self.pool.connection() as conn, conn.cursor() as cur:

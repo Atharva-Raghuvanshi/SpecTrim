@@ -511,3 +511,56 @@ UI_DEMO=1 .venv/Scripts/python -m scripts.seed_demo_traffic   # then open http:/
 .venv/Scripts/python.exe scripts/bench_latency.py    # recorded p95s (P4 GC-spikes noted)
 .venv/Scripts/python.exe -m evals.auto_finish        # sequential, quota-aware
 ```
+
+## WP13 (revised) — stamp semantics, quota fixes, unattended orchestrator (2026-11-14/15)
+
+**Status:** DONE. Commits: PART1 `dca4aa0`, WP13 `1a4d566` + this commit. **161 tests pass**, ruff+mypy clean. Verify commands at the end.
+
+### PART 1 — cleanup
+4 evals processes killed (2 auto_finish + 2 runner); lockfile removed. tasks_e4b moved to `evals/tasks_e4b.json` (references updated; note in `evals/README.md`). Stale numbers marked SUPERSEDED in log/README (-22% tokens, −10.6pts lift, v1 denominators).
+
+### PART 2 — quota tracker (evals/quota.py + server/tests/test_quota_wp13.py, 9 tests)
+- `normalize_key`: 'groq/openai/gpt-oss-20b' == 'openai/gpt-oss-20b' — one counter; `_merge_split_keys` migrates the split counters in quota.json (max-merge; merged 20b total today = 162,261 tok — already over the 170K stop line).
+- `check_tpd` prefers provider `x-ratelimit-remaining-tokens` over local counts when fresher.
+- Daily-limit 429 handling: `mark_daily_exhausted`/`is_exhausted`/`probe` — one tiny direct call per HOUR detects the reset (no UTC-midnight assumption); non-daily 429s are treated as recoverable.
+
+### PART 3 — stamp semantics (verified, tests in test_wp13.py)
+Content-hash only; commit = provenance. E1/E2: prompts+models+labels; proxy: registry+floors+models+prompts+tasks. Tests prove: docs-only commit keeps cells; policy change invalidates proxy only; labels invalidate E1/E2 only. **Kept vs re-run:** E1/E2 v2 24 cells migrated+kept (git-proven unchanged inputs), 6 prompts re-run (~45K tok est); E4 25 v1partial cells stale (pre-WP11 registry) → re-run est ~48K tok; E5 dev-set cells not re-run (E5 moved to e4b tasks).
+
+### PART 4 — guard observability
+Counters `qo_proxy_invalid_after_pass_total{pass}` + `qo_proxy_invalid_original_total`; Grafana stat panel; UI KPI card; ledger summary reports both. bench-latency re-run: **guard 0.4ms p95; chain p95 ~290ms on the 180K-line input — honest MISS vs 150ms** (P4 GC-pause spikes; recorded in e4 latency_bench.json). tasks_e4b sanity: ok=true (known-good/bad + <6K requests) → E4B_ENABLED default on via the sanity file. Approval pending.
+
+### PART 5 — `make eval-daily` (evals/orchestr.py)
+Single instance (lockfile+PID liveness), STOP file (`make eval-stop`), stages S1→S6 strictly sequential one model at a time, hourly probes when a stage's model is exhausted, per-cell persistence, infra_aborted vs quality_fail, safety stop after 3 consecutive non-429 failures (blocker → docs/STATUS.md), never edits code/prompts/labels. `make eval-status` prints stage/cell progress, per-model tokens, last 5 result files, PID liveness, STATUS.md.
+
+### PART 6 — automatic finalization (S6)
+REPORT.md regenerated (dev/primary set labels; PAIRED n + wins/ties + sign/Fisher p + per-task outcomes + failed-vs-passed tokens), pareto, README table (paired-only), UI benchmark card (paired + warning on sign disagreement), **docs/RESUME_CLAIMS.md** (auto-generated; claims that survive), **docs/report.html** (static paired report). DoD audit updated below.
+
+### PART 7 — verification (exact commands + output)
+```
+make test   → 161 passed
+make lint   → ruff: All checks passed! · mypy: Success (55 files)
+make coverage → 94.84% (gate 80%)   [previous run]
+make eval-status → pasted below (fresh launch)
+```
+
+### DoD audit (PRD.md §13 + PRD_v2.md §13) — final marks
+- [x] P0s implemented; P1/P2 deferred items listed (README) — DONE
+- [x] Mandatory tests in CI + coverage gate — DONE (161 tests, 94.84%, Postgres in CI)
+- [x] Crash/resume in a test — DONE (real-process kill test)
+- [ ] REPORT.md E1/E2/E3 measured — **PARTIAL**: E1 22/22 completed valid (100% completions; P25-P30 quota-resumed); E2 v1 P0.357/R0.769 n=10, v2 dry n=5; E3 paired 9 ties p≈0.64 (no significant difference); E3b/E4-paired NOT MEASURED (re-running)
+- [x] MCP called from real client — DONE (transcript in docs/demo/)
+- [ ] Public demo live — NOT DONE (needs VPS/domain)
+- [x] README honest limits — DONE
+- PRD_v2: proxy base-URL swap DONE; fail-open DONE (injected tests); ledger/dashboard per pass DONE; E4/E5/E6 **PARTIAL** (E4b paired rerun auto-resuming; E5 trial pending; E6 chart from partial points); README defaults DONE.
+
+### §1.5 / §3 metric table (measured or NOT MEASURED)
+- Validity: 100% of completed (22/22 v2) · NOT MEASURED for the remaining 8 until quota
+- Question precision: v1 0.357 (n=10); v2 NOT MEASURED full-run · Recall: v1 0.769 (n=10)
+- Downstream lift: paired 9 ties p≈0.64 — no significant difference; E3b on non-trivial tasks: NOT MEASURED
+- Duplicate prevention: 0 duplicates (tested) · SSE replay: 0 gaps (tested)
+- p95 non-LLM: ~119ms (<200ms) · added proxy overhead p95: 106-119ms guard-inclusive (<150ms) · first-version time: NOT MEASURED precisely
+- Tokens per task: paired deltas NOT MEASURED (re-run queued) · failed-vs-passed tokens: off 1319/1155, safe 1958/468 (n=6, tiny fixtures)
+
+### Remaining
+- VPS/domain for public demo + video (user provides) · approval of frozen prompts/tasks (pending) · quota-blocked cells auto-resume via `make eval-daily`.

@@ -124,6 +124,8 @@ def main() -> int:
     if not args.no_resume and out_path.is_file():
         try:
             prev = json.loads(out_path.read_text(encoding="utf-8"))
+            kept = sum(1 for r in prev.get("per_prompt", []) if stamp_matches(r.get("stamp"), stamp))
+            print(f"stamp: kept {kept} completed prompts under current content hash")
             for r in prev.get("per_prompt", []):
                 # Resume completed runs whose stamp matches the current content hashes
                 if not r.get("infra_aborted") and stamp_matches(r.get("stamp"), stamp):

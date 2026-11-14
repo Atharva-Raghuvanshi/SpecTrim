@@ -23,7 +23,7 @@ from app.storage.db import close_pool, open_pool  # noqa: E402
 from app.storage.migrate import apply_migrations  # noqa: E402
 
 RESULTS = Path(__file__).resolve().parent / "results"
-E4B_TASKS = Path(__file__).resolve().parent / "tasks" / "tasks_e4b.json"
+E4B_TASKS = Path(__file__).resolve().parent / "tasks_e4b.json"
 WINDOW_MIN = 10  # ledger rows created in the last N minutes are the trial's
 
 
