@@ -1,0 +1,131 @@
+{
+  "builder_model": "groq/openai/gpt-oss-20b",
+  "cells": {
+    "T1:rep0:raw": {
+      "pass": false,
+      "stage": "behaviour",
+      "latency_s": 1.1,
+      "src_bytes": 835,
+      "tokens_est": 480
+    },
+    "T1:rep0:optimized": {
+      "pass": false,
+      "stage": "behaviour",
+      "latency_s": 1.2,
+      "src_bytes": 798,
+      "tokens_est": 470
+    },
+    "T1:rep1:raw": {
+      "pass": false,
+      "stage": "behaviour",
+      "latency_s": 1.2,
+      "src_bytes": 864,
+      "tokens_est": 493
+    },
+    "T1:rep1:optimized": {
+      "pass": false,
+      "stage": "behaviour",
+      "latency_s": 1.1,
+      "src_bytes": 864,
+      "tokens_est": 493
+    },
+    "T2:rep0:raw": {
+      "pass": true,
+      "stage": "behaviour",
+      "latency_s": 1.3,
+      "src_bytes": 1141,
+      "tokens_est": 583
+    },
+    "T2:rep0:optimized": {
+      "pass": true,
+      "stage": "behaviour",
+      "latency_s": 1.4,
+      "src_bytes": 1084,
+      "tokens_est": 553
+    },
+    "T2:rep1:raw": {
+      "pass": true,
+      "stage": "behaviour",
+      "latency_s": 3.8,
+      "src_bytes": 847,
+      "tokens_est": 513
+    },
+    "T2:rep1:optimized": {
+      "pass": true,
+      "stage": "behaviour",
+      "latency_s": 37.2,
+      "src_bytes": 935,
+      "tokens_est": 518
+    },
+    "T3:rep0:raw": {
+      "pass": true,
+      "stage": "behaviour",
+      "latency_s": 2.2,
+      "src_bytes": 1578,
+      "tokens_est": 620
+    },
+    "T3:rep0:optimized": {
+      "pass": true,
+      "stage": "behaviour",
+      "latency_s": 1.6,
+      "src_bytes": 1634,
+      "tokens_est": 652
+    },
+    "T3:rep1:raw": {
+      "pass": true,
+      "stage": "behaviour",
+      "latency_s": 1.5,
+      "src_bytes": 1514,
+      "tokens_est": 626
+    },
+    "T3:rep1:optimized": {
+      "pass": true,
+      "stage": "behaviour",
+      "latency_s": 1.5,
+      "src_bytes": 1579,
+      "tokens_est": 620
+    },
+    "T4:rep0:raw": {
+      "pass": true,
+      "stage": "behaviour",
+      "latency_s": 1.1,
+      "src_bytes": 762,
+      "tokens_est": 509
+    },
+    "T4:rep0:optimized": {
+      "pass": true,
+      "stage": "behaviour",
+      "latency_s": 2.3,
+      "src_bytes": 962,
+      "tokens_est": 585
+    },
+    "T4:rep1:raw": {
+      "pass": true,
+      "stage": "behaviour",
+      "latency_s": 37.1,
+      "src_bytes": 762,
+      "tokens_est": 532
+    },
+    "T4:rep1:optimized": {
+      "pass": true,
+      "stage": "behaviour",
+      "latency_s": 2.6,
+      "src_bytes": 852,
+      "tokens_est": 548
+    },
+    "T5:rep0:raw": {
+      "pass": true,
+      "stage": "behaviour",
+      "latency_s": 2.4,
+      "src_bytes": 3240,
+      "tokens_est": 1071
+    },
+    "T5:rep0:optimized": {
+      "pass": true,
+      "stage": "behaviour",
+      "latency_s": 4.4,
+      "src_bytes": 2169,
+      "tokens_est": 898
+    }
+  }
+}

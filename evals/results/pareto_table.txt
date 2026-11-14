@@ -1,0 +1,7 @@
+experiment config model n pass_rate tokens_in_avg
+E4 balanced groq/qwen/qwen3.8-27b n=8 38% 1445
+E4 off groq/qwen/qwen3.8-27b n=6 33% 1914
+E4 safe groq/qwen/qwen3.8-27b n=6 33% 1461
+E5 balanced groq/openai/gpt-oss-20b n=4 100% 282
+E5 balanced_no_P5 groq/openai/gpt-oss-20b n=4 100% 282
+E5 balanced_no_P9 groq/openai/gpt-oss-20b n=4 100% 282

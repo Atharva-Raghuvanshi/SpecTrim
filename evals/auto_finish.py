@@ -85,7 +85,7 @@ def e5_done() -> bool:
 
 PHASES = [
     ("WP3-resume", wp3_done,
-     lambda: ["-m", "evals.runner", "--version", "v2", "--max-tokens", "170000",
+     lambda: ["-m", "evals.runner", "--version", "v2", "--max-tokens", "400000",
               "--pace-s", "5", "--output", "evals/results/e1_e2_v2_full.json"],
      lambda: quota("openai/gpt-oss-120b") >= 100000),
     ("E3", e3_done,
