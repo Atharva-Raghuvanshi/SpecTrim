@@ -89,6 +89,7 @@ def probe_until_reset(model: str, deadline: float) -> bool:
     from evals.quota import QuotaTracker
 
     t = QuotaTracker()
+    t.mark_daily_exhausted(model)  # evidence: free < stage estimate
     while time.time() < deadline:
         print(f"[{now()}] probing {model} hourly for quota reset…", flush=True)
         if t.probe(model):
@@ -99,6 +100,14 @@ def probe_until_reset(model: str, deadline: float) -> bool:
 
 
 def pid_alive(pid: int) -> bool:
+    if os.name == "nt":
+        import ctypes
+
+        h = ctypes.windll.kernel32.OpenProcess(0x1000, False, pid)
+        if h:
+            ctypes.windll.kernel32.CloseHandle(h)
+            return True
+        return False
     try:
         os.kill(pid, 0)
         return True

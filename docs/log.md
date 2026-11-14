@@ -564,3 +564,32 @@ make eval-status → pasted below (fresh launch)
 
 ### Remaining
 - VPS/domain for public demo + video (user provides) · approval of frozen prompts/tasks (pending) · quota-blocked cells auto-resume via `make eval-daily`.
+
+### WP13 PART 7 — launch confirmation (make eval-daily + make eval-status)
+```
+$ make eval-status
+== eval-daily status ==
+orchestrator: RUNNING pid=10952
+STOP file: absent
+stages:
+  S1 E1/E2 v2 remainder: 22/30 cells
+  S2 E4b primary off+balanced: 0/16 cells
+  S2b E4b primary safe: 0/24 cells
+  S3b E5 trial + ablation on e4b: 0 cells
+  S4a E3b specs: 0/3 cells
+  S4b E3b builder cells: 0/12 cells
+  S5 E4 tiny dev/regression: 0/48 cells
+tokens used today (2026-11-14):
+  openai/gpt-oss-20b: 49847 tok, 44 req
+  (other models normalized: 120b ~144K used, qwen ~164K used — hourly probes until reset)
+last 5 result files: e4_20261113_v1partial…, e1_e2_v2_full…, latency_bench…, e4b_sanity…, e3b_…
+docs/STATUS.md: current stage S1 (hourly probe for quota reset)
+```
+The orchestrator probes hourly and continues S1→S6 automatically when quotas reset. Final verify: make test 161 passed · ruff+mypy clean · coverage 94.84% (gate 80%).
+
+### WP13 PART 7 — full verification (re-run after all WP13 edits)
+```
+make test   → 161 passed
+ruff check . → All checks passed!
+mypy server/app → Success (55 files)
+```

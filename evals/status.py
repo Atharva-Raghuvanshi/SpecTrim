@@ -27,12 +27,15 @@ STAGES = [
 
 def done_in(prefix: str) -> int:
     files = sorted(
-        (f for f in RESULTS.glob(f"{prefix}_*.json") if "diagnosis" not in f.name),
+        (f for f in RESULTS.glob(f"{prefix}*.json") if "diagnosis" not in f.name),
         key=lambda p: p.stat().st_mtime,
     )
     if not files:
         return 0
     d = json.loads(files[-1].read_text(encoding="utf-8"))
+    if "per_prompt" in d:
+        return sum(1 for p in d["per_prompt"]
+                   if p.get("valid") is not None and not p.get("infra_aborted"))
     return sum(1 for c in d.get("cells", {}).values() if c.get("pass") is not None)
 
 
@@ -46,11 +49,19 @@ def main() -> int:
             pass
     alive = False
     if pid:
-        try:
-            os.kill(pid, 0)
-            alive = True
-        except OSError:
-            alive = False
+        if os.name == "nt":
+            import ctypes
+
+            h = ctypes.windll.kernel32.OpenProcess(0x1000, False, pid)
+            if h:
+                ctypes.windll.kernel32.CloseHandle(h)
+                alive = True
+        else:
+            try:
+                os.kill(pid, 0)
+                alive = True
+            except OSError:
+                alive = False
     print(f"orchestrator: {'RUNNING pid=' + str(pid) if alive else 'not running'}")
     print(f"STOP file: {'present' if STOP.is_file() else 'absent'}")
 
@@ -70,7 +81,10 @@ def main() -> int:
         q = json.loads(qf.read_text(encoding="utf-8"))
         print(f"tokens used today ({q.get('date_utc')}):")
         for m, v in sorted(q.get("models", {}).items()):
-            print(f"  {m}: {v.get('tokens_today')} tok, {v.get('requests_today')} req")
+            from evals.quota import normalize_key
+
+        nk = normalize_key(m)
+        print(f"  {nk}: {v.get('tokens_today')} tok, {v.get('requests_today')} req")
 
     files = sorted(
         (f for f in RESULTS.glob("*.json") if "quota" not in f.name and "audit" not in f.name),
