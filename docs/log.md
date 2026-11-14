@@ -647,3 +647,25 @@ docs/STATUS.md: current stage S1 (hourly probe for quota reset)
 orchestrator.log: STAGE PLAN S1 … 25,754 tok free → model exhausted; probing hourly
 ```
 The orchestrator runs detached (log: evals/results/orchestrator.log), probes hourly, and continues S1→S6 as quotas reset. `make eval-stop` halts it cleanly after the current cell.
+
+## WP15 — scope cut (2026-11-15)
+
+**Scope change:** `EVAL_STAGES` (env, default **S1,S2,S6**). S2b (E4b safe), S3b/S3c (E5), S4a/S4b (E3b), S5 (E4 tiny) are **DISABLED** by default — still runnable via `EVAL_STAGES=S1,S2,S2b,...`. `make eval-status` shows them as DISABLED (not pending). No pass code or versions were changed (stamps unaffected).
+
+**Quota reconcile (re-confirmed, small):** the gpt-oss-20b total was merged by **SUM** (not max/dedupe): 40,771 + 162,261 = 203,032 recorded under the two spellings because the E1/E2 runner records under `res.model` (`openai/...`, provider-stripped) and E4/E5 under `args.model` (`groq/...`) — different calls, no double-count. One tiny probe (this WP): `x-ratelimit-limit-tokens=8000, remaining=7927, reset=547ms` → these headers are the **per-minute TPM window**, not daily; daily tracking stays on the local SUM. The earlier claim "162,261 is over the 170K stop" was **false** (162K < 170K) and is corrected in the WP13 log entry; the true statement is the SUM (203K) exceeded the 200K TPD. Test: `test_merge_sums_split_counters_not_max` (+3 more from WP14). 'Tokens today' date label verified correct — `today_utc()` returns the live UTC date (2026-11-14 at the time of the check; the machine clock was still inside that UTC day).
+
+**Latency (measurement only, no pass modified)** — `bench_latency.py --pass-buckets`, 30 reps, gc.collect() before each, valid tool-loop input (raw JSON: evals/results/latency_pass_buckets.json):
+| pass | p50 @1.3K | p95 @1.3K | p50 @9.4K | p95 @9.4K | p50 @97.7K | p95 @97.7K |
+|---|---|---|---|---|---|---|
+| P4 | 0.11ms | 0.25ms | 2.23ms | 3.55ms | 11.76ms | 17.35ms |
+| P5 | 0.09ms | 0.10ms | 0.17ms | 0.32ms | 0.65ms | 0.91ms |
+| P1 | 0.07ms | 0.12ms | 0.06ms | 0.08ms | 0.06ms | 0.09ms |
+| P7 | 0.03ms | 0.05ms | 0.03ms | 0.05ms | 0.02ms | 0.04ms |
+| chain_safe | 0.22ms | 0.94ms | 1.31ms | 1.69ms | 12.21ms | 16.15ms |
+Every number above carries its input size. The **180K-line GC-heavy miss (~290ms p95, WP14) remains a documented result** — no mitigation built (scope).
+
+**Finalization:** S6 outputs (REPORT.md, README table, RESUME_CLAIMS.md, report.html) now list the cut experiments as **NOT MEASURED: not run (free-tier quota / scope)** — not pending, not failed. DoD: E4/E5/E6 PARTIAL with exactly this reason.
+
+**Not built (per scope):** tree-sitter, screenshots, deployment work. No new features.
+
+**Verify:** make test → 166 passed · ruff+mypy clean · coverage 94% (gate 80%).

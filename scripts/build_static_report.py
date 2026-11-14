@@ -101,10 +101,12 @@ def e4_section() -> str:
 
 
 def main() -> int:
+    scope_note = ("<p class='muted'>Scope (WP15): E4b safe arm, E5 ablation, E3b, "
+                  "E4 tiny set are NOT MEASURED: not run (free-tier quota / scope).</p>")
     body = ["<h1>Query Optimizer — measured results</h1>"
             "<p class='muted'>generated from evals/results/*.json · paired, same-stamp, "
             "complete cells only; everything else NOT MEASURED</p>",
-            e12_section(), e4_section()]
+            scope_note, e12_section(), e4_section()]
     OUT.write_text(
         f"<!DOCTYPE html><html><head><meta charset='utf-8'>"
         f"<title>QO measured results</title><style>{CSS}</style></head>"

@@ -110,6 +110,17 @@ def main() -> int:
         "separately and never averaged together."
     )
 
+    parts.append("## Scope (WP15)")
+    import os as _os
+
+    scope = _os.environ.get("EVAL_STAGES", "S1,S2,S6")
+    parts.append(f"- Stage scope: EVAL_STAGES={scope}.")
+    parts.append("- Experiments outside the scope are **NOT MEASURED: not run "
+                 "(free-tier quota / scope)** — E4b safe arm, E5 ablation, E3b "
+                 "multi-file lift, E4 tiny dev/regression set. They are not pending "
+                 "and not failed; they were cut by scope decision.")
+    parts.append("")
+
     parts.append("## Limitations")
     parts.append(
         "- Groq free tier: per-model 30 RPM / 1K RPD / 8K TPM / 200K TPD; several runs "

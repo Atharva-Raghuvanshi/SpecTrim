@@ -33,6 +33,10 @@ _Generated from evals/results/*.json — only measured numbers appear here; anyt
 
 ## Primary benchmark set (queued)
 - tasks_e4b.json (4 multi-turn tasks with 3-5K-token tool logs) is the **primary benchmark set**; the 8 tiny tasks above are the **dev / regression set**. Primary-set cells are stamped (WP12) and run only after the dev-set paired rerun completes under the same code stamp.- Sets are never mixed: dev-set cells and primary-set cells are reported separately and never averaged together.
+## Scope (WP15)
+- Stage scope: EVAL_STAGES=S1,S2,S6.
+- Experiments outside the scope are **NOT MEASURED: not run (free-tier quota / scope)** — E4b safe arm, E5 ablation, E3b multi-file lift, E4 tiny dev/regression set. They are not pending and not failed; they were cut by scope decision.
+
 ## Limitations
 - Groq free tier: per-model 30 RPM / 1K RPD / 8K TPM / 200K TPD; several runs spanned multiple UTC days via the resumable quota-aware runners.
 - Small n per config (see each table); single provider; tiny single-file tasks.

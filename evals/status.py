@@ -39,8 +39,14 @@ def done_in(prefix: str) -> int:
     return sum(1 for c in d.get("cells", {}).values() if c.get("pass") is not None)
 
 
+def selected_stages() -> list[str]:
+    raw = os.environ.get("EVAL_STAGES", "S1,S2,S6")
+    return [t.strip() for t in raw.split(",") if t.strip()]
+
+
 def main() -> int:
     print("== eval-daily status ==")
+    sel = selected_stages()
     pid = None
     if LOCK.is_file():
         try:
@@ -65,8 +71,12 @@ def main() -> int:
     print(f"orchestrator: {'RUNNING pid=' + str(pid) if alive else 'not running'}")
     print(f"STOP file: {'present' if STOP.is_file() else 'absent'}")
 
+    print(f"stage selection (EVAL_STAGES): {','.join(sel) if sel else 'none'}")
     print("stages:")
     for sid, name, total in STAGES:
+        if sid not in sel:
+            print(f"  {sid} {name}: DISABLED")
+            continue
         prefix = {
             "S1": "e1_e2_v2_full", "S2": "e4_tasks_e4b", "S2b": "e4_tasks_e4b",
             "S3b": "e5_tasks_e4b", "S4a": "e3b_specs", "S4b": "e3b",

@@ -39,6 +39,12 @@ def now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
 
 
+def selected_stages() -> list[str]:
+    """WP15 scope cut: EVAL_STAGES env (default 'S1,S2,S6')."""
+    raw = os.environ.get("EVAL_STAGES", "S1,S2,S6")
+    return [t.strip() for t in raw.split(",") if t.strip()]
+
+
 def _used(model: str) -> int:
     qf = RESULTS / "quota.json"
     if not qf.is_file():
@@ -91,6 +97,9 @@ def probe_until_reset(model: str, deadline: float) -> bool:
     t = QuotaTracker()
     t.mark_daily_exhausted(model)  # evidence: free < stage estimate
     while time.time() < deadline:
+        if STOP.is_file():
+            print(f"[{now()}] STOP file seen during probe wait; exiting", flush=True)
+            return False
         print(f"[{now()}] probing {model} hourly for quota reset…", flush=True)
         if t.probe(model):
             print(f"[{now()}] {model} quota reset detected", flush=True)
@@ -197,6 +206,10 @@ def main() -> int:
         stages = build_stages()
         for stage in stages:
             name = stage["name"]
+            sid = stage.get("sid", name)
+            if sid not in selected_stages():
+                print(f"[{now()}] {name}: DISABLED (not in EVAL_STAGES)", flush=True)
+                continue
             if STOP.is_file():
                 print(f"[{now()}] STOP file present; exiting cleanly", flush=True)
                 break
@@ -237,6 +250,7 @@ def build_stages() -> list[dict]:  # noqa: ANN201
     return [
         {
             "name": "S1-E1E2-v2",
+        "sid": "S1",
             "model": "openai/gpt-oss-120b",
             "est_tokens": 45000,
             "cmd": ["-m", "evals.runner", "--version", "v2", "--max-tokens", "400000",
@@ -245,6 +259,7 @@ def build_stages() -> list[dict]:  # noqa: ANN201
         },
         {
             "name": "S2-E4b-off-balanced",
+        "sid": "S2",
             "model": "groq/qwen/qwen3.8-27b",
             "est_tokens": 35000,
             "cmd": ["-m", "evals.run_e4", "--model", "groq/qwen/qwen3.8-27b",
@@ -254,6 +269,7 @@ def build_stages() -> list[dict]:  # noqa: ANN201
         },
         {
             "name": "S3-E4b-safe",
+        "sid": "S2b",
             "model": "groq/qwen/qwen3.8-27b",
             "est_tokens": 18000,
             "cmd": ["-m", "evals.run_e4", "--model", "groq/qwen/qwen3.8-27b",
@@ -263,6 +279,7 @@ def build_stages() -> list[dict]:  # noqa: ANN201
         },
         {
             "name": "S3b-E5-trial",
+        "sid": "S3b",
             "model": "groq/openai/gpt-oss-20b",
             "est_tokens": 9000,
             "cmd": ["-m", "evals.e5_trial"],
@@ -270,6 +287,7 @@ def build_stages() -> list[dict]:  # noqa: ANN201
         },
         {
             "name": "S3c-E5-ablation",
+        "sid": "S3c",
             "model": "groq/openai/gpt-oss-20b",
             "est_tokens": 28000,
             "cmd": ["-m", "evals.run_e4", "--model", "groq/openai/gpt-oss-20b",
@@ -279,6 +297,7 @@ def build_stages() -> list[dict]:  # noqa: ANN201
         },
         {
             "name": "S4a-E3b-specs",
+        "sid": "S4a",
             "model": "openai/gpt-oss-120b",
             "est_tokens": 40000,
             "cmd": ["-m", "evals.run_e3b", "--specs-only", "--max-tokens", "170000",
@@ -287,6 +306,7 @@ def build_stages() -> list[dict]:  # noqa: ANN201
         },
         {
             "name": "S4b-E3b-builder",
+        "sid": "S4b",
             "model": "groq/openai/gpt-oss-20b",
             "est_tokens": 28000,
             "cmd": ["-m", "evals.run_e3b", "--builder", "groq/openai/gpt-oss-20b",
@@ -295,6 +315,7 @@ def build_stages() -> list[dict]:  # noqa: ANN201
         },
         {
             "name": "S5-E4-dev-regression",
+        "sid": "S5",
             "model": "groq/qwen/qwen3.8-27b",
             "est_tokens": 18000,
             "cmd": ["-m", "evals.run_e4", "--model", "groq/qwen/qwen3.8-27b",

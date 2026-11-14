@@ -108,8 +108,16 @@ def main() -> int:
             "from ablation arms as NOT VALID."
         )
     else:
-        lines.append("- E5 pass-firing trial: NOT RUN yet.")
+        lines.append("- E5 pass-firing trial: NOT MEASURED: not run "
+                     "(free-tier quota / scope).")
     lines.append("")
+    import os as _os
+
+    scope = _os.environ.get("EVAL_STAGES", "S1,S2,S6")
+    lines.append(f"- Stage scope for this report: EVAL_STAGES={scope}. Experiments outside "
+                 "the scope (E4b safe arm, E5 ablation, E3b multi-file, E4 tiny "
+                 "dev/regression set) are **NOT MEASURED: not run (free-tier quota / "
+                 "scope)** — not pending, not failed.")
 
     if not made_claim:
         lines.append("_No paired, complete claims available yet._")

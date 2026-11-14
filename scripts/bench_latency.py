@@ -107,7 +107,51 @@ def run_buckets(reps: int = 100) -> list[dict]:
     return rows
 
 
+def run_pass_buckets(reps: int = 30) -> list[dict]:
+    import gc
+
+    """WP15: per-pass p50/p95 at 1K/10K/100K tokens, 30 reps. Measurement only."""
+    from app.optimizer.passes import p1_cache_aware_assembly, p4_tool_output_compaction, p7_output_controls
+    from app.optimizer.passes_c import p5_history_compaction
+
+    rows = []
+    pol = resolve_policy("safe", None)
+    for target in (1000, 10000, 100000):
+        req = bucket_request(target)
+        passes = {
+            "P4": lambda r: p4_tool_output_compaction(r, pol),
+            "P5": lambda r: p5_history_compaction(r, pol),
+            "P1": lambda r: p1_cache_aware_assembly(r, pol),
+            "P7": lambda r: p7_output_controls(r, pol),
+            "chain_safe": lambda r: run_chain(r, pol),
+        }
+        for name, fn in passes.items():
+            samples = []
+            for _ in range(reps):
+                gc.collect()
+                t0 = time.perf_counter()
+                fn(req)
+                samples.append((time.perf_counter() - t0) * 1000)
+            samples.sort()
+            est = sum(token_est(str(m.get("content", ""))) for m in req["messages"])
+            rows.append({"pass": name, "target_tokens": target, "est_tokens": est,
+                         "reps": reps,
+                         "p50_ms": round(samples[len(samples) // 2], 2),
+                         "p95_ms": round(samples[int(0.95 * reps)], 2)})
+            print(f"{name:>10s} @ {est:>7d} tok: p50 {rows[-1]['p50_ms']:>8.2f}ms  "
+                  f"p95 {rows[-1]['p95_ms']:>8.2f}ms", flush=True)
+    return rows
+
+
 def main() -> int:
+    if "--pass-buckets" in sys.argv:
+        rows = run_pass_buckets(reps=30)
+        out = {"per_pass_curve": rows, "target_p95_ms": 150,
+               "note": "measurement only; no pass modified; valid tool-loop input; "
+                       "gc.collect() before each rep"}
+        RESULTS.mkdir(parents=True, exist_ok=True)
+        (RESULTS / "latency_pass_buckets.json").write_text(json.dumps(out, indent=2), encoding="utf-8")
+        return 0
     if "--buckets" in sys.argv:
         rows = run_buckets(reps=100)
         out = {"curve": rows, "target_p95_ms": 150,

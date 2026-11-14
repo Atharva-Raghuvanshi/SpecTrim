@@ -1,0 +1,126 @@
+{
+  "per_pass_curve": [
+    {
+      "pass": "P4",
+      "target_tokens": 1000,
+      "est_tokens": 1282,
+      "reps": 30,
+      "p50_ms": 0.11,
+      "p95_ms": 0.25
+    },
+    {
+      "pass": "P5",
+      "target_tokens": 1000,
+      "est_tokens": 1282,
+      "reps": 30,
+      "p50_ms": 0.09,
+      "p95_ms": 0.1
+    },
+    {
+      "pass": "P1",
+      "target_tokens": 1000,
+      "est_tokens": 1282,
+      "reps": 30,
+      "p50_ms": 0.07,
+      "p95_ms": 0.12
+    },
+    {
+      "pass": "P7",
+      "target_tokens": 1000,
+      "est_tokens": 1282,
+      "reps": 30,
+      "p50_ms": 0.03,
+      "p95_ms": 0.05
+    },
+    {
+      "pass": "chain_safe",
+      "target_tokens": 1000,
+      "est_tokens": 1282,
+      "reps": 30,
+      "p50_ms": 0.22,
+      "p95_ms": 0.94
+    },
+    {
+      "pass": "P4",
+      "target_tokens": 10000,
+      "est_tokens": 9382,
+      "reps": 30,
+      "p50_ms": 2.23,
+      "p95_ms": 3.55
+    },
+    {
+      "pass": "P5",
+      "target_tokens": 10000,
+      "est_tokens": 9382,
+      "reps": 30,
+      "p50_ms": 0.17,
+      "p95_ms": 0.32
+    },
+    {
+      "pass": "P1",
+      "target_tokens": 10000,
+      "est_tokens": 9382,
+      "reps": 30,
+      "p50_ms": 0.06,
+      "p95_ms": 0.08
+    },
+    {
+      "pass": "P7",
+      "target_tokens": 10000,
+      "est_tokens": 9382,
+      "reps": 30,
+      "p50_ms": 0.03,
+      "p95_ms": 0.05
+    },
+    {
+      "pass": "chain_safe",
+      "target_tokens": 10000,
+      "est_tokens": 9382,
+      "reps": 30,
+      "p50_ms": 1.31,
+      "p95_ms": 1.69
+    },
+    {
+      "pass": "P4",
+      "target_tokens": 100000,
+      "est_tokens": 97702,
+      "reps": 30,
+      "p50_ms": 11.76,
+      "p95_ms": 17.35
+    },
+    {
+      "pass": "P5",
+      "target_tokens": 100000,
+      "est_tokens": 97702,
+      "reps": 30,
+      "p50_ms": 0.65,
+      "p95_ms": 0.91
+    },
+    {
+      "pass": "P1",
+      "target_tokens": 100000,
+      "est_tokens": 97702,
+      "reps": 30,
+      "p50_ms": 0.06,
+      "p95_ms": 0.09
+    },
+    {
+      "pass": "P7",
+      "target_tokens": 100000,
+      "est_tokens": 97702,
+      "reps": 30,
+      "p50_ms": 0.02,
+      "p95_ms": 0.04
+    },
+    {
+      "pass": "chain_safe",
+      "target_tokens": 100000,
+      "est_tokens": 97702,
+      "reps": 30,
+      "p50_ms": 12.21,
+      "p95_ms": 16.15
+    }
+  ],
+  "target_p95_ms": 150,
+  "note": "measurement only; no pass modified; valid tool-loop input; gc.collect() before each rep"
+}

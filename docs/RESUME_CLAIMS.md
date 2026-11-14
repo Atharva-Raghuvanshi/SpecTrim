@@ -7,5 +7,6 @@ _Generated from evals/results/*.json. Everything not listed here is NOT MEASURED
 
 - E4 paired: NOT MEASURED (insufficient complete triples).
 
-- E5 pass-firing trial: NOT RUN yet.
+- E5 pass-firing trial: NOT MEASURED: not run (free-tier quota / scope).
 
+- Stage scope for this report: EVAL_STAGES=S1,S2,S6. Experiments outside the scope (E4b safe arm, E5 ablation, E3b multi-file, E4 tiny dev/regression set) are **NOT MEASURED: not run (free-tier quota / scope)** — not pending, not failed.
