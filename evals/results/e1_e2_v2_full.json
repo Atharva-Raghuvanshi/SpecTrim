@@ -1,23 +1,23 @@
 {
-  "ran": 13,
-  "completed": 13,
-  "infra_aborted": 0,
+  "ran": 24,
+  "completed": 18,
+  "infra_aborted": 6,
   "quality_fail": 0,
   "e1": {
-    "valid": 13,
+    "valid": 18,
     "invalid": 0,
     "validity_rate": 1.0
   },
   "e2": {
-    "micro_tp": 15,
-    "micro_fp": 10,
+    "micro_tp": 23,
+    "micro_fp": 13,
     "micro_fn": 4,
-    "micro_precision": 0.6,
-    "micro_recall": 0.7894736842105263
+    "micro_precision": 0.6388888888888888,
+    "micro_recall": 0.8518518518518519
   },
-  "tokens_total_est": 174833,
+  "tokens_total_est": 247604,
   "cost_usd_reported": 0.0,
-  "elapsed_s": 0.0,
+  "elapsed_s": 1186.2,
   "per_prompt": [
     {
       "id": "P01",
@@ -262,6 +262,196 @@
         1
       ],
       "valid": true
+    },
+    {
+      "id": "P14",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 15184,
+      "cost_usd": 0.0,
+      "questions": [
+        "auth_model",
+        "data_ownership",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        2,
+        1,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P15",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 12003,
+      "cost_usd": 0.0,
+      "questions": [
+        "auth_model",
+        "data_ownership"
+      ],
+      "tp_fp_fn": [
+        1,
+        1,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P16",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 15186,
+      "cost_usd": 0.0,
+      "questions": [
+        "data_ownership",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        2,
+        0,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P17",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 13713,
+      "cost_usd": 0.0,
+      "questions": [
+        "data_ownership"
+      ],
+      "tp_fp_fn": [
+        0,
+        1,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P18",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 16685,
+      "cost_usd": 0.0,
+      "questions": [
+        "auth_model",
+        "data_ownership",
+        "payments"
+      ],
+      "tp_fp_fn": [
+        3,
+        0,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P19",
+      "version": "v2",
+      "status": "infra_aborted",
+      "infra_aborted": true,
+      "quality_fail": false,
+      "tokens": 0,
+      "cost_usd": 0.0,
+      "questions": [
+        "data_ownership",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        1,
+        1,
+        1
+      ],
+      "valid": false,
+      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b"
+    },
+    {
+      "id": "P20",
+      "version": "v2",
+      "status": "infra_aborted",
+      "infra_aborted": true,
+      "quality_fail": false,
+      "tokens": 0,
+      "cost_usd": 0.0,
+      "valid": false,
+      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b"
+    },
+    {
+      "id": "P21",
+      "version": "v2",
+      "status": "infra_aborted",
+      "infra_aborted": true,
+      "quality_fail": false,
+      "tokens": 0,
+      "cost_usd": 0.0,
+      "questions": [
+        "auth_model",
+        "data_ownership"
+      ],
+      "tp_fp_fn": [
+        1,
+        1,
+        0
+      ],
+      "valid": false,
+      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b"
+    },
+    {
+      "id": "P22",
+      "version": "v2",
+      "status": "infra_aborted",
+      "infra_aborted": true,
+      "quality_fail": false,
+      "tokens": 0,
+      "cost_usd": 0.0,
+      "valid": false,
+      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b"
+    },
+    {
+      "id": "P23",
+      "version": "v2",
+      "status": "infra_aborted",
+      "infra_aborted": true,
+      "quality_fail": false,
+      "tokens": 0,
+      "cost_usd": 0.0,
+      "questions": [
+        "auth_model",
+        "data_ownership",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        2,
+        1,
+        0
+      ],
+      "valid": false,
+      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b"
+    },
+    {
+      "id": "P24",
+      "version": "v2",
+      "status": "infra_aborted",
+      "infra_aborted": true,
+      "quality_fail": false,
+      "tokens": 0,
+      "cost_usd": 0.0,
+      "valid": false,
+      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b"
     }
   ]
 }

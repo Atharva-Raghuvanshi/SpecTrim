@@ -126,6 +126,93 @@
       "latency_s": 4.4,
       "src_bytes": 2169,
       "tokens_est": 898
+    },
+    "T5:rep1:raw": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b"
+    },
+    "T5:rep1:optimized": {
+      "pass": true,
+      "stage": "behaviour",
+      "latency_s": 1.9,
+      "src_bytes": 2156,
+      "tokens_est": 838
+    },
+    "T6:rep0:raw": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b"
+    },
+    "T6:rep0:optimized": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b"
+    },
+    "T6:rep1:raw": {
+      "pass": true,
+      "stage": "behaviour",
+      "latency_s": 1.7,
+      "src_bytes": 1303,
+      "tokens_est": 714
+    },
+    "T6:rep1:optimized": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b"
+    },
+    "T7:rep0:raw": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b"
+    },
+    "T7:rep0:optimized": {
+      "pass": false,
+      "stage": "behaviour",
+      "latency_s": 11.9,
+      "src_bytes": 3585,
+      "tokens_est": 1212
+    },
+    "T7:rep1:raw": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b"
+    },
+    "T7:rep1:optimized": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b"
+    },
+    "T8:rep0:raw": {
+      "pass": true,
+      "stage": "behaviour",
+      "latency_s": 1.6,
+      "src_bytes": 930,
+      "tokens_est": 606
+    },
+    "T8:rep0:optimized": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b"
+    },
+    "T8:rep1:raw": {
+      "pass": true,
+      "stage": "behaviour",
+      "latency_s": 142.0,
+      "src_bytes": 1073,
+      "tokens_est": 505
+    },
+    "T8:rep1:optimized": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b"
     }
+  },
+  "summary": {
+    "pass_rate_raw": 0.8333333333333334,
+    "pass_rate_optimized": 0.7272727272727273,
+    "n_raw": 12,
+    "n_optimized": 11,
+    "lift": -0.10606060606060608
   }
 }

@@ -289,21 +289,6 @@
       "tokens_out": 335,
       "latency_avg_s": 1.64
     },
-    "T7:rep1:off": {
-      "pass": null,
-      "infra_aborted": true,
-      "error": "RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m70m4qk5e3tvbafv3cs9qb4e` service ti"
-    },
-    "T8:rep0:off": {
-      "pass": null,
-      "infra_aborted": true,
-      "error": "RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m70m4qk5e3tvbafv3cs9qb4e` service ti"
-    },
-    "T8:rep1:off": {
-      "pass": null,
-      "infra_aborted": true,
-      "error": "RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m70m4qk5e3tvbafv3cs9qb4e` service ti"
-    },
     "T4:rep0:off": {
       "pass": true,
       "stage": "behaviour",
@@ -312,10 +297,37 @@
       "tokens_out": 130,
       "latency_avg_s": 0.7
     },
+    "T7:rep1:off": {
+      "pass": false,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 476,
+      "tokens_out": 465,
+      "latency_avg_s": 2.35
+    },
+    "T8:rep0:off": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 4,
+      "tokens_in": 2549,
+      "tokens_out": 183,
+      "latency_avg_s": 0.37
+    },
     "T4:rep1:off": {
-      "pass": null,
-      "infra_aborted": true,
-      "error": "RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m70m4qk5e3tvbafv3cs9qb4e` service ti"
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 468,
+      "tokens_out": 107,
+      "latency_avg_s": 0.96
+    },
+    "T8:rep1:off": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 4,
+      "tokens_in": 2524,
+      "tokens_out": 139,
+      "latency_avg_s": 0.61
     }
   },
   "summary": {
@@ -328,12 +340,12 @@
       "latency_avg_s": 0.13
     },
     "off": {
-      "n": 11,
-      "pass_rate": 0.5454545454545454,
-      "tokens_in_avg": 1979.6363636363637,
-      "tokens_out_avg": 229.63636363636363,
-      "iterations_avg": 3.090909090909091,
-      "latency_avg_s": 0.95
+      "n": 15,
+      "pass_rate": 0.6,
+      "tokens_in_avg": 1852.8666666666666,
+      "tokens_out_avg": 228.0,
+      "iterations_avg": 2.933333333333333,
+      "latency_avg_s": 0.99
     },
     "safe": {
       "n": 6,

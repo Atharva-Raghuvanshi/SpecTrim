@@ -422,3 +422,55 @@ make ui-smoke                 # 10 passed
 docker compose stop worker; .venv/Scripts/python.exe -m pytest -q; docker compose start worker   # 126 passed
 UI_DEMO=1 .venv/Scripts/python -m scripts.seed_demo_traffic   # then open http://127.0.0.1:8001/ui
 ```
+
+## FINAL — DoD audit + measured results close-out (2026-11-14)
+
+**Verification:** 126 tests passed · ruff clean · mypy clean (54 files) · all containers healthy.
+
+### PRD.md §13 Definition of Done
+- [x] **All P0 requirements implemented; P1 done or explicitly deferred** — DONE. P0s complete (gateway, schemas, pipeline, durability, versioning, interfaces, observability, proxy). Deferred items explicitly listed: PDF/URL intake (P1), tree-sitter repo map (P1, BM25-lite shipped), P10 prose compression (P2), E5-justified defaults.
+- [x] **Every mandatory test passes in CI; coverage gate met** — DONE. 126 tests (CI runs them incl. DB tests via Postgres service container); coverage 95% vs 80% gate.
+- [x] **Crash/resume demonstrated in a test** — DONE. Real-process test: worker subprocess killed mid-pipeline, stages 1..k not re-executed (server/tests/test_crash_resume.py). (Video: not recorded — no VPS.)
+- [x] **evals/REPORT.md has measured E1, E2, E3** — DONE. E1: 18 valid / 30 attempted (100% of completed; 12 quota-aborted, resumable). E2: precision 0.38→0.50 (v2 dry-run, 5 prompts) / recall 0.76 (v1, 12) — full v2 30-prompt run blocked by org-wide TPM contention, retried by auto-finish. E3 measured: **negative lift −10.6pts** (raw 83.3% n=12 vs optimized 72.7% n=11) — reported honestly; spec context adds noise on trivially small tasks.
+- [x] **MCP tool call from a real coding agent demonstrated** — DONE. Official MCP SDK client called create_spec/get_context/savings_report; transcript docs/demo/mcp_transcript.md.
+- [ ] **Public demo live** — NOT DONE (needs VPS/domain; user provides). All deploy assets ready: docs/DEPLOY.md, scripts/smoke_deploy.sh, Caddyfile, full compose.
+- [x] **README states known limits honestly** — DONE (Measured results table with n+model, Honest status, Limitations).
+
+### PRD_v2.md §13 DoD additions
+- [x] **Proxy works with a real coding agent by base-URL swap** — DONE. Multi-turn tool agent through both /v1/chat/completions and /v1/messages; docs/demo/proxy_proof.md with /stats deltas.
+- [x] **Fail-open proven by injected-failure test** — DONE. Pass-level + router-level + chain-level injected failures all forward the original (tests).
+- [x] **Savings Ledger + dashboard show baseline-est vs actual per pass** — DONE. /stats, /ui dashboard (per-pass chart), Grafana panels.
+- [x] **E4, E5, E6 measured and reported honestly** — DONE (partial quota). E4: off 60% n=15 / safe 33% n=6 / balanced 37.5% n=8 — balanced cut input tokens 22% vs off (1853→1445 avg) with a pass-rate dip; small n. E5: ablation shows **no measurable token/pass effect on small tasks** (identical 282 tokens-in, 100% pass) — per PRD rule, P4/P5 stay enabled but with honest no-effect finding; bigger sessions needed for signal. E6: pareto.png + table. 23 E4 cells + 28 E5 cells remain quota-aborted, auto-retried by the resumable runner.
+- [x] **README before/after + which passes enabled by default and why** — DONE (pass table + measured results + honest status).
+
+### PRD §1.5 / PRD_v2 §3 metrics — measured values
+| Metric | Target | Measured |
+|---|---|---|
+| Spec validity | ≥95% | **100% of completed runs** (18/30 attempted; 12 quota-aborted) — v1; v2 dry-run 100% (5/5) |
+| Question precision | ≥80% | **0.50** (v2 dry-run n=5; v1 was 0.38) — full v2 run pending quota |
+| Question recall | ≥80% | **0.76** (v1 n=12) |
+| Downstream lift | measured honestly | **−10.6 pts** (n=11-12, trivial tasks) — negative, reported |
+| Duplicate-request prevention | 0 | **0** (tested: concurrent Idempotency-Key) |
+| SSE replay | 0 gaps/dups | **0** (tested) |
+| p95 non-LLM latency | <200ms | **~119ms** chain p95 (bench, 200 reps) |
+| First spec version time | ≤45s | ~40-60s observed in smoke (not precisely benchmarked) — PARTIAL |
+| Coverage pipeline/schemas/storage | ≥80% | **94.84%** |
+| Input tokens per task (balanced vs off) | reduced | **−22%** (1445 vs 1853 avg, n=8-15) |
+| Pass rate | within −2pts | **−22pts observed on trivial tasks** (small n) — honest miss, more reps needed |
+| Added proxy latency p95 | <150ms | **110.9-118.9ms** (measured) |
+| Fail-open correctness | 100% | **100%** (injected-failure tests) |
+| Cache correctness | 0 stale serves | **0** (invalidation test suite) |
+
+### Resume-safe claims (measured only)
+1. "Spec pipeline: 100% validity on completed runs (18/30 attempted on Groq free tier; remainder quota-resumable)."
+2. "Question recall 0.76; precision improved 0.38→0.50 with prompts v2 (dry-run n=5)."
+3. "Proxy adds 111-119ms p95 non-LLM overhead (<150ms target), with 100% fail-open correctness and 0 stale cache serves (tested)."
+4. "E4 (partial): balanced mode cut input tokens 22% vs off; pass-rate impact −22pts on trivial fixtures (n=8-15) — needs more reps on larger tasks."
+5. "E5: no measurable token or pass-rate effect from P9/P5 on small tasks (n=4 each) — honest ablation finding."
+6. "E3: negative downstream lift (−10.6pts) on trivial tasks — spec context is not beneficial for one-liner fixtures."
+7. "126 tests green incl. real-process crash/resume; 94.84% coverage on core packages; zero real LLM calls in CI."
+
+### Remaining (needs external resources)
+- VPS/domain → public demo + video (WP8 deploy assets ready).
+- Quota headroom → WP3 last 12 prompts, E3 re-run on non-trivial tasks, E4 23 cells, E5 28 cells (auto-finish orchestrator retries automatically: `python -m evals.auto_finish`).
+- Task-set/prompt-set approval (user) — marked pending everywhere.

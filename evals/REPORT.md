@@ -1,38 +1,36 @@
-# Evaluation Report
+# Evaluation Report (auto-generated from measured result files)
 
-**Date:** 2026-11-12 · **Provider:** Groq free tier (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`) via LiteLLM · **Harness:** `evals/runner.py`, labels frozen in `evals/prompts/labels.jsonl` (30 prompts, authored by the agent per user's "automate via docs" instruction — user approval deferred).
+_Generated from evals/results/*.json — only measured numbers appear here; anything missing is NOT MEASURED. Frozen labels: evals/prompts/labels.jsonl (user approval pending)._
 
-## E1 — Package validity (real run, 12 prompts)
+## E1/E2 — spec quality + question quality (prompts v2)
+- ran: 24/30 prompts · model: gpt-oss-120b pipeline (Groq free tier)
+- E1 validity: 18/24 (0%); invalid: 0; quota-aborted: 6 (resume-safe)
+- E2 precision: None · recall: None (micro, category-level)
+- tokens_total_est: 247604
 
-| Metric | Value |
-|---|---|
-| Attempted | 12 |
-| Valid on completion (schema + OpenAPI lint + consistency, zero warnings) | **10** |
-| Aborted by provider 429 after gateway backoff (7 attempts) | 2 (P11, P12) |
-| **Validity rate of completed runs** | **10/10 = 100%** |
-| Validity rate of attempted runs (conservative) | 83.3% |
+## E3 — downstream lift
+**NOT MEASURED** (spec generation blocked on 120b quota; resumable).
 
-Every prompt that survived Groq's free-tier rate limits produced a spec package that passed all three validation layers with zero warnings. No validity failure was caused by model output quality; both aborts were infrastructure (rate limit), visible in `evals/results/e1_e2.json`.
+## E4 token benchmark
 
-## E2 — Question precision/recall (real run, 12 prompts, frozen labels)
+- model: `groq/qwen/qwen3.8-27b` · cells: 48 (pass 14 / fail 15 / retryable-turn-cap 19)
 
-| Metric | Value |
-|---|---|
-| Micro precision (asked categories that were truly blocking) | **0.38** |
-| Micro recall (expected blocking categories actually asked) | **0.76** |
+- `balanced`: n=8 pass_rate=38% tokens_in_avg=1445 tokens_out_avg=186 iterations=2.375 latency=0.13s
+- `off`: n=15 pass_rate=60% tokens_in_avg=1853 tokens_out_avg=228 iterations=2.933333333333333 latency=0.99s
+- `safe`: n=6 pass_rate=33% tokens_in_avg=1461 tokens_out_avg=171 iterations=2.3333333333333335 latency=0.37s
 
-Interpretation:
-- **Recall 0.76** — the gate asks most genuinely blocking decisions. Misses concentrate in `target_platform`/`auth_model` items the analyzer framed differently than the label vocabulary.
-- **Precision 0.38** is low but expected for this harness: precision counts *categories*, and the analyzer frequently surfaces extra `behavior_detail`/`other` ambiguities the frozen labels do not enumerate. The deterministic gate already demotes low-confidence blocking items (PRD 5.4). Improving precision = tightening the analyzer prompt, not the gate — logged as future work, not silently patched.
+## E5 pass ablation
 
-## E3 — Downstream lift
+- model: `groq/openai/gpt-oss-20b` · cells: 28 (pass 12 / fail 0 / retryable-turn-cap 16)
 
-Not measured in this run. E3 needs a builder agent completing tasks with and without a spec (PRD Open Question 1 default: single-prompt builder via the gateway). Under the free-tier rate limits observed here (multiple 429s per prompt even with pacing), a paired E3 run would be dominated by infra noise, not signal. The harness slot exists in the ledger (`proxy_requests`) for when a paid or higher-quota key is available. **Reported honestly: not measured.**
+- `balanced`: n=4 pass_rate=100% tokens_in_avg=282 tokens_out_avg=816 iterations=1.0 latency=0.67s
+- `balanced_no_P5`: n=4 pass_rate=100% tokens_in_avg=282 tokens_out_avg=816 iterations=1.0 latency=0.09s
+- `balanced_no_P9`: n=4 pass_rate=100% tokens_in_avg=282 tokens_out_avg=816 iterations=1.0 latency=0.08s
 
-## E4 — Token benchmark across modes
+## E6 — cost vs pass-rate Pareto
+![pareto](results/pareto.png) · text table: results/pareto_table.txt
 
-The proxy records `tokens_baseline_est` (char/4 estimate of the original payload) vs provider-reported `tokens_actual` per request in the savings ledger, plus P4/P1 pass reports (est). A first measured before/after number on a realistic coding-agent session is pending — the lossless passes (P1/P4/P7/P9) are implemented and unit-tested; ablation via `GET /stats` needs a multi-turn session driver, which is the M14 harness. **Reported honestly: not measured yet.**
-
-## Cost
-
-`cost_usd_reported = 0.0` — Groq free tier; litellm has no price entry for `groq/openai/gpt-oss-*`, so the gateway records `cost_usd=None` by design (never invent numbers). Token estimates are labelled `_est` everywhere (hard rule).
+## Limitations
+- Groq free tier: per-model 30 RPM / 1K RPD / 8K TPM / 200K TPD; several runs spanned multiple UTC days via the resumable quota-aware runners.
+- Small n per config (see each table); single provider; tiny single-file tasks.
+- Results are indicative, not statistically strong. No number on this page is estimated without the `_est` label; provider-reported usage is used everywhere else.
