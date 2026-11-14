@@ -1,23 +1,23 @@
 {
-  "ran": 24,
-  "completed": 18,
-  "infra_aborted": 6,
+  "ran": 22,
+  "completed": 22,
+  "infra_aborted": 0,
   "quality_fail": 0,
   "e1": {
-    "valid": 18,
+    "valid": 22,
     "invalid": 0,
     "validity_rate": 1.0
   },
   "e2": {
-    "micro_tp": 23,
-    "micro_fp": 13,
-    "micro_fn": 4,
-    "micro_precision": 0.6388888888888888,
-    "micro_recall": 0.8518518518518519
+    "micro_tp": 27,
+    "micro_fp": 17,
+    "micro_fn": 5,
+    "micro_precision": 0.6136363636363636,
+    "micro_recall": 0.84375
   },
-  "tokens_total_est": 247604,
+  "tokens_total_est": 302801,
   "cost_usd_reported": 0.0,
-  "elapsed_s": 1186.2,
+  "elapsed_s": 300.9,
   "per_prompt": [
     {
       "id": "P01",
@@ -578,65 +578,48 @@
     {
       "id": "P19",
       "version": "v2",
-      "status": "infra_aborted",
-      "infra_aborted": true,
+      "status": "ok",
+      "infra_aborted": false,
       "quality_fail": false,
-      "tokens": 0,
+      "tokens": 13427,
       "cost_usd": 0.0,
       "questions": [
+        "data_ownership"
+      ],
+      "tp_fp_fn": [
+        1,
+        0,
+        1
+      ],
+      "valid": true
+    },
+    {
+      "id": "P20",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 14352,
+      "cost_usd": 0.0,
+      "questions": [
+        "auth_model",
         "data_ownership",
         "target_platform"
       ],
       "tp_fp_fn": [
         1,
-        1,
-        1
+        2,
+        0
       ],
-      "valid": false,
-      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b",
-      "stamp": {
-        "content": "06179761b50a",
-        "provenance_commit": "139c0fa",
-        "inputs": {
-          "kind": "e1e2",
-          "prompts": "385aab27fd06",
-          "models": "5edfb7a65006",
-          "labels": "9d2c2ee40d4d",
-          "version": "wp13"
-        }
-      },
-      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
-    },
-    {
-      "id": "P20",
-      "version": "v2",
-      "status": "infra_aborted",
-      "infra_aborted": true,
-      "quality_fail": false,
-      "tokens": 0,
-      "cost_usd": 0.0,
-      "valid": false,
-      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b",
-      "stamp": {
-        "content": "06179761b50a",
-        "provenance_commit": "139c0fa",
-        "inputs": {
-          "kind": "e1e2",
-          "prompts": "385aab27fd06",
-          "models": "5edfb7a65006",
-          "labels": "9d2c2ee40d4d",
-          "version": "wp13"
-        }
-      },
-      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
+      "valid": true
     },
     {
       "id": "P21",
       "version": "v2",
-      "status": "infra_aborted",
-      "infra_aborted": true,
+      "status": "ok",
+      "infra_aborted": false,
       "quality_fail": false,
-      "tokens": 0,
+      "tokens": 12065,
       "cost_usd": 0.0,
       "questions": [
         "auth_model",
@@ -647,110 +630,26 @@
         1,
         0
       ],
-      "valid": false,
-      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b",
-      "stamp": {
-        "content": "06179761b50a",
-        "provenance_commit": "139c0fa",
-        "inputs": {
-          "kind": "e1e2",
-          "prompts": "385aab27fd06",
-          "models": "5edfb7a65006",
-          "labels": "9d2c2ee40d4d",
-          "version": "wp13"
-        }
-      },
-      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
+      "valid": true
     },
     {
       "id": "P22",
       "version": "v2",
-      "status": "infra_aborted",
-      "infra_aborted": true,
+      "status": "ok",
+      "infra_aborted": false,
       "quality_fail": false,
-      "tokens": 0,
-      "cost_usd": 0.0,
-      "valid": false,
-      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b",
-      "stamp": {
-        "content": "06179761b50a",
-        "provenance_commit": "139c0fa",
-        "inputs": {
-          "kind": "e1e2",
-          "prompts": "385aab27fd06",
-          "models": "5edfb7a65006",
-          "labels": "9d2c2ee40d4d",
-          "version": "wp13"
-        }
-      },
-      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
-    },
-    {
-      "id": "P23",
-      "version": "v2",
-      "status": "infra_aborted",
-      "infra_aborted": true,
-      "quality_fail": false,
-      "tokens": 0,
+      "tokens": 15353,
       "cost_usd": 0.0,
       "questions": [
-        "auth_model",
         "data_ownership",
         "target_platform"
       ],
       "tp_fp_fn": [
-        2,
+        1,
         1,
         0
       ],
-      "valid": false,
-      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b",
-      "stamp": {
-        "content": "06179761b50a",
-        "provenance_commit": "139c0fa",
-        "inputs": {
-          "kind": "e1e2",
-          "prompts": "385aab27fd06",
-          "models": "5edfb7a65006",
-          "labels": "9d2c2ee40d4d",
-          "version": "wp13"
-        }
-      },
-      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
-    },
-    {
-      "id": "P24",
-      "version": "v2",
-      "status": "infra_aborted",
-      "infra_aborted": true,
-      "quality_fail": false,
-      "tokens": 0,
-      "cost_usd": 0.0,
-      "valid": false,
-      "error": "GatewayRateLimited: rate limited after 7 attempts on groq/openai/gpt-oss-120b",
-      "stamp": {
-        "content": "06179761b50a",
-        "provenance_commit": "139c0fa",
-        "inputs": {
-          "kind": "e1e2",
-          "prompts": "385aab27fd06",
-          "models": "5edfb7a65006",
-          "labels": "9d2c2ee40d4d",
-          "version": "wp13"
-        }
-      },
-      "stamp_note": "migrated: prompts/labels/models verified unchanged since b62766d"
+      "valid": true
     }
-  ],
-  "stamp": {
-    "content": "06179761b50a",
-    "provenance_commit": "139c0fa",
-    "inputs": {
-      "kind": "e1e2",
-      "prompts": "385aab27fd06",
-      "models": "5edfb7a65006",
-      "labels": "9d2c2ee40d4d",
-      "version": "wp13"
-    }
-  }
+  ]
 }

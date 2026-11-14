@@ -457,13 +457,13 @@ UI_DEMO=1 .venv/Scripts/python -m scripts.seed_demo_traffic   # then open http:/
 | Spec validity | ≥95% | **100% of completed runs** (18/30 attempted; 12 quota-aborted) — v1; v2 dry-run 100% (5/5) |
 | Question precision | ≥80% | **0.50** (v2 dry-run n=5; v1 was 0.38) — full v2 run pending quota |
 | Question recall | ≥80% | **0.76** (v1 n=12) |
-| Downstream lift | measured honestly | **−10.6 pts** (n=11-12, trivial tasks) — negative, reported |
+| Downstream lift | measured honestly | **[SUPERSEDED — paired n=9 all ties, Fisher p≈0.64, no significant difference]** apparent −10.6 pts from unpaired cells (n=11-12) |
 | Duplicate-request prevention | 0 | **0** (tested: concurrent Idempotency-Key) |
 | SSE replay | 0 gaps/dups | **0** (tested) |
 | p95 non-LLM latency | <200ms | **~119ms** chain p95 (bench, 200 reps) |
 | First spec version time | ≤45s | ~40-60s observed in smoke (not precisely benchmarked) — PARTIAL |
 | Coverage pipeline/schemas/storage | ≥80% | **94.84%** |
-| Input tokens per task (balanced vs off) | reduced | **−22%** (1445 vs 1853 avg, n=8-15) |
+| Input tokens per task (balanced vs off) | reduced | **[SUPERSEDED — paired analysis showed +18.1% in paired cells]** apparent −22% from unpaired averages (n=8-15) |
 | Pass rate | within −2pts | **−22pts observed on trivial tasks** (small n) — honest miss, more reps needed |
 | Added proxy latency p95 | <150ms | **110.9-118.9ms** (measured) |
 | Fail-open correctness | 100% | **100%** (injected-failure tests) |

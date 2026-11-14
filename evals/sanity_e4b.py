@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from checks import check_generated_multi  # noqa: E402
 
-TASKS = Path(__file__).resolve().parent / "tasks" / "tasks_e4b.json"
+TASKS = Path(__file__).resolve().parent / "tasks_e4b.json"
 RESULTS = Path(__file__).resolve().parent / "results"
 
 # Hand-written known-good solutions (small, correct implementations).
