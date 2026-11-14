@@ -20,7 +20,10 @@ def test_p1_still_runs_when_explicitly_enabled_in_aggressive(monkeypatch) -> Non
     messages = [
         {"role": "system", "content": "sys"},
         {"role": "user", "content": "latest"},
-        {"role": "tool", "content": "out"},
+        {"role": "assistant", "content": "",
+         "tool_calls": [{"id": "t1", "type": "function",
+                         "function": {"name": "f", "arguments": "{}"}}]},
+        {"role": "tool", "content": "out", "tool_call_id": "t1"},
     ]
     _, reports = run_chain({"messages": messages}, pol)
     p1 = next(r for r in reports if r["pass"] == "P1")

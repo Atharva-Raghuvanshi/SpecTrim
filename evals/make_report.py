@@ -20,7 +20,10 @@ def load(name: str) -> dict | None:
 
 def e_section() -> str:
     lines = []
-    for exp, label in (("e4", "E4 token benchmark"), ("e5", "E5 pass ablation")):
+    for exp, label in (
+        ("e4", "E4 token benchmark — dev/regression set (tiny single-file tasks)"),
+        ("e5", "E5 pass ablation — dev/regression set"),
+    ):
         files = sorted(
             (f for f in RESULTS.glob(f"{exp}_*.json") if "diagnosis" not in f.name),
             key=lambda p: p.stat().st_mtime)
@@ -96,6 +99,16 @@ def main() -> int:
     else:
         parts.append("**NOT MEASURED** yet.")
     parts.append("")
+
+    parts.append("## Primary benchmark set (queued)")
+    parts.append(
+        "- tasks_e4b.json (4 multi-turn tasks with 3-5K-token tool logs) is the "
+        "**primary benchmark set**; the 8 tiny tasks above are the **dev / regression "
+        "set**. Primary-set cells are stamped (WP12) and run only after the dev-set "
+        "paired rerun completes under the same code stamp."
+        "- Sets are never mixed: dev-set cells and primary-set cells are reported "
+        "separately and never averaged together."
+    )
 
     parts.append("## Limitations")
     parts.append(

@@ -29,6 +29,7 @@ from app.optimizer.passes import PASS_FUNCTIONS  # noqa: E402
 from checks import check_generated  # noqa: E402
 
 from evals.quota import QuotaTracker  # noqa: E402
+from evals.stamp import get_stamp, stamp_matches  # noqa: E402
 
 TASKS = Path(__file__).resolve().parent / "tasks" / "tasks_e3.json"
 RESULTS = Path(__file__).resolve().parent / "results"
@@ -242,12 +243,19 @@ def main() -> int:
         if out_path.is_file() else {"builder_model": args.model, "experiment": args.experiment,
                                     "tasks_file": tasks_src, "cells": {}}
     )
-    # infra-aborted cells are retryable: drop them so resume re-runs them
-    dropped = [k for k, v in results["cells"].items() if v.get("infra_aborted")]
+    # infra-aborted cells are retryable; cells from an older code stamp are
+    # stale and re-run (WP12: never pair/average across stamps)
+    stamp = get_stamp()
+    results["stamp"] = stamp
+    dropped = [
+        k for k, v in results["cells"].items()
+        if v.get("infra_aborted") or not stamp_matches(v.get("stamp"), stamp)
+    ]
     for k in dropped:
         results["cells"].pop(k, None)
     if dropped:
-        print(f"retrying {len(dropped)} infra-aborted cells")
+        print(f"rerunning {len(dropped)} stale/aborted cells under stamp "
+              f"{stamp['commit']}/{stamp['registry']}")
     results["builder_model"] = args.model
 
     n_cells = len(task_ids) * args.reps * len(configs)

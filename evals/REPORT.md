@@ -9,19 +9,20 @@ _Generated from evals/results/*.json — only measured numbers appear here; anyt
 - tokens_total_est: 247604
 
 ## E3 — downstream lift
-**NOT MEASURED** (spec generation blocked on 120b quota; resumable).
+- builder model: `groq/openai/gpt-oss-20b`
+- pass rate raw: 0.8333333333333334 (n=12) · optimized: 0.7272727272727273 (n=11) · lift: -0.10606060606060608
 
-## E4 token benchmark
+## E4 token benchmark — dev/regression set (tiny single-file tasks)
 
-- model: `groq/qwen/qwen3.8-27b` · cells: 48 (pass 14 / fail 15 / retryable-turn-cap 19)
+- model: `groq/qwen/qwen3.8-27b` · cells: 32 (pass 18 / fail 7 / retryable-turn-cap 7)
 
-- `balanced`: n=8 pass_rate=38% tokens_in_avg=1445 tokens_out_avg=186 iterations=2.375 latency=0.13s
-- `off`: n=15 pass_rate=60% tokens_in_avg=1853 tokens_out_avg=228 iterations=2.933333333333333 latency=0.99s
-- `safe`: n=6 pass_rate=33% tokens_in_avg=1461 tokens_out_avg=171 iterations=2.3333333333333335 latency=0.37s
+- `balanced`: n=8 pass_rate=75% tokens_in_avg=1670 tokens_out_avg=159 iterations=2.75 latency=0.09s
+- `off`: n=7 pass_rate=71% tokens_in_avg=1067 tokens_out_avg=231 iterations=1.8571428571428572 latency=1.07s
+- `safe`: n=10 pass_rate=70% tokens_in_avg=2302 tokens_out_avg=187 iterations=3.5 latency=0.12s
 
-## E5 pass ablation
+## E5 pass ablation — dev/regression set
 
-- model: `groq/openai/gpt-oss-20b` · cells: 28 (pass 12 / fail 0 / retryable-turn-cap 16)
+- model: `groq/openai/gpt-oss-20b` · cells: 0 (pass 0 / fail 0 / retryable-turn-cap 0)
 
 - `balanced`: n=4 pass_rate=100% tokens_in_avg=282 tokens_out_avg=816 iterations=1.0 latency=0.67s
 - `balanced_no_P5`: n=4 pass_rate=100% tokens_in_avg=282 tokens_out_avg=816 iterations=1.0 latency=0.09s
@@ -30,6 +31,8 @@ _Generated from evals/results/*.json — only measured numbers appear here; anyt
 ## E6 — cost vs pass-rate Pareto
 ![pareto](results/pareto.png) · text table: results/pareto_table.txt
 
+## Primary benchmark set (queued)
+- tasks_e4b.json (4 multi-turn tasks with 3-5K-token tool logs) is the **primary benchmark set**; the 8 tiny tasks above are the **dev / regression set**. Primary-set cells are stamped (WP12) and run only after the dev-set paired rerun completes under the same code stamp.- Sets are never mixed: dev-set cells and primary-set cells are reported separately and never averaged together.
 ## Limitations
 - Groq free tier: per-model 30 RPM / 1K RPD / 8K TPM / 200K TPD; several runs spanned multiple UTC days via the resumable quota-aware runners.
 - Small n per config (see each table); single provider; tiny single-file tasks.

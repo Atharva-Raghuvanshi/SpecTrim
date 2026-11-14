@@ -73,6 +73,16 @@ def app_client(fake_gateway, db_pool):
         yield client, app.state.gateway
 
 
+@pytest.fixture()
+def ui_client(fake_gateway, db_pool):
+    from app.main import create_app
+    from fastapi.testclient import TestClient
+
+    app = create_app(gateway=fake_gateway)
+    with TestClient(app) as c:
+        yield c
+
+
 def drain(client, session_id):
     """Process a session's job until it reaches ready/awaiting_user."""
     import asyncio

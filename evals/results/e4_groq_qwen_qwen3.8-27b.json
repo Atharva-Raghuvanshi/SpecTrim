@@ -5,133 +5,196 @@
     "T1:rep0:off": {
       "pass": false,
       "stage": "behaviour",
-      "turns": 3,
-      "tokens_in": 1740,
-      "tokens_out": 225,
-      "latency_avg_s": 0.9
+      "turns": 1,
+      "tokens_in": 474,
+      "tokens_out": 126,
+      "latency_avg_s": 1.9
     },
     "T1:rep0:safe": {
       "pass": false,
       "stage": "behaviour",
-      "turns": 5,
-      "tokens_in": 3446,
-      "tokens_out": 247,
-      "latency_avg_s": 0.41
+      "turns": 2,
+      "tokens_in": 1095,
+      "tokens_out": 56,
+      "latency_avg_s": 0.07
     },
     "T1:rep0:balanced": {
       "pass": false,
       "stage": "behaviour",
-      "turns": 5,
-      "tokens_in": 3446,
-      "tokens_out": 247,
-      "latency_avg_s": 0.06
+      "turns": 2,
+      "tokens_in": 1095,
+      "tokens_out": 56,
+      "latency_avg_s": 0.09
     },
     "T1:rep1:off": {
-      "pass": false,
-      "stage": "behaviour",
-      "turns": 3,
-      "tokens_in": 1746,
-      "tokens_out": 209,
-      "latency_avg_s": 0.56
+      "pass": null,
+      "infra_aborted": false,
+      "error": "BadRequestError: litellm.BadRequestError: GroqException - {\"error\":{\"message\":\"tool call validation failed: attempted to call tool 'run_command' which was not in request.tools\",\"type\":\"invalid_request"
     },
     "T1:rep1:safe": {
       "pass": false,
       "stage": "behaviour",
-      "turns": 5,
-      "tokens_in": 3446,
-      "tokens_out": 247,
-      "latency_avg_s": 0.06
+      "turns": 2,
+      "tokens_in": 1095,
+      "tokens_out": 56,
+      "latency_avg_s": 0.08
     },
     "T1:rep1:balanced": {
       "pass": false,
       "stage": "behaviour",
-      "turns": 5,
-      "tokens_in": 3446,
-      "tokens_out": 247,
-      "latency_avg_s": 0.06
+      "turns": 2,
+      "tokens_in": 1095,
+      "tokens_out": 56,
+      "latency_avg_s": 0.09
+    },
+    "T2:rep0:off": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 4,
+      "tokens_in": 2506,
+      "tokens_out": 243,
+      "latency_avg_s": 0.43
     },
     "T2:rep0:safe": {
-      "pass": false,
+      "pass": true,
       "stage": "behaviour",
-      "turns": 1,
-      "tokens_in": 470,
-      "tokens_out": 152,
-      "latency_avg_s": 0.91
+      "turns": 4,
+      "tokens_in": 2558,
+      "tokens_out": 178,
+      "latency_avg_s": 0.08
     },
     "T2:rep0:balanced": {
-      "pass": false,
+      "pass": true,
       "stage": "behaviour",
-      "turns": 1,
-      "tokens_in": 470,
-      "tokens_out": 152,
-      "latency_avg_s": 0.05
+      "turns": 4,
+      "tokens_in": 2558,
+      "tokens_out": 178,
+      "latency_avg_s": 0.09
+    },
+    "T2:rep1:off": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "BadRequestError: litellm.BadRequestError: GroqException - {\"error\":{\"message\":\"tool call validation failed: attempted to call tool 'runITS' which was not in request.tools\",\"type\":\"invalid_request_erro"
     },
     "T2:rep1:safe": {
-      "pass": false,
+      "pass": true,
       "stage": "behaviour",
-      "turns": 1,
-      "tokens_in": 470,
-      "tokens_out": 152,
+      "turns": 4,
+      "tokens_in": 2558,
+      "tokens_out": 178,
       "latency_avg_s": 0.06
     },
     "T2:rep1:balanced": {
-      "pass": false,
+      "pass": true,
       "stage": "behaviour",
-      "turns": 1,
-      "tokens_in": 470,
-      "tokens_out": 152,
-      "latency_avg_s": 0.05
+      "turns": 4,
+      "tokens_in": 2558,
+      "tokens_out": 178,
+      "latency_avg_s": 0.09
     },
     "T3:rep0:off": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 468,
+      "tokens_out": 280,
+      "latency_avg_s": 0.78
+    },
+    "T3:rep0:safe": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 2,
+      "tokens_in": 1123,
+      "tokens_out": 179,
+      "latency_avg_s": 0.1
+    },
+    "T3:rep0:balanced": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 2,
+      "tokens_in": 1123,
+      "tokens_out": 179,
+      "latency_avg_s": 0.11
+    },
+    "T3:rep1:off": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 4,
+      "tokens_in": 2593,
+      "tokens_out": 209,
+      "latency_avg_s": 0.41
+    },
+    "T3:rep1:safe": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 2,
+      "tokens_in": 1123,
+      "tokens_out": 179,
+      "latency_avg_s": 0.09
+    },
+    "T3:rep1:balanced": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 2,
+      "tokens_in": 1123,
+      "tokens_out": 179,
+      "latency_avg_s": 0.09
+    },
+    "T5:rep0:off": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 482,
+      "tokens_out": 241,
+      "latency_avg_s": 1.29
+    },
+    "T5:rep0:safe": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 3,
+      "tokens_in": 1903,
+      "tokens_out": 224,
+      "latency_avg_s": 0.08
+    },
+    "T5:rep0:balanced": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 3,
+      "tokens_in": 1903,
+      "tokens_out": 224,
+      "latency_avg_s": 0.05
+    },
+    "T5:rep1:off": {
       "pass": false,
       "stage": "syntax",
       "turns": 1,
-      "tokens_in": 468,
-      "tokens_out": 278,
-      "latency_avg_s": 1.42
-    },
-    "T3:rep0:safe": {
-      "pass": null,
-      "infra_aborted": false,
-      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
-    },
-    "T3:rep0:balanced": {
-      "pass": null,
-      "infra_aborted": false,
-      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
-    },
-    "T3:rep1:safe": {
-      "pass": null,
-      "infra_aborted": false,
-      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
-    },
-    "T3:rep1:balanced": {
-      "pass": false,
-      "stage": "behaviour",
-      "turns": 3,
-      "tokens_in": 1733,
-      "tokens_out": 326,
-      "latency_avg_s": 0.33
-    },
-    "T5:rep0:safe": {
-      "pass": null,
-      "infra_aborted": false,
-      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
-    },
-    "T5:rep0:balanced": {
-      "pass": null,
-      "infra_aborted": false,
-      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
+      "tokens_in": 482,
+      "tokens_out": 282,
+      "latency_avg_s": 1.44
     },
     "T5:rep1:safe": {
-      "pass": null,
-      "infra_aborted": false,
-      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 3,
+      "tokens_in": 1903,
+      "tokens_out": 224,
+      "latency_avg_s": 0.07
     },
     "T5:rep1:balanced": {
-      "pass": null,
-      "infra_aborted": false,
-      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 3,
+      "tokens_in": 1903,
+      "tokens_out": 224,
+      "latency_avg_s": 0.1
+    },
+    "T6:rep0:off": {
+      "pass": true,
+      "stage": "behaviour",
+      "turns": 1,
+      "tokens_in": 466,
+      "tokens_out": 235,
+      "latency_avg_s": 1.26
     },
     "T6:rep0:safe": {
       "pass": null,
@@ -143,217 +206,101 @@
       "infra_aborted": false,
       "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
     },
+    "T6:rep1:off": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m70m4qk5e3tvbafv3cs9qb4e` service ti"
+    },
     "T6:rep1:safe": {
-      "pass": null,
-      "infra_aborted": false,
-      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
-    },
-    "T6:rep1:balanced": {
-      "pass": true,
-      "stage": "behaviour",
-      "turns": 2,
-      "tokens_in": 1058,
-      "tokens_out": 131,
-      "latency_avg_s": 0.36
-    },
-    "T7:rep0:safe": {
-      "pass": null,
-      "infra_aborted": false,
-      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
-    },
-    "T7:rep0:balanced": {
-      "pass": null,
-      "infra_aborted": false,
-      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
-    },
-    "T7:rep1:safe": {
-      "pass": null,
-      "infra_aborted": false,
-      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
-    },
-    "T7:rep1:balanced": {
-      "pass": null,
-      "infra_aborted": false,
-      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
-    },
-    "T8:rep0:safe": {
-      "pass": null,
-      "infra_aborted": false,
-      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
-    },
-    "T8:rep0:balanced": {
-      "pass": null,
-      "infra_aborted": false,
-      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
-    },
-    "T8:rep1:safe": {
-      "pass": null,
-      "infra_aborted": false,
-      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
-    },
-    "T8:rep1:balanced": {
-      "pass": null,
-      "infra_aborted": false,
-      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
-    },
-    "T4:rep0:safe": {
-      "pass": true,
-      "stage": "behaviour",
-      "turns": 1,
-      "tokens_in": 468,
-      "tokens_out": 115,
-      "latency_avg_s": 0.71
-    },
-    "T4:rep0:balanced": {
-      "pass": true,
-      "stage": "behaviour",
-      "turns": 1,
-      "tokens_in": 468,
-      "tokens_out": 115,
-      "latency_avg_s": 0.07
-    },
-    "T4:rep1:safe": {
-      "pass": true,
-      "stage": "behaviour",
-      "turns": 1,
-      "tokens_in": 468,
-      "tokens_out": 115,
-      "latency_avg_s": 0.06
-    },
-    "T4:rep1:balanced": {
-      "pass": true,
-      "stage": "behaviour",
-      "turns": 1,
-      "tokens_in": 468,
-      "tokens_out": 115,
-      "latency_avg_s": 0.06
-    },
-    "T2:rep0:off": {
-      "pass": false,
-      "stage": "behaviour",
-      "turns": 1,
-      "tokens_in": 470,
-      "tokens_out": 300,
-      "latency_avg_s": 2.19
-    },
-    "T2:rep1:off": {
-      "pass": true,
-      "stage": "behaviour",
-      "turns": 4,
-      "tokens_in": 2528,
-      "tokens_out": 164,
-      "latency_avg_s": 0.34
-    },
-    "T3:rep1:off": {
       "pass": true,
       "stage": "behaviour",
       "turns": 6,
-      "tokens_in": 4532,
-      "tokens_out": 317,
-      "latency_avg_s": 0.38
+      "tokens_in": 4464,
+      "tokens_out": 216,
+      "latency_avg_s": 0.27
     },
-    "T5:rep1:off": {
+    "T6:rep1:balanced": {
       "pass": null,
       "infra_aborted": false,
-      "error": "BadRequestError: litellm.BadRequestError: GroqException - {\"error\":{\"message\":\"tool call validation failed: attempted to call tool 'run_command' which was not in request.tools\",\"type\":\"invalid_request"
-    },
-    "T5:rep0:off": {
-      "pass": true,
-      "stage": "behaviour",
-      "turns": 1,
-      "tokens_in": 482,
-      "tokens_out": 179,
-      "latency_avg_s": 1.42
-    },
-    "T6:rep0:off": {
-      "pass": true,
-      "stage": "behaviour",
-      "turns": 5,
-      "tokens_in": 3422,
-      "tokens_out": 271,
-      "latency_avg_s": 0.39
-    },
-    "T6:rep1:off": {
-      "pass": true,
-      "stage": "behaviour",
-      "turns": 4,
-      "tokens_in": 2490,
-      "tokens_out": 118,
-      "latency_avg_s": 0.55
+      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err"
     },
     "T7:rep0:off": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01m70m4qk5e3tvbafv3cs9qb4e` service ti"
+    },
+    "T7:rep0:safe": {
       "pass": false,
-      "stage": "behaviour",
-      "turns": 5,
-      "tokens_in": 3430,
-      "tokens_out": 335,
-      "latency_avg_s": 1.64
-    },
-    "T4:rep0:off": {
-      "pass": true,
-      "stage": "behaviour",
-      "turns": 1,
-      "tokens_in": 468,
-      "tokens_out": 130,
-      "latency_avg_s": 0.7
-    },
-    "T7:rep1:off": {
-      "pass": false,
-      "stage": "behaviour",
-      "turns": 1,
-      "tokens_in": 476,
-      "tokens_out": 465,
-      "latency_avg_s": 2.35
-    },
-    "T8:rep0:off": {
-      "pass": true,
-      "stage": "behaviour",
-      "turns": 4,
-      "tokens_in": 2549,
-      "tokens_out": 183,
-      "latency_avg_s": 0.37
-    },
-    "T4:rep1:off": {
-      "pass": true,
-      "stage": "behaviour",
-      "turns": 1,
-      "tokens_in": 468,
-      "tokens_out": 107,
-      "latency_avg_s": 0.96
-    },
-    "T8:rep1:off": {
-      "pass": true,
-      "stage": "behaviour",
-      "turns": 4,
-      "tokens_in": 2524,
-      "tokens_out": 139,
-      "latency_avg_s": 0.61
+      "stage": "syntax",
+      "turns": 7,
+      "tokens_in": 5196,
+      "tokens_out": 378,
+      "latency_avg_s": 0.29
     }
   },
   "summary": {
     "balanced": {
       "n": 8,
-      "pass_rate": 0.375,
-      "tokens_in_avg": 1444.875,
-      "tokens_out_avg": 185.625,
-      "iterations_avg": 2.375,
-      "latency_avg_s": 0.13
+      "pass_rate": 0.75,
+      "tokens_in_avg": 1669.75,
+      "tokens_out_avg": 159.25,
+      "iterations_avg": 2.75,
+      "latency_avg_s": 0.09
     },
     "off": {
-      "n": 15,
-      "pass_rate": 0.6,
-      "tokens_in_avg": 1852.8666666666666,
-      "tokens_out_avg": 228.0,
-      "iterations_avg": 2.933333333333333,
-      "latency_avg_s": 0.99
+      "n": 7,
+      "pass_rate": 0.7142857142857143,
+      "tokens_in_avg": 1067.2857142857142,
+      "tokens_out_avg": 230.85714285714286,
+      "iterations_avg": 1.8571428571428572,
+      "latency_avg_s": 1.07
     },
     "safe": {
-      "n": 6,
-      "pass_rate": 0.3333333333333333,
-      "tokens_in_avg": 1461.3333333333333,
-      "tokens_out_avg": 171.33333333333334,
-      "iterations_avg": 2.3333333333333335,
-      "latency_avg_s": 0.37
+      "n": 10,
+      "pass_rate": 0.7,
+      "tokens_in_avg": 2301.8,
+      "tokens_out_avg": 186.8,
+      "iterations_avg": 3.5,
+      "latency_avg_s": 0.12
     }
+  },
+  "paired": {
+    "bases": [
+      "T1:rep0",
+      "T2:rep0",
+      "T3:rep0",
+      "T3:rep1",
+      "T5:rep0",
+      "T5:rep1"
+    ],
+    "paired_n": 6,
+    "tasks_with_different_outcomes": 1,
+    "per_config": {
+      "balanced": {
+        "n": 6,
+        "pass_rate": 0.8333333333333334,
+        "tokens_in_avg": 1618,
+        "tokens_out_avg": 173,
+        "tokens_in_delta_pct": 38.5
+      },
+      "off": {
+        "n": 6,
+        "pass_rate": 0.6666666666666666,
+        "tokens_in_avg": 1168,
+        "tokens_out_avg": 230,
+        "tokens_in_delta_pct": 0.0
+      },
+      "safe": {
+        "n": 6,
+        "pass_rate": 0.8333333333333334,
+        "tokens_in_avg": 1618,
+        "tokens_out_avg": 173,
+        "tokens_in_delta_pct": 38.5
+      }
+    }
+  },
+  "stamp": {
+    "commit": "459bf0b",
+    "registry": "0b335bc3c059"
   }
 }

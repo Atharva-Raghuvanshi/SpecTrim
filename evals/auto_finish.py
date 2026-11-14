@@ -105,6 +105,17 @@ PHASES = [
         "model": "openai/gpt-oss-120b",
     },
     {
+        "name": "E4b-primary",
+        "est_tokens": 40000,
+        "gate": lambda: os.environ.get("E4B_ENABLED") == "1"
+        and quota("groq/qwen/qwen3.8-27b") >= 40000,
+        "cmd": lambda: ["-m", "evals.run_e4", "--model", "groq/qwen/qwen3.8-27b",
+                        "--experiment", "e4", "--tasks-file",
+                        str(ROOT / "evals" / "tasks" / "tasks_e4b.json"), "--pace-s", "2"],
+        "done": lambda: os.environ.get("E4B_ENABLED") != "1",
+        "model": "groq/qwen/qwen3.8-27b",
+    },
+    {
         "name": "E6",
         "est_tokens": 0,
         "gate": lambda: True,

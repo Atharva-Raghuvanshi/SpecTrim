@@ -26,9 +26,9 @@
       "ratelimit_reset_tokens_s": null
     },
     "groq/qwen/qwen3.8-27b": {
-      "tokens_today": 6911,
-      "requests_today": 5,
-      "last_updated_utc": "2026-11-14T08:10:50.128449+00:00",
+      "tokens_today": 163929,
+      "requests_today": 181,
+      "last_updated_utc": "2026-11-14T17:15:03.826679+00:00",
       "ratelimit_remaining_tokens": null,
       "ratelimit_limit_tokens": null,
       "ratelimit_reset_tokens_s": null

@@ -1,4 +1,8 @@
 {
   "builder_model": "groq/openai/gpt-oss-20b",
-  "cells": {}
+  "cells": {},
+  "stamp": {
+    "commit": "459bf0b",
+    "registry": "0b335bc3c059"
+  }
 }

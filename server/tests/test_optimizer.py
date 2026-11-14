@@ -102,7 +102,7 @@ def test_chain_respects_mode_gating() -> None:
     assert by_pass["P5"]["skipped"] == "mode or kill switch"  # P5 needs balanced
     _, reports_balanced = run_chain(req, resolve_policy("balanced", None))
     by_pass_b = {r["pass"]: r for r in reports_balanced}
-    assert "not implemented" in by_pass_b["P5"]["skipped"]
+    assert by_pass_b["P5"]["skipped"] == ""  # P5 is registered since WP12
 
 
 def test_kill_switch_disables_pass(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -118,8 +118,15 @@ def test_injected_pass_failure_still_forwards(monkeypatch: pytest.MonkeyPatch) -
     def broken(request, pol):  # type: ignore[no-untyped-def]
         raise RuntimeError("injected pass failure")
 
-    monkeypatch.setitem(chain_mod.PASS_FUNCTIONS, "P4", broken)
-    req = {"messages": [{"role": "tool", "content": "data"}, {"role": "user", "content": "go"}]}
+    monkeypatch.setitem(chain_mod.REGISTRY, "P4", broken)
+    req = {"messages": [
+        {"role": "system", "content": "sys"},
+        {"role": "assistant", "content": "",
+         "tool_calls": [{"id": "t1", "type": "function",
+                         "function": {"name": "f", "arguments": "{}"}}]},
+        {"role": "tool", "content": "data", "tool_call_id": "t1"},
+        {"role": "user", "content": "go"},
+    ]}
     out, reports = run_chain(req, resolve_policy("safe", None))
     p4 = next(r for r in reports if r["pass"] == "P4")
     assert "injected pass failure" in p4["skipped"]

@@ -23,6 +23,7 @@ from checks import check_generated_multi, parse_files  # noqa: E402
 
 from evals.agents.builder import build_once  # noqa: E402
 from evals.quota import QuotaTracker  # noqa: E402
+from evals.stamp import get_stamp, stamp_matches  # noqa: E402
 
 TASKS = Path(__file__).resolve().parent / "tasks" / "tasks_e3b.json"
 RESULTS = Path(__file__).resolve().parent / "results"
@@ -81,6 +82,13 @@ def main() -> int:
         if out_path.is_file() else {"builder_model": args.builder, "cells": {}}
     )
     results["builder_model"] = args.builder
+    stamp = get_stamp()
+    results["stamp"] = stamp
+    stale = [k for k, v in results["cells"].items() if not stamp_matches(v.get("stamp"), stamp)]
+    for k in stale:
+        results["cells"].pop(k, None)
+    if stale:
+        print(f"rerunning {len(stale)} cells from an older code stamp")
 
     specs = load_or_make_specs(gateway, quota, args.builder)
     n_cells = len(tasks) * args.reps * 2
@@ -111,6 +119,7 @@ def main() -> int:
                     chk = check_generated_multi(t["id"], files)
                     rec = {
                         "pass": chk["pass"], "stage": chk["stage"],
+                        "stamp": stamp,
                         "files": chk.get("files", []),
                                         "src_bytes": len(src),
                         "tokens": res.usage.total_tokens,

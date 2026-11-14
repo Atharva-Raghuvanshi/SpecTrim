@@ -105,6 +105,21 @@ async def _handle_chat(request: Request, api: str) -> Response:
     optimized, reports = run_chain(body, policy)
     PROXY_OVERHEAD.observe(time.perf_counter() - t_chain)
     overhead_ms = int((time.perf_counter() - t_overhead) * 1000)
+    broken = next((r["pass"] for r in reports if r.get("invalid_after_pass")), None)
+    if broken is not None:
+        # WP12 validity guard: a pass broke the request -> forward the ORIGINAL
+        PROXY_PASSTHROUGH.labels(reason=f"invalid_after_pass:{broken}").inc()
+        if body.get("stream"):
+            return StreamingResponse(
+                proxy_gateway.raw_stream({**body, "model": model}),
+                media_type="text/event-stream",
+            )
+        resp = proxy_gateway.raw_completion({**body, "model": model})
+        tokens_actual, cost_actual = proxy_gateway.raw_usage(resp)
+        await ledger.record(session_id, policy.mode, model, False, True,
+                            tokens_baseline_est, tokens_actual, 0.0, cost_actual,
+                            overhead_ms, reports)
+        return _reply(api, resp)
     _record_savings(reports)
     payload = {**optimized, "model": model}
 

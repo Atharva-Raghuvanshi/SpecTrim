@@ -91,23 +91,49 @@ def p4_tool_output_compaction(request: dict, policy: Policy) -> tuple[dict, dict
     return ({**request, "messages": out} if changed else request), _report("P4", before, after, changed)
 
 
+def _units(messages: list[dict]) -> list[list[dict]]:
+    """Group messages into atomic units: every assistant-with-tool_calls keeps
+    the tool messages that immediately follow it (WP12: tool pairs are never
+    separated by reordering)."""
+    units: list[list[dict]] = []
+    i = 0
+    while i < len(messages):
+        m = messages[i]
+        if m.get("role") == "assistant" and m.get("tool_calls"):
+            unit = [m]
+            i += 1
+            while i < len(messages) and messages[i].get("role") == "tool":
+                unit.append(messages[i])
+                i += 1
+            units.append(unit)
+        else:
+            units.append([m])
+            i += 1
+    return units
+
+
 def p1_cache_aware_assembly(request: dict, policy: Policy) -> tuple[dict, dict]:
     """Stable prefix first, volatile last; the latest user instruction is always
-    the very last message; byte-stable for identical inputs (M11.4)."""
+    the very last message; assistant+tool pairs are atomic (WP12); byte-stable
+    for identical inputs (M11.4)."""
     messages = request.get("messages", [])
     before = _msg_tokens(messages)
     last_user = _last_user_index(messages)
-    system = [m for m in messages if m.get("role") == "system"]
-    stable_rest = [
-        m for i, m in enumerate(messages)
-        if m.get("role") != "system" and i != last_user and m.get("role") in ("user", "assistant")
-    ]
-    others = [
-        m for i, m in enumerate(messages)
-        if m.get("role") not in ("system", "user", "assistant") and i != last_user
-    ]
-    volatile = others + ([messages[last_user]] if last_user >= 0 else [])
-    reordered = system + stable_rest + volatile
+    units = _units(messages)
+    reordered_units: list[list[dict]] = []
+    tail: list[dict] = []
+    for unit in units:
+        first_role = unit[0].get("role")
+        if first_role == "system":
+            reordered_units.append(unit)
+        elif unit is messages[last_user:last_user + 1] or (
+            last_user >= 0 and last_user < len(messages)
+            and messages[last_user] in unit
+        ):
+            tail = unit  # the unit holding the latest user instruction goes last
+        else:
+            reordered_units.append(unit)
+    reordered = [m for u in reordered_units for m in u] + [m for u in [tail] for m in u]
     changed = reordered != messages
     request2 = {**request, "messages": reordered} if changed else request
     return request2, _report("P1", before, _msg_tokens(reordered), changed)
