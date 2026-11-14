@@ -1,6 +1,7 @@
 """Automated pass checks for E3/E4 generated code: syntax, import, behaviour."""
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import tempfile
@@ -49,33 +50,41 @@ def compile_ok(source: str) -> bool:
         return False
 
 
+# E3b multi-file checks: builder output uses '### FILE: name.py' markers.
+NL = chr(10)  # avoids backslash-n ambiguity in these embedded programs
 MULTI_SNIPPETS: dict[str, str] = {
-    "B1": "from cli import main
-main()
-from storage import Ledger
-l = Ledger()
-l.add_expense('a', 30, ['a', 'b'])
-assert l.balances()['a'] == 15
-print('CHECK-OK')",  # noqa: E501
-    "B2": "from api import handle_create, handle_resolve
-from models import InMemoryStore
-s = InMemoryStore()
-r = handle_create('https://example.com/x', s)
-assert handle_resolve(r['code'], s) == 'https://example.com/x'
-print('CHECK-OK')",  # noqa: E501
-    "B3": "from queue import PriorityQueue
-from worker import Worker
-q = PriorityQueue()
-q.push('t1', 2)
-w = Worker(q, {'t1': lambda: 'done'})
-assert w.run_once() == 't1'
-assert w.processed == ['t1']
-print('CHECK-OK')",  # noqa: E501
+    "B1": NL.join([
+        "from cli import main",
+        "main()",
+        "from storage import Ledger",
+        "l = Ledger()",
+        "l.add_expense('a', 30, ['a', 'b'])",
+        "assert l.balances()['a'] == 15",
+        "print('CHECK-OK')",
+    ]),
+    "B2": NL.join([
+        "from api import handle_create, handle_resolve",
+        "from models import InMemoryStore",
+        "s = InMemoryStore()",
+        "r = handle_create('https://example.com/x', s)",
+        "assert handle_resolve(r['code'], s) == 'https://example.com/x'",
+        "print('CHECK-OK')",
+    ]),
+    "B3": NL.join([
+        "from queue import PriorityQueue",
+        "from worker import Worker",
+        "q = PriorityQueue()",
+        "q.push('t1', 2)",
+        "w = Worker(q, {'t1': lambda: 'done'})",
+        "assert w.run_once() == 't1'",
+        "assert w.processed == ['t1']",
+        "print('CHECK-OK')",
+    ]),
 }
 
 
 def parse_files(text: str) -> dict[str, str]:
-    """Parse builder output with '### FILE: name.py' markers into {name: source}.
+    """Parse builder output with ### FILE: name.py markers into {name: source}.
 
     Falls back to {'mod.py': text} when no markers are present."""
     files: dict[str, str] = {}
@@ -85,26 +94,20 @@ def parse_files(text: str) -> dict[str, str]:
         m = line.strip()
         if m.startswith("### FILE:"):
             if current:
-                files[name] = "
-".join(current).strip() + "
-"
+                files[name] = chr(10).join(current).strip() + chr(10)
             name = m.split(":", 1)[1].strip()
             current = []
         else:
             current.append(line)
     if current:
-        files[name] = "
-".join(current).strip() + "
-"
+        files[name] = chr(10).join(current).strip() + chr(10)
     if not files:
         files = {"mod.py": text}
     return files
 
 
 def check_generated_multi(task_id: str, files: dict[str, str]) -> dict:
-    import os
-    import tempfile
-
+    """Write every parsed file into one temp dir, then run the cross-file check."""
     with tempfile.TemporaryDirectory() as td:
         for name, source in files.items():
             path = Path(td) / name
@@ -113,13 +116,13 @@ def check_generated_multi(task_id: str, files: dict[str, str]) -> dict:
         checker = Path(td) / "check.py"
         checker.write_text(MULTI_SNIPPETS.get(task_id, "print('CHECK-OK')"), encoding="utf-8")
         r = subprocess.run(
-            [sys.executable, str(checker)], cwd=td,
-            capture_output=True, text=True, timeout=30,
-            env={"PYTHONPATH": td, "PATH": "",
-                 "SYSTEMROOT": os.environ.get("SYSTEMROOT", "")},
+            [sys.executable, str(checker)], cwd=td, capture_output=True, text=True, timeout=30,
+            env={"PYTHONPATH": td, "PATH": "", "SYSTEMROOT": os.environ.get("SYSTEMROOT", "")},
         )
         if "CHECK-OK" in r.stdout:
             return {"pass": True, "stage": "behaviour", "files": list(files)}
         syntax_ok = all(compile_ok(src) for src in files.values())
         return {"pass": False, "stage": "syntax" if not syntax_ok else "behaviour",
                 "files": list(files), "stderr": r.stderr[-300:]}
+
+

@@ -104,7 +104,7 @@ def main() -> int:
                 spec_ctx = None if arm == "raw" else specs.get(t["id"], "")
                 try:
                     quota.check_tpm_and_sleep(args.builder, 3000)
-                    t0 = time.perf_counter()
+                    time.perf_counter()
                     src, res = build_once(gateway, t["prompt"], spec_ctx)
                     quota.record_usage(args.builder, res.usage.total_tokens or 0)
                     files = parse_files(src)

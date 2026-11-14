@@ -2,12 +2,11 @@
 from __future__ import annotations
 
 import json
+import uuid as _uuid
 
 import pytest
 
 pytestmark = pytest.mark.usefixtures("db_pool")
-
-import uuid as _uuid
 
 ANTH_REQ = {
     "model": "m-anth",
