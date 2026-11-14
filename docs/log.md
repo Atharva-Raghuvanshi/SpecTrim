@@ -593,3 +593,35 @@ make test   → 161 passed
 ruff check . → All checks passed!
 mypy server/app → Success (55 files)
 ```
+
+## WP14 — quota reconciliation (2026-11-15)
+
+**How the merged 162,261 was computed:** the WP13 merge rule was **max** — max(40,771, 162,261) = 162,261. That rule was WRONG.
+
+**Code-path analysis (why the two keys held different calls — no double-recording):**
+- `evals/runner.py` (E1/E2) records usage under **`res.model`** — the model string Groq returns in the response, which is `openai/gpt-oss-20b` (provider prefix stripped) → the 40,771 tok key.
+- `evals/run_e4.py`/`run_e5` record under **`args.model`** — `groq/openai/gpt-oss-20b` as passed on the command line → the 162,261 tok key.
+- Empirically confirmed: a live classifier call via models.yaml (`groq/openai/gpt-oss-20b`) returns `CompletionResult.model = 'openai/gpt-oss-20b'`.
+- Each call is recorded exactly once by its own code path; the same call is never recorded under both keys.
+
+**Correct merge rule = SUM**: the provider TPD window counts every call to the model regardless of which recording key was used. Merged total for openai/gpt-oss-20b on 2026-11-14: **40,771 + 162,261 = 203,032 tok** — genuinely over the 200K TPD limit (and the 170K stop), which explains yesterday's persistent daily 429s on that model. The old message calling 162,261 "over the 170K stop" was doubly wrong (162K < 170K; the SUM is what exceeded) — fixed. `_merge_split_keys` now SUMs tokens and requests; tests updated (`test_merge_sums_split_counters_not_max`, `test_merged_sum_exceeds_tpd_stops`, `test_no_double_recording_for_one_call`).
+
+**Probe comparison:** the tiny probe on openai/gpt-oss-20b returned `x-ratelimit-limit-tokens = 8000, remaining = 7927, reset 547ms` — these headers expose the **per-MINUTE (TPM) window, not the daily window**. The WP13 `check_tpd` header-preference logic was therefore wrong (it would read "7923 used today" from a 1-minute window) — removed; daily tracking uses the local merged SUM only. Headers remain stored for TPM diagnostics. The probe also succeeded (200), consistent with the UTC daily window having reset.
+
+**Recording-key hygiene going forward:** `record_usage` normalizes keys, so all new usage lands under `openai/gpt-oss-20b`-style keys — one counter per model.
+
+## WP14 — quota reconciliation + latency by input size (2026-11-15)
+
+**PART 1 — quota reconciliation:** the WP13 merge rule was MAX — max(40,771, 162,261) = 162,261 for openai/gpt-oss-20b. Code-path analysis: the E1/E2 runner records under `res.model` (= `openai/gpt-oss-20b`, Groq strips the provider prefix — confirmed empirically) while E4/E5 record under `args.model` (= `groq/openai/gpt-oss-20b`) — the two keys held DIFFERENT calls, no double-recording. Correct rule = **SUM** → **203,032 tok**, genuinely over the 200K TPD (the old "162,261 over the 170K stop" message was doubly wrong: 162K < 170K; the SUM is what exceeded). `_merge_split_keys` now SUMs; tests added (sum rule, merged-total stop, no-double-recording guard). Probe: `x-ratelimit-*` headers expose the **8K per-MINUTE (TPM) window** (7927 remaining, 547ms reset) — NOT the daily window; the WP13 header-preference in `check_tpd` was removed (it would read "73 used today" from a 1-minute window). The probe's 200 OK is consistent with the UTC daily window having reset.
+
+**PART 2 — latency by input size** (`scripts/bench_latency.py --buckets`, 100 reps/bucket, chain_safe incl. guard, gc.collect() before each rep):
+| input (est) | p50 | p95 | >150ms |
+|---|---|---|---|
+| 1,282 tok | 0.2ms | 0.2ms | 0/100 |
+| 9,382 tok | 1.3ms | 2.1ms | 0/100 |
+| 48,582 tok | 5.9ms | 7.6ms | 0/100 |
+| 97,702 tok | 11.6ms | 13.1ms | 0/100 |
+| 177,452 tok | 61.2ms | 70.7ms | 0/100 |
+All buckets under the 150ms target. **GC-heavy case** (default GC, no pre-collection, 200 reps without collect): p95 ~290ms at 180K — generational GC pauses dominate at large sizes; mitigation (GC tuning or chunked passes) logged as future work. Profile at 100K: P4 cumulative 26ms total (splitlines 9ms; allocations ≤12KiB) — **no actionable hot spot; no code change made; no pass-version bump** (behavior unchanged). Golden regression corpus added (server/tests/golden/p4_golden.json + test_p4_golden.py) to keep future optimizations byte-identical.
+
+**PART 3 — stamps:** E1/E2 cells re-verified valid under the content-hash stamp (prompts/labels/models unchanged). Proxy cells invalidated by the WP12/WP13 changes: E4 25 v1partial cells + E5 12 dev-set cells + E3 12 cells (pre-WP11/WP12 registry) — all re-run by the orchestrator (queued).

@@ -22,6 +22,33 @@ from app.optimizer.policy import resolve_policy  # noqa: E402
 RESULTS = Path(__file__).resolve().parents[1] / "evals" / "results"
 
 
+def bucket_request(target_tokens: int, turns: int = 20) -> dict:
+    """Valid tool-loop request sized to ~target_tokens total (chars/4 est)."""
+    msgs = [{"role": "system", "content": "You are a coding agent. " * 20}]
+    # spread tool-log chars across turns: each turn's log ≈ (target - overhead)/turns
+    log_tokens = max(50, (target_tokens - 200 - assistant_tokens_est(turns)) // turns)
+    log_chars = log_tokens * 4
+    for i in range(turns):
+        msgs.append({"role": "user", "content": f"turn {i}: " + "x" * 40})
+        msgs.append({"role": "assistant", "content": "",
+                     "tool_calls": [{"id": f"c{i}", "type": "function",
+                                     "function": {"name": "run_tests", "arguments": "{}"}}]})
+        tool_log = chr(10).join(
+            f"line {j}: log entry detail {i}" for j in range(max(1, log_chars // 30)))
+        msgs.append({"role": "tool", "content": tool_log + chr(10) + "ERROR: something",
+                     "tool_call_id": f"c{i}"})
+    msgs.append({"role": "user", "content": "continue"})
+    return {"model": "m", "messages": msgs}
+
+
+def assistant_tokens_est(turns: int) -> int:
+    return 12 * turns
+
+
+def token_est(text: str) -> int:
+    return max(1, len(text) // 4)
+
+
 def big_request(tool_lines: int = 3000, turns: int = 60) -> dict:
     msgs = [{"role": "system", "content": "You are a coding agent. " * 20}]
     for i in range(turns):
@@ -53,7 +80,41 @@ def bench(name: str, fn, reps: int = 200) -> dict:
     }
 
 
+def run_buckets(reps: int = 100) -> list[dict]:
+    """WP14: p50/p95 chain overhead by input-size bucket (1K..180K tokens)."""
+    import gc
+
+    rows = []
+    for target in (1000, 10000, 50000, 100000, 180000):
+        req = bucket_request(target)
+        est = sum(token_est(str(m.get("content", ""))) for m in req["messages"])
+        samples = []
+        for _ in range(reps):
+            gc.collect()  # include GC-heavy cases: collect before, GC runs during
+            t0 = time.perf_counter()
+            run_chain(req, resolve_policy("safe", None))
+            samples.append((time.perf_counter() - t0) * 1000)
+        samples.sort()
+        p50 = samples[len(samples) // 2]
+        p95 = samples[int(0.95 * len(samples))]
+        rows.append({"target_tokens": target, "est_tokens": est, "reps": reps,
+                     "p50_ms": round(p50, 1), "p95_ms": round(p95, 1),
+                     "max_ms": round(samples[-1], 1),
+                     "over_150": sum(1 for x in samples if x > 150)})
+        print(f"{est:>7d} tok: p50 {p50:7.1f}ms  p95 {p95:7.1f}ms  "
+              f"max {samples[-1]:7.1f}ms  (>150ms: {sum(1 for x in samples if x > 150)}/{reps})",
+              flush=True)
+    return rows
+
+
 def main() -> int:
+    if "--buckets" in sys.argv:
+        rows = run_buckets(reps=100)
+        out = {"curve": rows, "target_p95_ms": 150,
+               "note": "chain_safe on valid tool-loop input; gc.collect() before each rep"}
+        RESULTS.mkdir(parents=True, exist_ok=True)
+        (RESULTS / "latency_buckets.json").write_text(json.dumps(out, indent=2), encoding="utf-8")
+        return 0
     req = big_request()
     pol_safe = resolve_policy("safe", None)
     pol_balanced = resolve_policy("balanced", None)

@@ -40,28 +40,6 @@ def test_normalized_keys_share_one_counter(tmp_path: Path) -> None:
     assert "groq/openai/gpt-oss-20b" not in d["models"]
 
 
-def test_merge_split_keys_takes_max_and_dedupes() -> None:
-    data = {"date_utc": "2026-11-14", "models": {
-        "groq/openai/gpt-oss-20b": {"tokens_today": 162261, "requests_today": 40},
-        "openai/gpt-oss-20b": {"tokens_today": 40771, "requests_today": 34},
-        "openai/gpt-oss-120b": {"tokens_today": 98125, "requests_today": 20},
-    }}
-    _merge_split_keys(data)
-    merged = data["models"]
-    assert "groq/openai/gpt-oss-20b" not in merged
-    assert merged["openai/gpt-oss-20b"]["tokens_today"] == 162261  # max of split
-    assert merged["openai/gpt-oss-20b"]["requests_today"] == 40
-    assert merged["openai/gpt-oss-120b"]["tokens_today"] == 98125
-
-
-def test_check_tpd_stops_on_merged_total(tmp_path: Path) -> None:
-    t = tracker(tmp_path)
-    t.record_usage("groq/openai/gpt-oss-20b", 162000)
-    t.record_usage("openai/gpt-oss-20b", 10000)  # same model: merged total 172K
-    # 172K >= 170K threshold: any further cell is rejected
-    assert t.check_tpd("openai/gpt-oss-20b", 1000) is False
-
-
 def test_check_tpd_allows_below_threshold(tmp_path: Path) -> None:
     t = tracker(tmp_path)
     t.record_usage("openai/gpt-oss-20b", 10000)
@@ -82,15 +60,6 @@ def test_daily_limit_message_detection() -> None:
     assert not is_daily_limit_error("server overloaded")
 
 
-def test_headers_preferred_over_local_count(tmp_path: Path) -> None:
-    t = tracker(tmp_path)
-    t.record_usage("openai/gpt-oss-120b", 1000)
-    # provider says only 5000 tokens remain of 200K → 195K used, over threshold
-    t.read_headers("groq/openai/gpt-oss-120b", {
-        "x-ratelimit-remaining-tokens": "5000",
-        "x-ratelimit-limit-tokens": "200000",
-    })
-    assert t.check_tpd("openai/gpt-oss-120b", 0) is False
 
 
 def test_probe_clears_exhaustion_on_success(tmp_path: Path, monkeypatch) -> None:
@@ -128,3 +97,48 @@ def test_probe_hourly_throttle(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(_httpx, "post", fake_post)
     assert t.probe("qwen/qwen3.8-27b") is False  # throttled: no HTTP call
     assert calls["n"] == 0
+
+
+def test_merge_sums_split_counters_not_max(tmp_path: Path) -> None:
+    """WP14: the split keys recorded DIFFERENT calls, so the merge must SUM.
+    (40,771 + 162,261 = 203,032 for openai/gpt-oss-20b on 2026-11-14.)"""
+    data = {"date_utc": "2026-11-14", "models": {
+        "openai/gpt-oss-20b": {"tokens_today": 40771, "requests_today": 34},
+        "groq/openai/gpt-oss-20b": {"tokens_today": 162261, "requests_today": 66},
+    }}
+    _merge_split_keys(data)
+    merged = data["models"]["openai/gpt-oss-20b"]
+    assert merged["tokens_today"] == 40771 + 162261
+    assert merged["requests_today"] == 34 + 66
+
+
+def test_merged_sum_exceeds_tpd_stops(tmp_path: Path) -> None:
+    t = tracker(tmp_path)
+    t.record_usage("groq/openai/gpt-oss-20b", 162261)
+    t.record_usage("openai/gpt-oss-20b", 40771)  # same model, other code path
+    assert t.check_tpd("openai/gpt-oss-20b", 0) is False  # 203K > 170K stop
+
+
+def test_no_double_recording_for_one_call(tmp_path: Path) -> None:
+    """A call is recorded exactly once by its own code path: recording the same
+    call under both key spellings is a caller bug the tracker cannot dedupe —
+    document via this guard test (two records = two calls counted)."""
+    t = tracker(tmp_path)
+    t.record_usage("groq/openai/gpt-oss-20b", 100)
+    t.record_usage("openai/gpt-oss-20b", 100)
+    assert t.check_tpd("openai/gpt-oss-20b", 0) is True  # 200 tok: two calls counted
+    d = json.loads((tmp_path / "quota.json").read_text(encoding="utf-8"))
+    assert d["models"]["openai/gpt-oss-20b"]["tokens_today"] == 200
+
+
+def test_headers_are_tpm_only_never_used_for_tpd(tmp_path: Path) -> None:
+    """Groq x-ratelimit-* headers expose the 8K per-minute window: feeding them
+    into the DAILY check would undercount (7927 remaining == 73 used)."""
+    t = tracker(tmp_path)
+    t.record_usage("openai/gpt-oss-20b", 190000)
+    t.read_headers("openai/gpt-oss-20b", {
+        "x-ratelimit-remaining-tokens": "7927",
+        "x-ratelimit-limit-tokens": "8000",
+    })
+    # despite the header saying "7927 remaining", the local daily sum rules
+    assert t.check_tpd("openai/gpt-oss-20b", 0) is False

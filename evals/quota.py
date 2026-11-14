@@ -154,12 +154,10 @@ class QuotaTracker:
                   f"resume tomorrow or probe hourly", file=sys.stderr)
             return False
         mcfg = self._ensure_model(key)
+        # NOTE (WP14): the x-ratelimit-* headers expose the per-MINUTE (TPM)
+        # window (8K), NOT the daily window — never use them for TPD tracking.
+        # Daily usage is the local sum of recorded calls (merged across keys).
         current = mcfg["tokens_today"]
-        remaining = mcfg.get("ratelimit_remaining_tokens")
-        limit = mcfg.get("ratelimit_limit_tokens") or MAX_TPD
-        if remaining is not None and limit:
-            used_by_provider = max(0, int(limit) - int(remaining))
-            current = max(current, used_by_provider)  # prefer provider count
         if current + estimated_tokens >= TPD_THRESHOLD:
             print("quota reached, resume tomorrow", file=sys.stderr)
             return False
@@ -269,10 +267,11 @@ def _merge_split_keys(data: dict[str, Any]) -> None:
         if tgt is None:
             merged[norm] = dict(cfg)
             continue
-        tgt["tokens_today"] = max(
-            int(tgt.get("tokens_today", 0)), int(cfg.get("tokens_today", 0)))
-        tgt["requests_today"] = max(
-            int(tgt.get("requests_today", 0)), int(cfg.get("requests_today", 0)))
+        # SUM, not max: the split keys recorded DIFFERENT calls (one per code
+        # path — e.g. E1/E2 records under res.model, E4/E5 under args.model),
+        # and the provider TPD window counts every call to the model.
+        tgt["tokens_today"] = int(tgt.get("tokens_today", 0)) + int(cfg.get("tokens_today", 0))
+        tgt["requests_today"] = int(tgt.get("requests_today", 0)) + int(cfg.get("requests_today", 0))
     data["models"] = merged
 
 
