@@ -1,6 +1,6 @@
 {
   "version": "e4b-v1",
-  "note": "Large-tool-output multi-turn tasks (approval pending). Each task's tool results include a 3-5K-token build/test log from turn 2 onward; the runner keeps only the latest tool result in history, so every request stays under 6K tokens while P4/P5 have real content to compress.",
+  "note": "Large-tool-output multi-turn tasks (approved by user (see evals/APPROVALS.md)",
   "tasks": [
     {"id": "L1", "prompt": "Fix the failing build in bigbuild.py so all checks pass, then submit the corrected file.", "tool_log_lines": 800, "fail_turns": 5},
     {"id": "L2", "prompt": "Diagnose the integration test failure shown in the log and submit the fixed module.", "tool_log_lines": 1100, "fail_turns": 5},

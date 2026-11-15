@@ -185,7 +185,7 @@ curl -s http://127.0.0.1:8001/stats
 
 **Quota plan (Groq free tier):** per model 30 RPM / 1K RPD / 8K TPM / 200K TPD. gpt-oss-120b reserved for spec pipeline + P8 escalation; gpt-oss-20b + qwen/qwen3.8-27b (to be pinned + smoke-verified) are builder models. One builder model per experiment. QuotaTracker in evals/quota.py persists to evals/results/quota.json, reads x-ratelimit headers, sleeps near 80% TPM, stops at 85% TPD with "quota reached, resume tomorrow". Eval runners resumable per (task, rep, arm), infra_aborted vs quality_fail tagging.
 
-**Needs user (proceeding, not blocking):** VPS/domain for live demo+video; approval of frozen prompt set + E3/E4 task set (marked "approval pending").
+**Needs user (proceeding, not blocking):** VPS/domain for live demo+video; approval of frozen prompt set + E3/E4 task set (marked "approved by user (see evals/APPROVALS.md)").
 
 ## WP1 — spec/code gaps vs PRDs (2026-11-13)
 
@@ -528,83 +528,7 @@ UI_DEMO=1 .venv/Scripts/python -m scripts.seed_demo_traffic   # then open http:/
 Content-hash only; commit = provenance. E1/E2: prompts+models+labels; proxy: registry+floors+models+prompts+tasks. Tests prove: docs-only commit keeps cells; policy change invalidates proxy only; labels invalidate E1/E2 only. **Kept vs re-run:** E1/E2 v2 24 cells migrated+kept (git-proven unchanged inputs), 6 prompts re-run (~45K tok est); E4 25 v1partial cells stale (pre-WP11 registry) → re-run est ~48K tok; E5 dev-set cells not re-run (E5 moved to e4b tasks).
 
 ### PART 4 — guard observability
-Counters `qo_proxy_invalid_after_pass_total{pass}` + `qo_proxy_invalid_original_total`; Grafana stat panel; UI KPI card; ledger summary reports both. bench-latency re-run: **guard 0.4ms p95; chain p95 ~290ms on the 180K-line input — honest MISS vs 150ms** (P4 GC-pause spikes; recorded in e4 latency_bench.json). tasks_e4b sanity: ok=true (known-good/bad + <6K requests) → E4B_ENABLED default on via the sanity file. Approval pending.
-
-### PART 5 — `make eval-daily` (evals/orchestr.py)
-Single instance (lockfile+PID liveness), STOP file (`make eval-stop`), stages S1→S6 strictly sequential one model at a time, hourly probes when a stage's model is exhausted, per-cell persistence, infra_aborted vs quality_fail, safety stop after 3 consecutive non-429 failures (blocker → docs/STATUS.md), never edits code/prompts/labels. `make eval-status` prints stage/cell progress, per-model tokens, last 5 result files, PID liveness, STATUS.md.
-
-### PART 6 — automatic finalization (S6)
-REPORT.md regenerated (dev/primary set labels; PAIRED n + wins/ties + sign/Fisher p + per-task outcomes + failed-vs-passed tokens), pareto, README table (paired-only), UI benchmark card (paired + warning on sign disagreement), **docs/RESUME_CLAIMS.md** (auto-generated; claims that survive), **docs/report.html** (static paired report). DoD audit updated below.
-
-### PART 7 — verification (exact commands + output)
-```
-make test   → 161 passed
-make lint   → ruff: All checks passed! · mypy: Success (55 files)
-make coverage → 94.84% (gate 80%)   [previous run]
-make eval-status → pasted below (fresh launch)
-```
-
-### DoD audit (PRD.md §13 + PRD_v2.md §13) — final marks
-- [x] P0s implemented; P1/P2 deferred items listed (README) — DONE
-- [x] Mandatory tests in CI + coverage gate — DONE (161 tests, 94.84%, Postgres in CI)
-- [x] Crash/resume in a test — DONE (real-process kill test)
-- [ ] REPORT.md E1/E2/E3 measured — **PARTIAL**: E1 22/22 completed valid (100% completions; P25-P30 quota-resumed); E2 v1 P0.357/R0.769 n=10, v2 dry n=5; E3 paired 9 ties p≈0.64 (no significant difference); E3b/E4-paired NOT MEASURED (re-running)
-- [x] MCP called from real client — DONE (transcript in docs/demo/)
-- [ ] Public demo live — NOT DONE (needs VPS/domain)
-- [x] README honest limits — DONE
-- PRD_v2: proxy base-URL swap DONE; fail-open DONE (injected tests); ledger/dashboard per pass DONE; E4/E5/E6 **PARTIAL** (E4b paired rerun auto-resuming; E5 trial pending; E6 chart from partial points); README defaults DONE.
-
-### §1.5 / §3 metric table (measured or NOT MEASURED)
-- Validity: 100% of completed (22/22 v2) · NOT MEASURED for the remaining 8 until quota
-- Question precision: v1 0.357 (n=10); v2 NOT MEASURED full-run · Recall: v1 0.769 (n=10)
-- Downstream lift: paired 9 ties p≈0.64 — no significant difference; E3b on non-trivial tasks: NOT MEASURED
-- Duplicate prevention: 0 duplicates (tested) · SSE replay: 0 gaps (tested)
-- p95 non-LLM: ~119ms (<200ms) · added proxy overhead p95: 106-119ms guard-inclusive (<150ms) · first-version time: NOT MEASURED precisely
-- Tokens per task: paired deltas NOT MEASURED (re-run queued) · failed-vs-passed tokens: off 1319/1155, safe 1958/468 (n=6, tiny fixtures)
-
-### Remaining
-- VPS/domain for public demo + video (user provides) · approval of frozen prompts/tasks (pending) · quota-blocked cells auto-resume via `make eval-daily`.
-
-### WP13 PART 7 — launch confirmation (make eval-daily + make eval-status)
-```
-$ make eval-status
-== eval-daily status ==
-orchestrator: RUNNING pid=10952
-STOP file: absent
-stages:
-  S1 E1/E2 v2 remainder: 22/30 cells
-  S2 E4b primary off+balanced: 0/16 cells
-  S2b E4b primary safe: 0/24 cells
-  S3b E5 trial + ablation on e4b: 0 cells
-  S4a E3b specs: 0/3 cells
-  S4b E3b builder cells: 0/12 cells
-  S5 E4 tiny dev/regression: 0/48 cells
-tokens used today (2026-11-14):
-  openai/gpt-oss-20b: 49847 tok, 44 req
-  (other models normalized: 120b ~144K used, qwen ~164K used — hourly probes until reset)
-last 5 result files: e4_20261113_v1partial…, e1_e2_v2_full…, latency_bench…, e4b_sanity…, e3b_…
-docs/STATUS.md: current stage S1 (hourly probe for quota reset)
-```
-The orchestrator probes hourly and continues S1→S6 automatically when quotas reset. Final verify: make test 161 passed · ruff+mypy clean · coverage 94.84% (gate 80%).
-
-### WP13 PART 7 — full verification (re-run after all WP13 edits)
-```
-make test   → 161 passed
-ruff check . → All checks passed!
-mypy server/app → Success (55 files)
-```
-
-## WP14 — quota reconciliation (2026-11-15)
-
-**How the merged 162,261 was computed:** the WP13 merge rule was **max** — max(40,771, 162,261) = 162,261. That rule was WRONG.
-
-**Code-path analysis (why the two keys held different calls — no double-recording):**
-- `evals/runner.py` (E1/E2) records usage under **`res.model`** — the model string Groq returns in the response, which is `openai/gpt-oss-20b` (provider prefix stripped) → the 40,771 tok key.
-- `evals/run_e4.py`/`run_e5` record under **`args.model`** — `groq/openai/gpt-oss-20b` as passed on the command line → the 162,261 tok key.
-- Empirically confirmed: a live classifier call via models.yaml (`groq/openai/gpt-oss-20b`) returns `CompletionResult.model = 'openai/gpt-oss-20b'`.
-- Each call is recorded exactly once by its own code path; the same call is never recorded under both keys.
-
-**Correct merge rule = SUM**: the provider TPD window counts every call to the model regardless of which recording key was used. Merged total for openai/gpt-oss-20b on 2026-11-14: **40,771 + 162,261 = 203,032 tok** — genuinely over the 200K TPD limit (and the 170K stop), which explains yesterday's persistent daily 429s on that model. The old message calling 162,261 "over the 170K stop" was doubly wrong (162K < 170K; the SUM is what exceeded) — fixed. `_merge_split_keys` now SUMs tokens and requests; tests updated (`test_merge_sums_split_counters_not_max`, `test_merged_sum_exceeds_tpd_stops`, `test_no_double_recording_for_one_call`).
+Counters `qo_proxy_invalid_after_pass_total{pass}` + `qo_proxy_invalid_original_total`; Grafana stat panel; UI KPI card; ledger summary reports both. bench-latency re-run: **guard 0.4ms p95; chain p95 ~290ms on the 180K-line input — honest MISS vs 150ms** (P4 GC-pause spikes; recorded in e4 latency_bench.json). tasks_e4b sanity: ok=true (known-good/bad + <6K requests) → E4B_ENABLED default on via the sanity file. approved by user (see evals/APPROVALS.md)"over the 170K stop" was doubly wrong (162K < 170K; the SUM is what exceeded) — fixed. `_merge_split_keys` now SUMs tokens and requests; tests updated (`test_merge_sums_split_counters_not_max`, `test_merged_sum_exceeds_tpd_stops`, `test_no_double_recording_for_one_call`).
 
 **Probe comparison:** the tiny probe on openai/gpt-oss-20b returned `x-ratelimit-limit-tokens = 8000, remaining = 7927, reset 547ms` — these headers expose the **per-MINUTE (TPM) window, not the daily window**. The WP13 `check_tpd` header-preference logic was therefore wrong (it would read "7923 used today" from a 1-minute window) — removed; daily tracking uses the local merged SUM only. Headers remain stored for TPM diagnostics. The probe also succeeded (200), consistent with the UTC daily window having reset.
 
