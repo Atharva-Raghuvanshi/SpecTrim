@@ -29,7 +29,8 @@ from app.optimizer.passes import PASS_FUNCTIONS  # noqa: E402
 from checks import check_generated  # noqa: E402
 
 from evals.quota import QuotaTracker  # noqa: E402
-from evals.stamp import (  # noqa: E402
+from evals.stamp import (  # noqa: E402  # noqa: E402
+    get_stamp,
     models_hash,
     prompts_hash,
     proxy_registry_hash,
@@ -40,6 +41,7 @@ from evals.stamp import (  # noqa: E402
 
 TASKS = Path(__file__).resolve().parent / "tasks" / "tasks_e3.json"
 RESULTS = Path(__file__).resolve().parent / "results"
+ROOT = Path(__file__).resolve().parents[1]
 E4_TASKS = [f"T{i}" for i in (1, 2, 3, 5, 6, 7, 8, 4)]
 E5_TASKS = ["T1", "T3", "T6", "T7"]
 
@@ -119,9 +121,13 @@ def tool_result(task: dict, name: str, attempt: int) -> dict:
     return {}
 
 
-def run_cell(call, task: dict, max_turns: int = 8) -> dict:
-    """One multi-turn tool loop until submit_code or turn cap."""
+def run_cell(call, task: dict, max_turns: int = 8, ledger_pool=None) -> dict:
+    """One multi-turn tool loop until submit_code or turn cap.
+
+    With ledger_pool, each request's ledger row is captured per turn:
+    tokens_baseline_est (input est), tokens_actual and passes fired."""
     import json as _json
+
 
     messages: list[dict] = [
         {"role": "system", "content": SYSTEM},
@@ -130,6 +136,7 @@ def run_cell(call, task: dict, max_turns: int = 8) -> dict:
     submitted: str | None = None
     tokens_in = tokens_out = 0
     latencies: list[float] = []
+    requests: list[dict] = []
     turns = 0
     for attempt in range(max_turns):
         resp, elapsed = call(messages)
@@ -138,6 +145,22 @@ def run_cell(call, task: dict, max_turns: int = 8) -> dict:
         tokens_out += usage.get("completion_tokens", 0)
         latencies.append(elapsed)
         turns += 1
+        if ledger_pool is not None:
+            try:
+                with ledger_pool.connection() as conn, conn.cursor() as cur:
+                    cur.execute(
+                        "SELECT tokens_baseline_est, pass_reports FROM proxy_requests "
+                        "ORDER BY created_at DESC LIMIT 1")
+                    row = cur.fetchone()
+                if row:
+                    fired = [pr["pass"] for pr in (row[1] or [])
+                             if not pr.get("skipped")]
+                    requests.append({
+                        "tokens_baseline_est": int(row[0] or 0),
+                        "passes_fired": fired,
+                    })
+            except Exception:
+                pass  # ledger capture is best-effort; never break the cell
         msg = (resp.get("choices") or [{}])[0].get("message", {})
         tool_calls = msg.get("tool_calls") or []
         if tool_calls:
@@ -160,10 +183,12 @@ def run_cell(call, task: dict, max_turns: int = 8) -> dict:
         break
     if submitted is None:
         return {"pass": None, "infra_aborted": True, "turns": turns,
-                "tokens_in": tokens_in, "tokens_out": tokens_out}
+                "tokens_in": tokens_in, "tokens_out": tokens_out,
+                "requests": requests}
     chk = check_generated(task["id"], submitted.strip())
     return {"pass": chk["pass"], "stage": chk["stage"], "turns": turns,
             "tokens_in": tokens_in, "tokens_out": tokens_out,
+            "requests": requests,
             "latency_avg_s": round(sum(latencies) / len(latencies), 2)}
 
 
@@ -239,6 +264,10 @@ def main() -> int:
     parser.add_argument("--passes-from-trial", action="store_true",
                         dest="passes_from_trial",
                         help="read the fired pass list from e5_trial.json")
+    parser.add_argument("--task-ids", default=None, dest="task_ids",
+                        help="comma-separated task ids (e.g. 'L1,L3' for the pilot)")
+    parser.add_argument("--pilot", action="store_true",
+                        help="pilot mode: 1 rep, per-request ledger capture, pairs summary")
     args = parser.parse_args()
 
     quota = QuotaTracker()
@@ -247,6 +276,9 @@ def main() -> int:
     all_tasks = json.loads(Path(tasks_src).read_text(encoding="utf-8"))["tasks"]
     by_id_all = {t["id"]: t for t in all_tasks}
     task_ids = E5_TASKS if args.experiment == "e5" else E4_TASKS
+    if args.task_ids:
+        wanted = [t.strip() for t in args.task_ids.split(",") if t.strip()]
+        task_ids = [t for t in task_ids if t in wanted]
 
     if args.experiment == "e4":
         order = [c.strip() for c in args.configs.split(",") if c.strip()]
@@ -307,6 +339,83 @@ def main() -> int:
     summarize(results)
     out_path.write_text(json.dumps(results, indent=2), encoding="utf-8")
     return 0
+
+
+def run_pilot_cells(client, quota, args, results, out_path) -> None:  # noqa: ANN001
+    """WP17 S2p pilot: tasks L1+L3, 1 rep, off+balanced = 4 cells, sequential.
+    Per-request ledger capture; shown as pairs; labelled 'pilot, n=2 pairs'."""
+
+    from app.optimizer.validate import validate_internal as _unused_guard  # noqa: F401
+
+    model = args.model
+    stamp = get_stamp()
+    results["stamp"] = stamp
+    results["pilot"] = True
+    results["pilot_note"] = "pilot, n=2 pairs"
+    pool = client.app.state.pool
+    ledger_pool = pool  # run_cell captures per-request rows via this pool
+    consecutive_bad = 0
+    configs = ["off", "balanced"]
+    wanted = [t.strip() for t in (args.task_ids or "L1,L3").split(",") if t.strip()]
+    for tid in wanted:
+        task = by_id_from(Path(args.tasks_file or
+                               str(ROOT / "evals" / "tasks_e4b.json")), tid)
+        for mode in configs:
+            cell = f"{tid}:{mode}"
+            if cell in results["cells"]:
+                continue
+            if not quota.check_tpd(model, 9000):
+                print(f"[quota] {model} exhausted; pilot stops here", flush=True)
+                out_path.write_text(json.dumps(results, indent=2), encoding="utf-8")
+                return
+            call = make_call(client, model, mode)
+            try:
+                rec = run_cell(call, task, ledger_pool=ledger_pool)
+                rec["mode"] = mode
+                rec["task"] = tid
+                rec["stamp"] = stamp
+            except Exception as exc:  # noqa: BLE001
+                name = type(exc).__name__
+                rec = {"pass": None, "infra_aborted": "RateLimit" in name,
+                       "error": f"{name}: {exc}"[:200], "mode": mode, "task": tid}
+            results["cells"][cell] = rec
+            quota.record_usage(model, rec.get("tokens_in", 0) + rec.get("tokens_out", 0))
+            out_path.write_text(json.dumps(results, indent=2), encoding="utf-8")
+            first_est = max((r["tokens_baseline_est"]
+                             for r in rec.get("requests", [])), default=0)
+            fired = sorted({p for r in rec.get("requests", [])
+                            for p in r["passes_fired"]})
+            print(f"pilot {cell}: pass={rec.get('pass')} "
+                  f"tok_in={rec.get('tokens_in')} first_call_est={first_est} "
+                  f"passes_fired={fired}", flush=True)
+            if rec.get("pass") is None and not rec.get("infra_aborted"):
+                consecutive_bad += 1
+            else:
+                consecutive_bad = 0
+            if consecutive_bad >= 3:
+                raise SystemExit(2)
+            time.sleep(args.pace_s)
+
+    # pairs summary
+    pairs = []
+    for tid in wanted:
+        off = results["cells"].get(f"{tid}:off")
+        bal = results["cells"].get(f"{tid}:balanced")
+        if off and bal and off.get("pass") is not None and bal.get("pass") is not None:
+            pairs.append({
+                "task": tid,
+                "off": {"pass": off["pass"], "tokens_in": off["tokens_in"],
+                        "first_call_est": max(
+                            (r["tokens_baseline_est"] for r in off.get("requests", [])),
+                            default=0)},
+                "balanced": {"pass": bal["pass"], "tokens_in": bal["tokens_in"],
+                             "first_call_est": max(
+                                 (r["tokens_baseline_est"] for r in bal.get("requests", [])),
+                                 default=0)},
+            })
+    results["paired"] = {"pairs": pairs, "n_pairs": len(pairs),
+                         "label": "pilot, n=2 pairs"}
+    print(json.dumps(results["paired"], indent=2), flush=True)
 
 
 def run_all(client, quota, args, task_ids, by_id_all, configs, results, out_path,
