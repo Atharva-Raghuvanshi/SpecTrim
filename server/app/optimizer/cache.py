@@ -85,7 +85,8 @@ class SavingsLedger:
         async with self.pool.connection() as conn, conn.cursor() as cur:
             await cur.execute(
                 "SELECT COUNT(*), "
-                "COALESCE(SUM(CASE WHEN prompt_tokens_actual IS NOT NULL THEN tokens_baseline_est ELSE 0 END), 0), "
+                "COALESCE(SUM(CASE WHEN prompt_tokens_actual IS NOT NULL "
+                "THEN tokens_baseline_est ELSE 0 END), 0), "
                 "COALESCE(SUM(prompt_tokens_actual), 0), "
                 "COALESCE(SUM(cache_hit::int), 0), "
                 "COALESCE(SUM(passthrough::int), 0), "
@@ -122,7 +123,8 @@ class SavingsLedger:
         table = "proxy_demo_requests" if demo else "proxy_requests"
         q = (
             f"SELECT date_bin(make_interval(secs => %s), created_at, '2000-01-01') AS b, "
-            f"COALESCE(SUM(CASE WHEN prompt_tokens_actual IS NOT NULL THEN tokens_baseline_est ELSE 0 END), 0), "
+            f"COALESCE(SUM(CASE WHEN prompt_tokens_actual IS NOT NULL "
+            f"THEN tokens_baseline_est ELSE 0 END), 0), "
             f"COALESCE(SUM(prompt_tokens_actual), 0), COUNT(*), "
             f"COALESCE(SUM(cache_hit::int), 0), "
             f"percentile_cont(0.5) WITHIN GROUP (ORDER BY latency_ms), "
@@ -215,7 +217,8 @@ class SavingsLedger:
         table = "proxy_demo_requests" if demo else "proxy_requests"
         q = (
             f"SELECT "
-            f"COALESCE(SUM(CASE WHEN prompt_tokens_actual IS NOT NULL THEN tokens_baseline_est ELSE 0 END), 0), "
+            f"COALESCE(SUM(CASE WHEN prompt_tokens_actual IS NOT NULL "
+            f"THEN tokens_baseline_est ELSE 0 END), 0), "
             f"COALESCE(SUM(prompt_tokens_actual), 0), "
             f"COUNT(*), "
             f"COALESCE(SUM(cache_hit::int), 0), "
@@ -241,7 +244,10 @@ class SavingsLedger:
             await cur.execute(q_modes)
             modes_rows = await cur.fetchall()
 
-        base, actual, n, hits, passthroughs, cost, cost_n, p95, inv_ap, inv_orig, comp, reas, excl, measured = r
+        (
+            base, actual, n, hits, passthroughs, cost, cost_n,
+            p95, inv_ap, inv_orig, comp, reas, excl, measured,
+        ) = r
         saved = int(base) - int(actual)
         pct = round(100 * saved / base, 1) if (base and measured) else 0.0
         by_mode = {row[0]: int(row[1]) for row in modes_rows}

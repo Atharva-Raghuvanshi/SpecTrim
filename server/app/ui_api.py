@@ -115,9 +115,15 @@ def build_ui_router(app):  # type: ignore[no-untyped-def]
                     )
                     ev = await cur.fetchone()
                     if ev and isinstance(ev[0], dict):
-                        raw_reason = ev[0].get("reason") or ev[0].get("message") or ev[0].get("error") or "pipeline error"
+                        p = ev[0]
+                        raw_reason = p.get("reason") or p.get("message") or p.get("error") or "pipeline error"
                         import re
-                        clean = re.sub(r"(Bearer\s+|api[-_]?key\s*[:=]\s*)[^\s]+", r"\1[REDACTED]", str(raw_reason), flags=re.I)
+                        clean = re.sub(
+                            r"(Bearer\s+|api[-_]?key\s*[:=]\s*)[^\s]+",
+                            r"\1[REDACTED]",
+                            str(raw_reason),
+                            flags=re.I,
+                        )
                         failure_reason = clean[:120]
                     else:
                         failure_reason = "pipeline error"

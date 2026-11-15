@@ -33,7 +33,9 @@ def raw_usage_breakdown(resp: dict[str, Any]) -> dict[str, Any]:
         "prompt_tokens": int(p) if p is not None else None,
         "completion_tokens": int(c) if c is not None else None,
         "reasoning_tokens": int(r) if r is not None else None,
-        "total_tokens": int(tot) if tot is not None else (int(p or 0) + int(c or 0) if p is not None else None),
+        "total_tokens": int(tot) if tot is not None else (
+            int(p or 0) + int(c or 0) if p is not None else None
+        ),
         "cost": float(cost) if cost is not None else None,
     }
 

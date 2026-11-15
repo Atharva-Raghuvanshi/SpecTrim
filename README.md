@@ -126,10 +126,16 @@ What this does:
 
 `POST /sessions` (Idempotency-Key) · `GET /sessions/{id}` · `POST /sessions/{id}/answers` · `POST /sessions/{id}/revisions` · `GET /sessions/{id}/events` (SSE with Last-Event-ID replay) · `GET /sessions/{id}/diff` · `GET /sessions/{id}/export?format=json|markdown|openapi` · `POST /sessions/{id}/cancel` · `GET /metrics` · `GET /healthz` · proxy: `/v1/chat/completions`, `/v1/optimize`, `/stats`.
 
-## Honest status
+## Results
+
+Prompt tokens saved is a ledger estimate; see the paired benchmark for measured results.
 
 - Measured results: [evals/REPORT.md](evals/REPORT.md) — E1 validity **10/10 completed runs** (2 aborted by Groq free-tier 429s), E2 question recall **0.76** / precision **0.38** (precision limited by label vocabulary vs analyzer breadth — known, logged).
 - E3 downstream lift and E4 before/after on a multi-turn agent session: harness slots exist, **not yet measured** (free-tier rate limits make paired runs infra-noisy).
+- Paired benchmark: [`evals/REPORT.md`](evals/REPORT.md) and [`evals/BENCHMARK_STATUS.md`](evals/BENCHMARK_STATUS.md).
+
+## Honest status
+
 - Single-tenant, single-region. `psycopg_pool` replaced by per-checkout connections on Windows (see docs/log.md).
 - No secrets in code: everything from env; metric labels never contain session ids; savings are provider-reported usage, estimates labelled `_est`.
 

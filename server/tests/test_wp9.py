@@ -119,12 +119,25 @@ def test_seed_script_refuses_without_ui_demo_flag() -> None:
 
 
 def test_ui_kpi_honest_labels(ui_client) -> None:
-    """WP19: KPI cards show data source, time window, and honest sign wording."""
+    """WP19.1: KPI cards show honest prompt token wording, tooltip,
+    completion/reasoning breakdown, and prompt charts."""
     client = ui_client
     d = client.get("/ui/api/summary?range=24h").json()
     assert "tokens_saved_pct_est" in d
-    assert "invalid_after_pass_events" in d
-    assert "invalid_original_events" in d
+    assert "prompt_tokens_baseline_est" in d
+    assert "prompt_tokens_actual" in d
+    assert "completion_tokens" in d
+    assert "reasoning_tokens" in d
+    assert "excluded_count" in d
+    assert "by_mode" in d
+
+    app_js = client.get("/ui/app.js").text
+    assert "Prompt tokens saved (estimated)" in app_js
+    assert "Net increase (estimated)" in app_js
+    assert "baseline is an estimate from chars/4" in app_js
+    assert "baseline-est (prompt)" in app_js
+    assert "actual (prompt)" in app_js
+    assert "completion" in app_js and "reasoning" in app_js
 
 
 def test_ui_disabled_stages_show_disabled(ui_client) -> None:
@@ -151,12 +164,17 @@ def test_ui_connect_page_has_copy_snippets(ui_client) -> None:
 
 
 def test_ui_hash_navigation_exists(ui_client) -> None:
-    """WP19 P4: app.js includes hash navigation for sidebar pages."""
+    """WP19 P4: app.js and index.html include hash navigation for sidebar pages."""
     app_js = ui_client.get("/ui/app.js").text
     assert "hashchange" in app_js
     assert "showPageFromHash" in app_js
     assert "location.hash" in app_js
     assert "initialHash" in app_js
+    assert '"specs"' in app_js and '"connect"' in app_js
+
+    index_html = ui_client.get("/ui/").text
+    assert 'data-page="specs"' in index_html
+    assert 'data-page="connect"' in index_html
 
 
 def test_ui_contrast_and_overflow_guards(ui_client) -> None:
@@ -165,20 +183,43 @@ def test_ui_contrast_and_overflow_guards(ui_client) -> None:
     assert ".topbar a.ghost" in styles or ".topbar a" in styles
     assert "#1a56db" in styles  # high-contrast AA link color on light theme
     assert "#58a6ff" in styles  # high-contrast AA link color on dark theme
+    assert ":visited" in styles
     assert "overflow-x: hidden" in styles
     assert "minmax(0, 1fr)" in styles
 
 
 def test_ui_kpi_data_source_labels(ui_client) -> None:
-    """WP19 P3: KPI cards show data source and time window."""
+    """WP19.2: KPI cards show data source and time window;
+    pie chart shows total and consistent mode breakdown."""
     app_js = ui_client.get("/ui/app.js").text
     assert "Ledger," in app_js
     assert "s.range" in app_js
+    assert "Total:" in app_js
+    assert "by_mode" in app_js
+
+    # Verify Grafana dashboard has cache-hit percent and window panel titles
+    import json
+    from pathlib import Path
+
+    dash_path = Path("observability/grafana/dashboards/dashboard.json")
+    if dash_path.exists():
+        dash = json.loads(dash_path.read_text(encoding="utf-8"))
+        cache_panel = next(
+            (p for p in dash.get("panels", []) if "Cache hit rate" in p.get("title", "")), None
+        )
+        assert cache_panel is not None
+        assert "(15m)" in cache_panel["title"]
+        assert cache_panel.get("fieldConfig", {}).get("defaults", {}).get("unit") == "percent"
+        for p in dash.get("panels", []):
+            has_win = any(w in p["title"] for w in ("5m", "15m", "total", "today"))
+            assert has_win, f"Panel {p['title']} missing window"
 
 
 def test_prompt_tokens_like_with_like_fixtures(ui_client) -> None:
-    """WP19.1: Prompt token accounting fixtures (lower, equal, higher than baseline, plus excluded unmeasured)."""
+    """WP19.1: Prompt token accounting fixtures (lower, equal,
+    higher than baseline, plus excluded unmeasured)."""
     import asyncio
+
     from app.optimizer.cache import SavingsLedger
 
     ledger = SavingsLedger(ui_client.app.state.pool)
@@ -278,6 +319,8 @@ def test_specs_page_eval_and_status_filters(ui_client) -> None:
     assert "specs-hide-eval" in app_js
     assert "specs-status-filter" in app_js
     assert "Needs your answer" in app_js
+    assert "openQuestionForm" in app_js
+    assert "data-answer" in app_js
 
     index_html = ui_client.get("/ui/").text
     assert "specs-hide-eval" in index_html
@@ -291,8 +334,8 @@ def test_specs_page_eval_and_status_filters(ui_client) -> None:
         from app.storage.repos import EventsRepo
         async with pool.connection() as conn, conn.cursor() as cur:
             await cur.execute(
-                "INSERT INTO sessions (id, status, trace_id, current_version, spend_usd, idempotency_key, idea) "
-                "VALUES (%s, 'failed', 'tr-test', 1, 0, %s, 'failed task idea')",
+                "INSERT INTO sessions (id, status, trace_id, current_version, spend_usd, "
+                "idempotency_key, idea) VALUES (%s, 'failed', 'tr-test', 1, 0, %s, 'failed task idea')",
                 (sid, f"idem-{sid}"),
             )
         await EventsRepo(pool).append(sid, "error", {

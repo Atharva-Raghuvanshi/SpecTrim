@@ -42,7 +42,9 @@ def _record_savings(reports: list[dict]) -> None:
             PASS_SAVINGS_EST.labels(**{"pass": p}).inc(max(0, saved))
 
 
-def _record_proxy_metrics(model: str, usage_info: dict, cost: float | None, latency_ms: int, tokens_baseline_est: int) -> None:
+def _record_proxy_metrics(
+    model: str, usage_info: dict, cost: float | None, latency_ms: int, tokens_baseline_est: int
+) -> None:
     t_in = usage_info.get("prompt_tokens") or tokens_baseline_est or 0
     t_out = usage_info.get("completion_tokens") or 0
     record_stage_call("proxy", model, t_in, t_out, cost, latency_ms)

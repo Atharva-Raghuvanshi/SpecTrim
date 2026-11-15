@@ -91,7 +91,13 @@ def drain(client, session_id):
     from app.pipeline.orchestrator import PipelineContext, run_pipeline_job
 
     ctx = PipelineContext(client.app.state.pool, client.app.state.gateway, 3)
-    loop = asyncio.get_event_loop_policy().get_event_loop()
+    try:
+        loop = asyncio.get_event_loop_policy().get_event_loop()
+        if loop.is_closed():
+            raise RuntimeError("Loop is closed")
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
     for _ in range(3):
         status = loop.run_until_complete(run_pipeline_job(ctx, session_id))
         if status in ("awaiting_user", "ready"):
