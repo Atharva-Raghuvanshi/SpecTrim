@@ -34,6 +34,9 @@ lint:
 migrate:
 	$(PY) -m app.storage.migrate
 
+smoke-docker:
+	@bash scripts/smoke_docker.sh
+
 eval-daily:
 	$(PY) -u -m evals.orchestr
 

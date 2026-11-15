@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app}
       POSTGRES_DB: ${POSTGRES_DB:-qo}
     ports:
-      - "${POSTGRES_HOST_PORT:-5433}:5432"
+      - "${QO_PG_PORT:-5433}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -26,7 +26,7 @@ services:
       RATE_LIMIT_PER_MIN: ${RATE_LIMIT_PER_MIN:-30}
       GROQ_API_KEY: ${GROQ_API_KEY:-}
     ports:
-      - "${API_HOST_PORT:-8001}:8000"
+      - "${QO_API_PORT:-8001}:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -73,7 +73,7 @@ services:
       api:
         condition: service_healthy
     ports:
-      - "${MCP_HOST_PORT:-8002}:8001"
+      - "${QO_MCP_PORT:-8002}:8001"
     restart: unless-stopped
 
   prometheus:
