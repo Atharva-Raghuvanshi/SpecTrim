@@ -665,3 +665,24 @@ All items from the earlier audit stand, with these updates:
 - E3b multi-file lift: 120b quota exhausted for spec-gen; 20b quota exhausted for builder
 - Demo video: needs VPS + domain (user provides)
 - Resume: needs git remote 'origin'
+
+## WP18 — fresh-clone fix + container smoke test (2026-11-15)
+
+**Diagnosis:** cause **(b) — setuptools didn't package `server/app/ui/` static files or `server/app/storage/migrations/*.sql` into the Docker image**. `pip install .` only includes `.py` files from packages found by `packages.find`; the `ui/` dir (no `__init__.py`) and `migrations/*.sql` were excluded. In the container, `Path(__file__).parent / "ui"` didn't exist → mount skipped → /ui/ 404. Similarly, `apply_migrations` couldn't find the SQL files → `proxy_requests` table missing → /ui/api/summary 500. Port conflict (cause a) was also a factor (old stack on 8001).
+
+**Fixes:**
+1. `pyproject.toml`: `[tool.setuptools.package-data]` added `"app" = ["ui/*"]` and `"app.storage" = ["migrations/*.sql"]` — both directories now included in the wheel.
+2. `docker-compose.yml`: port env vars renamed to `QO_*` prefix (QO_API_PORT, QO_PG_PORT, QO_MCP_PORT) so a fresh clone on non-default ports doesn't conflict with an existing stack.
+3. `.env.example` updated to match.
+
+**Smoke test** (`scripts/smoke_docker.sh` → `make smoke-docker`):
+- Clones current HEAD to a temp dir, creates .env from .env.example, finds free ports, `docker compose up -d --build`, waits for /healthz, asserts 13 endpoints, cleans up on exit (trap).
+- **Result: PASS=13 FAIL=0** (all endpoints 200, UI index references assets, metrics present).
+- **Cause confirmed: (b) fixed by the package-data change.** Old stack on 8001 (cause a) also contributed.
+
+### Verify
+```
+make smoke-docker    # PASS=13 FAIL=0
+make test            # 166 passed
+make lint            # ruff+mypy clean
+```

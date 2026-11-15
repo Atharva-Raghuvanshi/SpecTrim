@@ -79,7 +79,11 @@ check() {
     PASS=$((PASS + 1))
   else
     echo "  FAIL $desc (got $code, expected $expect_code)"
-    echo "    body: $(echo "$body" | head -c 200)"
+    echo "    body: $(echo "$body" | head -c 300)"
+    if [ "$code" = "500" ]; then
+      echo "    --- api logs (last 20 lines) ---"
+      docker compose -p "$PROJECT_NAME" logs api --tail 20 2>/dev/null | tail -15
+    fi
     FAIL=$((FAIL + 1))
   fi
 }
@@ -87,7 +91,7 @@ check() {
 check "/healthz"                    "$BASE_URL/healthz"                    200 "OK"
 check "/docs"                       "$BASE_URL/docs"                       200
 check "/ui/ (index)"                "$BASE_URL/ui/"                        200 "Query Optimizer"
-check "/ui (no slash, redirect)"    "$BASE_URL/ui"                         "200\|307"
+check "/ui (no slash, redirect)"    "$BASE_URL/ui"                         "307"
 check "/ui/app.js"                  "$BASE_URL/ui/app.js"                  200
 check "/ui/styles.css"              "$BASE_URL/ui/styles.css"              200
 check "/ui/api/summary"             "$BASE_URL/ui/api/summary?range=24h"   200
@@ -118,16 +122,8 @@ for metric in qo_sessions_created_total qo_stage_calls_total; do
   fi
 done
 
-# Grafana
-GRAFANA_URL="http://127.0.0.1:$QO_GRAFANA_PORT/api/health"
-gcode=$(curl -s -o /dev/null -w "%{http_code}" "$GRAFANA_URL" 2>/dev/null || echo "000")
-if [ "$gcode" = "200" ]; then
-  echo "  PASS Grafana /api/health ($gcode)"
-  PASS=$((PASS + 1))
-else
-  echo "  FAIL Grafana /api/health ($gcode)"
-  FAIL=$((FAIL + 1))
-fi
+# Grafana: only checked when running the full stack (smoke starts api+postgres only)
+echo "  SKIP Grafana (smoke starts api+postgres only; full-stack via make up)"
 
 echo ""
 echo "=== SMOKE RESULT: PASS=$PASS FAIL=$FAIL ==="
