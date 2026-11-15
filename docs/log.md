@@ -593,3 +593,28 @@ Every number above carries its input size. The **180K-line GC-heavy miss (~290ms
 **Not built (per scope):** tree-sitter, screenshots, deployment work. No new features.
 
 **Verify:** make test → 166 passed · ruff+mypy clean · coverage 94% (gate 80%).
+
+## WP17 — launch confirmation (2026-11-15)
+```
+$ nohup make eval-daily > evals/results/orchestrator.log 2>&1 & disown
+$ make eval-status
+== eval-daily status ==
+orchestrator: RUNNING pid=38136
+STOP file: absent
+stage selection (EVAL_STAGES): S1,S2p,S6,S7
+stages:
+  S1 E1/E2 v2 remainder: 22/30 cells
+  S2 E4b primary off+balanced: 0/16 cells
+  S2b E4b primary safe: DISABLED
+  S3b E5 trial + ablation on e4b: DISABLED
+  S4a E3b specs: DISABLED
+  S4b E3b builder cells: DISABLED
+  S5 E4 tiny dev/regression: DISABLED
+  S6 finalization: auto
+  S7 verify+tag: auto
+tokens used today (2026-11-15): fresh quota window
+orchestrator.log: STAGE PLAN S1 … 170,000 tok free → S1 started
+```
+PID 38136 confirmed alive (ctypes OpenProcess). The orchestrator runs detached
+(survives shell exit), probes hourly when a model is exhausted, and proceeds
+S1 → S2p → S6 → S7 (verify/secret-scan/commit/tag/COMPLETE) automatically.

@@ -40,7 +40,7 @@ def done_in(prefix: str) -> int:
 
 
 def selected_stages() -> list[str]:
-    raw = os.environ.get("EVAL_STAGES", "S1,S2,S6")
+    raw = os.environ.get("EVAL_STAGES", "S1,S2p,S6,S7")
     return [t.strip() for t in raw.split(",") if t.strip()]
 
 

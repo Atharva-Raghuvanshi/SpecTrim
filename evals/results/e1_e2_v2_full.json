@@ -1,23 +1,23 @@
 {
-  "ran": 22,
-  "completed": 22,
+  "ran": 19,
+  "completed": 19,
   "infra_aborted": 0,
   "quality_fail": 0,
   "e1": {
-    "valid": 22,
+    "valid": 19,
     "invalid": 0,
     "validity_rate": 1.0
   },
   "e2": {
-    "micro_tp": 27,
-    "micro_fp": 17,
+    "micro_tp": 24,
+    "micro_fp": 14,
     "micro_fn": 5,
-    "micro_precision": 0.6136363636363636,
-    "micro_recall": 0.84375
+    "micro_precision": 0.631578947368421,
+    "micro_recall": 0.8275862068965517
   },
-  "tokens_total_est": 302801,
+  "tokens_total_est": 261062,
   "cost_usd_reported": 0.0,
-  "elapsed_s": 300.9,
+  "elapsed_s": 24.8,
   "per_prompt": [
     {
       "id": "P01",
@@ -581,73 +581,16 @@
       "status": "ok",
       "infra_aborted": false,
       "quality_fail": false,
-      "tokens": 13427,
+      "tokens": 13458,
       "cost_usd": 0.0,
       "questions": [
-        "data_ownership"
+        "data_ownership",
+        "target_platform"
       ],
       "tp_fp_fn": [
         1,
-        0,
+        1,
         1
-      ],
-      "valid": true
-    },
-    {
-      "id": "P20",
-      "version": "v2",
-      "status": "ok",
-      "infra_aborted": false,
-      "quality_fail": false,
-      "tokens": 14352,
-      "cost_usd": 0.0,
-      "questions": [
-        "auth_model",
-        "data_ownership",
-        "target_platform"
-      ],
-      "tp_fp_fn": [
-        1,
-        2,
-        0
-      ],
-      "valid": true
-    },
-    {
-      "id": "P21",
-      "version": "v2",
-      "status": "ok",
-      "infra_aborted": false,
-      "quality_fail": false,
-      "tokens": 12065,
-      "cost_usd": 0.0,
-      "questions": [
-        "auth_model",
-        "data_ownership"
-      ],
-      "tp_fp_fn": [
-        1,
-        1,
-        0
-      ],
-      "valid": true
-    },
-    {
-      "id": "P22",
-      "version": "v2",
-      "status": "ok",
-      "infra_aborted": false,
-      "quality_fail": false,
-      "tokens": 15353,
-      "cost_usd": 0.0,
-      "questions": [
-        "data_ownership",
-        "target_platform"
-      ],
-      "tp_fp_fn": [
-        1,
-        1,
-        0
       ],
       "valid": true
     }
