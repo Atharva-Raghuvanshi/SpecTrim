@@ -302,21 +302,105 @@ function renderBench(b) {
 }
 
 /* ---------- specs ---------- */
+let allSpecs = [];
+
+function isEvalSession(s) {
+  const idea = s.idea || "";
+  const sid = s.id || "";
+  const evalPattern = /\bvariant\s*\d+\b|\bv\d+\b|\beval\b|\bbenchmark\b|\bprompt[-_]?\d+\b/i;
+  return evalPattern.test(idea) || evalPattern.test(sid);
+}
+
+function renderSpecsList() {
+  const list = $("specs-list");
+  if (!list) return;
+  const hideEval = $("specs-hide-eval") ? $("specs-hide-eval").checked : true;
+  const statusFilter = $("specs-status-filter") ? $("specs-status-filter").value : "all";
+
+  let filtered = allSpecs;
+  if (hideEval) {
+    filtered = filtered.filter((s) => !isEvalSession(s));
+  }
+  if (statusFilter && statusFilter !== "all") {
+    filtered = filtered.filter((s) => s.status === statusFilter);
+  }
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="muted">No matching sessions.</div>`;
+    return;
+  }
+
+  list.innerHTML = `<table><thead><tr><th>session</th><th>status</th><th>v</th><th>idea</th><th></th></tr></thead><tbody>` +
+    filtered.map((s) => {
+      let statusHtml = escapeHtml(s.status);
+      if (s.status === "failed") {
+        statusHtml = `<span style="color:var(--danger);font-weight:600">failed</span>` +
+          (s.failure_reason ? `<div class="muted" style="font-size:11px">${escapeHtml(s.failure_reason)}</div>` : "");
+      } else if (s.status === "awaiting_user") {
+        statusHtml = `<a href="#questions" data-answer="${escapeHtml(s.id)}" style="color:var(--warn);text-decoration:underline;cursor:pointer;font-weight:600">Needs your answer</a>`;
+      }
+      return `<tr><td><code>${escapeHtml(s.id)}</code></td><td>${statusHtml}</td>` +
+        `<td>${s.current_version ?? "-"}</td><td>${escapeHtml(s.idea)}</td>` +
+        `<td><button class="ghost" data-view="${escapeHtml(s.id)}">View</button></td></tr>`;
+    }).join("") +
+    `</tbody></table>`;
+
+  list.querySelectorAll("[data-view]").forEach((b) =>
+    b.addEventListener("click", () => viewSpec(b.dataset.view)));
+
+  list.querySelectorAll("[data-answer]").forEach((a) =>
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      openQuestionForm(a.dataset.answer);
+    }));
+}
+
+async function openQuestionForm(sid) {
+  const modal = $("specs-questions-modal");
+  if (!modal) return;
+  modal.classList.remove("hidden");
+  modal.innerHTML = `<div class="skeleton"></div>`;
+  try {
+    const res = await api(`/sessions/${encodeURIComponent(sid)}/questions`);
+    const qs = res.questions || [];
+    if (!qs.length) {
+      modal.innerHTML = `<div class="muted">No unanswered questions for session ${escapeHtml(sid)}.</div>` +
+        `<button class="ghost" id="close-qmodal" style="margin-top:8px">Close</button>`;
+      $("close-qmodal").onclick = () => modal.classList.add("hidden");
+      return;
+    }
+    modal.innerHTML = `<h3 style="margin-top:0">Questions for session ${escapeHtml(sid)}</h3>` +
+      qs.map((q) =>
+        `<div class="row" style="margin-bottom:8px"><label style="font-weight:600;min-width:180px">${escapeHtml(q.id)}: ${escapeHtml(q.text)}</label>` +
+        `<input data-q="${escapeHtml(q.id)}" placeholder="Your answer…" style="flex:1"></div>`).join("") +
+      `<div class="row" style="margin-top:12px"><button class="primary" id="submit-spec-answers">Send answers</button>` +
+      `<button class="ghost" id="cancel-spec-answers">Cancel</button></div>`;
+
+    $("cancel-spec-answers").onclick = () => modal.classList.add("hidden");
+    $("submit-spec-answers").onclick = async () => {
+      const answers = [...modal.querySelectorAll("[data-q]")]
+        .map((inp) => ({ id: inp.dataset.q, answer: inp.value }))
+        .filter((a) => a.answer);
+      if (!answers.length) return;
+      await fetch(`/sessions/${encodeURIComponent(sid)}/answers`, {
+        method: "POST", headers: { "Content-Type": "application/json", ...headers() },
+        body: JSON.stringify({ answers }),
+      });
+      modal.classList.add("hidden");
+      await refreshSpecs();
+    };
+  } catch (err) {
+    modal.innerHTML = `<div class="muted">Failed to load questions: ${escapeHtml(err.message)}</div>` +
+      `<button class="ghost" id="close-qmodal" style="margin-top:8px">Close</button>`;
+    $("close-qmodal").onclick = () => modal.classList.add("hidden");
+  }
+}
+
 async function refreshSpecs() {
   try {
     const d = await api("/ui/api/sessions");
-    const list = $("specs-list");
-    list.innerHTML = `<table><thead><tr><th>session</th><th>status</th><th>v</th><th>idea</th><th></th></tr></thead><tbody>` +
-      (d.sessions || []).map((s) =>
-        `<tr><td><code>${escapeHtml(s.id)}</code></td><td>${escapeHtml(s.status)}</td>` +
-        `<td>${s.current_version ?? "-"}</td><td>${escapeHtml(s.idea)}</td>` +
-        `<td><button class="ghost" data-view="${escapeHtml(s.id)}">View</button></td></tr>`).join("") +
-      `</tbody></table>`;
-    list.querySelectorAll("[data-view]").forEach((b) =>
-      b.addEventListener("click", () => viewSpec(b.dataset.view)));
-    if (!(d.sessions || []).length) {
-      list.innerHTML = `<div class="muted">No sessions yet — create one under “New spec”.</div>`;
-    }
+    allSpecs = d.sessions || [];
+    renderSpecsList();
   } catch (e) { showError("Specs load failed: " + e.message); }
 }
 
@@ -484,6 +568,10 @@ $("auto-refresh").addEventListener("change", (e) => {
   else clearInterval(state.timer);
 });
 $("create-spec").addEventListener("click", newSpec);
+const hideEvalCb = $("specs-hide-eval");
+if (hideEvalCb) hideEvalCb.addEventListener("change", renderSpecsList);
+const statusFilterSel = $("specs-status-filter");
+if (statusFilterSel) statusFilterSel.addEventListener("change", renderSpecsList);
 $("theme-toggle").addEventListener("click", () => {
   const cur = document.documentElement.dataset.theme;
   document.documentElement.dataset.theme = cur === "dark" ? "light" : "dark";

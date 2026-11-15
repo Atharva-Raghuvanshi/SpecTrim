@@ -101,10 +101,36 @@ def build_ui_router(app):  # type: ignore[no-untyped-def]
                 (min(limit, 200),),
             )
             rows = await cur.fetchall()
-        return {"sessions": [
-            {"id": r[0], "status": r[1], "current_version": r[2],
-             "idea": r[3][:80], "created_at": r[4].isoformat()} for r in rows
-        ]}
+
+            out_sessions = []
+            for r in rows:
+                sid, status, cur_v, idea, created_at = r
+                failure_reason = None
+                if status == "failed":
+                    await cur.execute(
+                        "SELECT payload FROM events WHERE session_id = %s "
+                        "AND (type = 'error' OR (type = 'state_changed' AND payload->>'to' = 'failed')) "
+                        "ORDER BY seq DESC LIMIT 1",
+                        (sid,),
+                    )
+                    ev = await cur.fetchone()
+                    if ev and isinstance(ev[0], dict):
+                        raw_reason = ev[0].get("reason") or ev[0].get("message") or ev[0].get("error") or "pipeline error"
+                        import re
+                        clean = re.sub(r"(Bearer\s+|api[-_]?key\s*[:=]\s*)[^\s]+", r"\1[REDACTED]", str(raw_reason), flags=re.I)
+                        failure_reason = clean[:120]
+                    else:
+                        failure_reason = "pipeline error"
+
+                out_sessions.append({
+                    "id": sid,
+                    "status": status,
+                    "current_version": cur_v,
+                    "idea": idea[:80],
+                    "created_at": created_at.isoformat(),
+                    "failure_reason": failure_reason,
+                })
+        return {"sessions": out_sessions}
 
     @router.get("/sessions/{session_id}")
     async def session_detail(request: Request, session_id: str, version: int | None = None) -> dict:

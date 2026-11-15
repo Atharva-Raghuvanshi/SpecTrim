@@ -95,7 +95,24 @@
 
     <!-- ============ Specs ============ -->
     <section id="page-specs" class="page hidden">
-      <h1>Specs</h1>
+      <div class="row" style="align-items:center;justify-content:space-between;margin-top:0;margin-bottom:var(--sp-2)">
+        <h1 style="margin:0">Specs</h1>
+        <div class="row" style="margin:0;align-items:center;gap:var(--sp-2)">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="specs-hide-eval" checked> Hide eval sessions</label>
+          <select id="specs-status-filter" style="padding:4px 8px;border-radius:var(--r);background:var(--bg);color:var(--text);border:1px solid var(--line);font-size:13px">
+            <option value="all">All statuses</option>
+            <option value="ready">ready</option>
+            <option value="awaiting_user">awaiting_user</option>
+            <option value="failed">failed</option>
+            <option value="queued">queued</option>
+            <option value="analyzing">analyzing</option>
+            <option value="drafting">drafting</option>
+            <option value="validating">validating</option>
+            <option value="revising">revising</option>
+          </select>
+        </div>
+      </div>
+      <div id="specs-questions-modal" class="card hidden"></div>
       <div id="specs-list" class="card"><div class="skeleton"></div></div>
       <div id="spec-viewer" class="hidden"></div>
     </section>

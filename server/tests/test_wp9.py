@@ -255,3 +255,44 @@ def test_prompt_tokens_like_with_like_fixtures(ui_client) -> None:
             os.environ.pop("UI_DEMO", None)
 
     asyncio.run(_run())
+
+
+def test_specs_page_eval_and_status_filters(ui_client) -> None:
+    """WP19.5: Specs page eval filter, status filter, failure reason, and awaiting_user link."""
+    import asyncio
+    import uuid
+
+    app_js = ui_client.get("/ui/app.js").text
+    assert "isEvalSession" in app_js
+    assert "specs-hide-eval" in app_js
+    assert "specs-status-filter" in app_js
+    assert "Needs your answer" in app_js
+
+    index_html = ui_client.get("/ui/").text
+    assert "specs-hide-eval" in index_html
+    assert "specs-status-filter" in index_html
+    assert "Hide eval sessions" in index_html
+
+    # Test failure_reason in /ui/api/sessions without secrets
+    async def _insert_failed():
+        sid = f"ses-failed-{str(uuid.uuid4())[:8]}"
+        pool = ui_client.app.state.pool
+        from app.storage.repos import EventsRepo
+        async with pool.connection() as conn, conn.cursor() as cur:
+            await cur.execute(
+                "INSERT INTO sessions (id, status, trace_id, current_version, spend_usd, idempotency_key, idea) "
+                "VALUES (%s, 'failed', 'tr-test', 1, 0, %s, 'failed task idea')",
+                (sid, f"idem-{sid}"),
+            )
+        await EventsRepo(pool).append(sid, "error", {
+            "reason": "GatewayError: rate limit exceeded with Bearer sk-secret-123456",
+        })
+        return sid
+
+    sid = asyncio.run(_insert_failed())
+    sessions = ui_client.get("/ui/api/sessions").json()["sessions"]
+    matching = [s for s in sessions if s["id"] == sid]
+    assert len(matching) == 1
+    assert matching[0]["status"] == "failed"
+    assert "Bearer [REDACTED]" in matching[0]["failure_reason"]
+    assert "sk-secret-123456" not in matching[0]["failure_reason"]
