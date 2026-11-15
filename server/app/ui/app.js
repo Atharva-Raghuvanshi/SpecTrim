@@ -596,4 +596,9 @@ api("/ui/api/health").then((h) => {
 }).catch(() => {
   $("health").textContent = "unreachable"; $("health").className = "health bad";
 });
-showPage("overview");
+const initialHash = location.hash.replace("#", "");
+if (["overview", "specs", "newspec", "connect"].includes(initialHash)) {
+  showPage(initialHash);
+} else {
+  showPage("overview");
+}

@@ -156,6 +156,17 @@ def test_ui_hash_navigation_exists(ui_client) -> None:
     assert "hashchange" in app_js
     assert "showPageFromHash" in app_js
     assert "location.hash" in app_js
+    assert "initialHash" in app_js
+
+
+def test_ui_contrast_and_overflow_guards(ui_client) -> None:
+    """WP19.6: Contrast AA styles for Open Grafana link and horizontal overflow guards."""
+    styles = ui_client.get("/ui/styles.css").text
+    assert ".topbar a.ghost" in styles or ".topbar a" in styles
+    assert "#1a56db" in styles  # high-contrast AA link color on light theme
+    assert "#58a6ff" in styles  # high-contrast AA link color on dark theme
+    assert "overflow-x: hidden" in styles
+    assert "minmax(0, 1fr)" in styles
 
 
 def test_ui_kpi_data_source_labels(ui_client) -> None:
