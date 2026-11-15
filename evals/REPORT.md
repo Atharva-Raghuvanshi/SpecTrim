@@ -4,8 +4,8 @@ _Generated from evals/results/*.json — only measured numbers appear here; anyt
 
 ## E1/E2 — spec quality + question quality (prompts v2)
 - ran: 30/30 prompts · model: gpt-oss-120b pipeline (Groq free tier)
-- E1 validity: 30/30 (0%); invalid: 0; quota-aborted: 0 (resume-safe)
-- E2 precision: None · recall: None (micro, category-level)
+- E1 validity: 30/30 (100%); invalid: 0; quota-aborted: 0 (resume-safe)
+- E2 precision: 0.596 · recall: 0.810 (micro, category-level)
 - tokens_total_est: 399595
 
 ## E3 — downstream lift
@@ -29,7 +29,8 @@ _Generated from evals/results/*.json — only measured numbers appear here; anyt
 ![pareto](results/pareto.png) · text table: results/pareto_table.txt
 
 ## Primary benchmark set (queued)
-- tasks_e4b.json (4 multi-turn tasks with 3-5K-token tool logs) is the **primary benchmark set**; the 8 tiny tasks above are the **dev / regression set**. Primary-set cells are stamped (WP12) and run only after the dev-set paired rerun completes under the same code stamp.- Sets are never mixed: dev-set cells and primary-set cells are reported separately and never averaged together.
+- tasks_e4b.json (4 multi-turn tasks with 3-5K-token tool logs) is the **primary benchmark set**; the 8 tiny tasks above are the **dev / regression set**. Primary-set cells are stamped (WP12) and run only after the dev-set paired rerun completes under the same code stamp.
+- Sets are never mixed: dev-set cells and primary-set cells are reported separately and never averaged together.
 ## Scope (WP15)
 - Stage scope: EVAL_STAGES=S1,S2,S6.
 - Experiments outside the scope are **NOT MEASURED: not run (free-tier quota / scope)** — E4b safe arm, E5 ablation, E3b multi-file lift, E4 tiny dev/regression set. They are not pending and not failed; they were cut by scope decision.

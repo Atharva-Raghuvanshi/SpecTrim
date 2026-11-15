@@ -32,13 +32,9 @@ def test_daily_spend_cap_blocks() -> None:
     from fastapi import HTTPException
 
     with pytest.raises(HTTPException) as exc:
-        asyncio.get_event_loop().run_until_complete(
-            enforce_daily_spend(_FakeSessions(10.01), cap_usd=10.0)
-        )
+        asyncio.run(enforce_daily_spend(_FakeSessions(10.01), cap_usd=10.0))
     assert exc.value.status_code == 402
-    asyncio.get_event_loop().run_until_complete(
-        enforce_daily_spend(_FakeSessions(9.99), cap_usd=10.0)
-    )  # under cap: no raise
+    asyncio.run(enforce_daily_spend(_FakeSessions(9.99), cap_usd=10.0))  # under cap: no raise
 
 
 def test_bearer_required_when_configured(app_client, monkeypatch) -> None:

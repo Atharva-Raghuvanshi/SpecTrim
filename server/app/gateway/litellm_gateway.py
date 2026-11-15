@@ -6,10 +6,12 @@
 """
 from __future__ import annotations
 
+import os
 import random
 import time
 from typing import Callable
 
+os.environ.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "True")
 import litellm
 
 from .base import CompletionResult, GatewayError, GatewayRateLimited, Usage

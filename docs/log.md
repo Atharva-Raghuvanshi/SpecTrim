@@ -710,3 +710,23 @@ make lint            # ruff+mypy clean
 - **155 passthroughs**: 120 from mode=off (BY DESIGN — mode=off is passthrough+metrics per PRD_v2 §4); ~35 from unit-test models (`m`, `m-ledger`, `m-anth`). Zero from real traffic fail-open. **Classification: (a) by-design behavior, not errors.**
 - **27 invalid_original events**: no current ledger rows match (ledger was truncated before the fixture fix). They were from test-generated traffic with tool messages lacking a preceding assistant tool_calls message — the validator correctly flagged them. **Classification: (a) genuinely invalid client requests, NOT validator false positives.** No validator change needed.
 - Source breakdown: all test traffic, no real-client invalid requests. Models: test fixtures (m, m-ledger, m-anth) and qwen/20b builder models.
+
+## WP19 — UI and dashboard honesty fixes (2026-11-15)
+
+**Status:** DONE. Commits: PART1 `dca4aa0` (cleanup), `61d5d01` (WP19 main). **173 tests, ruff+mypy clean, coverage 94%.**
+
+### P1 — 27 invalid_original + 155 passthrough investigation
+- **155 passthroughs**: 120 from mode=off (BY DESIGN per PRD_v2 §4), ~35 from unit-test models (m, m-ledger, m-anth). Zero from real traffic fail-open. Classification: (a) by-design behavior.
+- **27 invalid_original**: no current ledger rows match (wiped before fixture fix). Were from test-generated traffic with tool messages lacking a preceding assistant tool_calls. Validator correctly flagged them. Classification: (a) genuinely invalid client requests, NOT validator false positives. No validator change needed.
+
+### P2 — KPI honesty
+KPI card shows "Net increase (Estimated · ledger)" when actual > baseline-est, with tooltip. Never displays negative as "saved".
+
+### P3 — data source labels
+KPI cards show "(Ledger, {range})" data source and time window.
+
+### P4 — Grafana link contrast AA, chart overflow fix, hash navigation (location.hash → showPageFromHash).
+
+### P5 — Grafana metrics verified: all 13 panel queries match registered metrics (test_grafana_panel_metrics_exist_in_metrics_endpoint + test_pipeline_emits_stage_metrics).
+
+### P6 — assertions added for KPI labels, DISABLED stages, Connect snippets, hash navigation.

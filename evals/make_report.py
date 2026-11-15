@@ -64,14 +64,30 @@ def main() -> int:
 
     parts.append("## E1/E2 — spec quality + question quality (prompts v2)")
     if v2 and v2.get("ran"):
+        e1_info = v2.get("e1") or {}
+        e2_info = v2.get("e2") or {}
+        valid = e1_info.get("valid", 0)
+        invalid = e1_info.get("invalid", 0)
+        validity_rate = e1_info.get("validity_rate")
+        if validity_rate is None:
+            validity_rate = v2.get("e1_validity_rate", 0)
+        prec = e2_info.get("micro_precision")
+        if prec is None:
+            prec = v2.get("e2_micro_precision")
+        prec_str = f"{prec:.3f}" if isinstance(prec, (int, float)) else str(prec)
+        rec = e2_info.get("micro_recall")
+        if rec is None:
+            rec = v2.get("e2_micro_recall")
+        rec_str = f"{rec:.3f}" if isinstance(rec, (int, float)) else str(rec)
+
         parts.append(
             f"- ran: {v2['ran']}/30 prompts · model: gpt-oss-120b pipeline (Groq free tier)\n"
-            f"- E1 validity: {v2['e1'].get('valid', 0)}/{v2['ran']} "
-            f"({100 * v2.get('e1_validity_rate', 0):.0f}%); "
-            f"invalid: {v2['e1'].get('invalid', 0)}; quota-aborted: "
+            f"- E1 validity: {valid}/{v2['ran']} "
+            f"({100 * validity_rate:.0f}%); "
+            f"invalid: {invalid}; quota-aborted: "
             f"{30 - v2['ran']} (resume-safe)\n"
-            f"- E2 precision: {v2.get('e2_micro_precision')} · recall: "
-            f"{v2.get('e2_micro_recall')} (micro, category-level)\n"
+            f"- E2 precision: {prec_str} · recall: "
+            f"{rec_str} (micro, category-level)\n"
             f"- tokens_total_est: {v2.get('tokens_total_est')}"
         )
     else:
@@ -105,7 +121,7 @@ def main() -> int:
         "- tasks_e4b.json (4 multi-turn tasks with 3-5K-token tool logs) is the "
         "**primary benchmark set**; the 8 tiny tasks above are the **dev / regression "
         "set**. Primary-set cells are stamped (WP12) and run only after the dev-set "
-        "paired rerun completes under the same code stamp."
+        "paired rerun completes under the same code stamp.\n"
         "- Sets are never mixed: dev-set cells and primary-set cells are reported "
         "separately and never averaged together."
     )

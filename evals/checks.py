@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
 CHECK_SNIPPETS: dict[str, str] = {
-    # noqa-disable dict: one-line embedded check programs
+    # Embedded check programs (one-line assert suites)
     "T1": "from mod import Calculator\nassert add(2, 3) == 5\nc = Calculator()\nassert c.multiply(4, 5) == 20\nprint('CHECK-OK')",  # noqa: E501
     "T2": "from mod import is_palindrome, count_vowels\nassert is_palindrome('A man a plan') is False\nassert is_palindrome('RaceCar') is True\nassert count_vowels('hello') == 2\nprint('CHECK-OK')",  # noqa: E501
     "T3": "from mod import Stack\ns = Stack()\ns.push(1)\nassert s.pop() == 1\ntry:\n    Stack().pop()\n    raise SystemExit(1)\nexcept IndexError:\n    pass\nprint('CHECK-OK')",  # noqa: E501
@@ -20,14 +21,28 @@ CHECK_SNIPPETS: dict[str, str] = {
 }
 
 
+def extract_code(source: str) -> str:
+    """Extract clean Python code from markdown blocks or search-replace diff blocks."""
+    sr_pat = re.compile(r"<<<<<<< SEARCH\n.*?\n=======\n(.*?)\n>>>>>>> REPLACE", re.DOTALL)
+    if "<<<<<<< SEARCH" in source and ">>>>>>> REPLACE" in source:
+        replacements = [m.group(1) for m in sr_pat.finditer(source)]
+        if replacements:
+            return "\n".join(replacements).strip()
+    fence_pat = re.compile(r"```(?:python|py)?\s*\n(.*?)\n```", re.DOTALL)
+    fences = fence_pat.findall(source)
+    if fences:
+        return "\n".join(fences).strip()
+    return source
+
+
 def check_generated(task_id: str, source: str) -> dict:
     """Run the generated file's checks in a subprocess. Returns pass/fail + stage."""
+    clean_source = extract_code(source)
     with tempfile.TemporaryDirectory() as td:
         mod = Path(td) / "mod.py"
-        mod.write_text(source, encoding="utf-8")
+        mod.write_text(clean_source, encoding="utf-8")
         checker = Path(td) / "check.py"
         checker.write_text(CHECK_SNIPPETS.get(task_id, "print('CHECK-OK')"), encoding="utf-8")
-        import os
 
         r = subprocess.run(
             [sys.executable, str(checker)], cwd=td,
@@ -37,7 +52,7 @@ def check_generated(task_id: str, source: str) -> dict:
         )
         if "CHECK-OK" in r.stdout:
             return {"pass": True, "stage": "behaviour"}
-        syntax_ok = compile_ok(source)
+        syntax_ok = compile_ok(clean_source)
         return {"pass": False, "stage": "syntax" if not syntax_ok else "behaviour",
                 "stderr": r.stderr[-300:]}
 

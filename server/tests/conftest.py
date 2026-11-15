@@ -9,6 +9,7 @@ from app import winloop  # noqa: F401  - SelectorEventLoop policy before any loo
 
 TEST_DSN = os.environ.get("TEST_DATABASE_URL", "postgresql://app:app@localhost:5433/qo")
 os.environ.setdefault("DATABASE_URL", TEST_DSN)
+os.environ.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "True")
 
 
 def _db_up() -> bool:
@@ -32,7 +33,7 @@ def event_loop() -> asyncio.AbstractEventLoop:
 
 
 @pytest.fixture()
-def db_pool():
+def db_pool(event_loop):
     if not DB_UP:
         pytest.skip("Postgres not reachable; run `make up` first")
     from app.storage.db import close_pool, open_pool
@@ -51,9 +52,9 @@ def db_pool():
             await conn.commit()
         return pool
 
-    pool = asyncio.get_event_loop().run_until_complete(_setup())
+    pool = event_loop.run_until_complete(_setup())
     yield pool
-    asyncio.get_event_loop().run_until_complete(close_pool())
+    event_loop.run_until_complete(close_pool())
 
 
 @pytest.fixture()
@@ -90,8 +91,9 @@ def drain(client, session_id):
     from app.pipeline.orchestrator import PipelineContext, run_pipeline_job
 
     ctx = PipelineContext(client.app.state.pool, client.app.state.gateway, 3)
+    loop = asyncio.get_event_loop_policy().get_event_loop()
     for _ in range(3):
-        status = asyncio.get_event_loop().run_until_complete(run_pipeline_job(ctx, session_id))
+        status = loop.run_until_complete(run_pipeline_job(ctx, session_id))
         if status in ("awaiting_user", "ready"):
             return ctx
     return ctx

@@ -13,7 +13,7 @@ def apply_migrations(dsn: str | None = None, migrations_dir: Path = MIGRATIONS_D
     """Apply pending migrations; returns list of applied filenames."""
     applied: list[str] = []
     dsn = dsn or os.environ.get("DATABASE_URL", "postgresql://app:app@localhost:5433/qo")
-    with psycopg.connect(dsn, autocommit=False) as conn, conn.cursor() as cur:
+    with psycopg.connect(dsn, autocommit=False, connect_timeout=3) as conn, conn.cursor() as cur:
         cur.execute(
             "CREATE TABLE IF NOT EXISTS schema_migrations ("
             "name TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())"
