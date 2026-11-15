@@ -1,23 +1,23 @@
 {
-  "ran": 19,
-  "completed": 19,
+  "ran": 30,
+  "completed": 30,
   "infra_aborted": 0,
   "quality_fail": 0,
   "e1": {
-    "valid": 19,
+    "valid": 30,
     "invalid": 0,
     "validity_rate": 1.0
   },
   "e2": {
-    "micro_tp": 24,
-    "micro_fp": 14,
-    "micro_fn": 5,
-    "micro_precision": 0.631578947368421,
-    "micro_recall": 0.8275862068965517
+    "micro_tp": 34,
+    "micro_fp": 23,
+    "micro_fn": 8,
+    "micro_precision": 0.5964912280701754,
+    "micro_recall": 0.8095238095238095
   },
-  "tokens_total_est": 261062,
+  "tokens_total_est": 399595,
   "cost_usd_reported": 0.0,
-  "elapsed_s": 24.8,
+  "elapsed_s": 932.8,
   "per_prompt": [
     {
       "id": "P01",
@@ -590,6 +590,211 @@
       "tp_fp_fn": [
         1,
         1,
+        1
+      ],
+      "valid": true
+    },
+    {
+      "id": "P20",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 13064,
+      "cost_usd": 0.0,
+      "questions": [
+        "auth_model",
+        "data_ownership",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        1,
+        2,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P21",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 9914,
+      "cost_usd": 0.0,
+      "questions": [
+        "auth_model",
+        "data_ownership"
+      ],
+      "tp_fp_fn": [
+        1,
+        1,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P22",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 14051,
+      "cost_usd": 0.0,
+      "questions": [
+        "data_ownership",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        1,
+        1,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P23",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 13174,
+      "cost_usd": 0.0,
+      "questions": [
+        "auth_model",
+        "data_ownership",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        2,
+        1,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P24",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 13736,
+      "cost_usd": 0.0,
+      "questions": [
+        "data_ownership"
+      ],
+      "tp_fp_fn": [
+        1,
+        0,
+        1
+      ],
+      "valid": true
+    },
+    {
+      "id": "P25",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 11822,
+      "cost_usd": 0.0,
+      "questions": [
+        "data_ownership"
+      ],
+      "tp_fp_fn": [
+        1,
+        0,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P26",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 13961,
+      "cost_usd": 0.0,
+      "questions": [
+        "data_ownership",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        1,
+        1,
+        1
+      ],
+      "valid": true
+    },
+    {
+      "id": "P27",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 9827,
+      "cost_usd": 0.0,
+      "questions": [
+        "data_ownership",
+        "target_platform"
+      ],
+      "tp_fp_fn": [
+        0,
+        2,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P28",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 15078,
+      "cost_usd": 0.0,
+      "questions": [
+        "auth_model",
+        "data_ownership"
+      ],
+      "tp_fp_fn": [
+        1,
+        1,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P29",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 11020,
+      "cost_usd": 0.0,
+      "questions": [
+        "data_ownership"
+      ],
+      "tp_fp_fn": [
+        1,
+        0,
+        0
+      ],
+      "valid": true
+    },
+    {
+      "id": "P30",
+      "version": "v2",
+      "status": "ok",
+      "infra_aborted": false,
+      "quality_fail": false,
+      "tokens": 12886,
+      "cost_usd": 0.0,
+      "questions": [],
+      "tp_fp_fn": [
+        0,
+        0,
         1
       ],
       "valid": true

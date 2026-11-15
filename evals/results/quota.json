@@ -10,17 +10,17 @@
       "ratelimit_reset_tokens_s": null
     },
     "openai/gpt-oss-120b": {
-      "tokens_today": 12545,
-      "requests_today": 6,
-      "last_updated_utc": "2026-11-15T10:47:53.508867+00:00",
+      "tokens_today": 125349,
+      "requests_today": 60,
+      "last_updated_utc": "2026-11-15T11:02:13.849247+00:00",
       "ratelimit_remaining_tokens": null,
       "ratelimit_limit_tokens": null,
       "ratelimit_reset_tokens_s": null
     },
     "openai/gpt-oss-20b": {
-      "tokens_today": 2331,
-      "requests_today": 2,
-      "last_updated_utc": "2026-11-15T10:47:05.889347+00:00",
+      "tokens_today": 26642,
+      "requests_today": 24,
+      "last_updated_utc": "2026-11-15T11:02:13.838242+00:00",
       "ratelimit_remaining_tokens": null,
       "ratelimit_limit_tokens": null,
       "ratelimit_reset_tokens_s": null
