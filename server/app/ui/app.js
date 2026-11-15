@@ -135,6 +135,8 @@ function donut(parts, w = 560, h = 180) {
     t.textContent = `${p.label}: ${num(p.value)}`; svg.appendChild(t);
     angle = a2;
   });
+  const tTot = svgEl("text", { x: 190, y: 30 + parts.length * 20, fill: "var(--muted)", "font-size": 12, "font-weight": "600" });
+  tTot.textContent = `Total: ${num(total)}`; svg.appendChild(tTot);
   return svg;
 }
 
@@ -162,7 +164,7 @@ async function refreshOverview() {
     $("demo-banner").classList.toggle("hidden", !summary.demo);
     window.__ledgerSavedEst = summary.tokens_saved_est;
     renderKpis(summary);
-    renderCharts(series, passes, reqs);
+    renderCharts(series, passes, reqs, summary);
     renderRequests(reqs);
     renderBench(bench);
     const empty = summary.requests === 0;
@@ -176,14 +178,17 @@ function renderKpis(s) {
     (() => {
       const sv = s.tokens_saved_est;
       const neg = sv < 0;
-      const label = neg ? "Net increase (Estimated · ledger)" : "Tokens saved (Estimated · ledger)";
-      const val = neg ? num(-sv) + ` (+${s.tokens_saved_pct_est}% increase)` : num(sv) + ` (${s.tokens_saved_pct_est}%)`;
-      const tip = neg
-        ? "Actual tokens exceeded the baseline-est. baseline-est is a chars/4 estimate vs provider-reported actual tokens — the estimate underestimates real usage for this traffic."
-        : "baseline-est comes from a chars/4 estimate of the original payload — never a measured baseline";
-      return { l: label, v: val, d: "", tip };
+      const label = (neg ? "Net increase (estimated)" : "Prompt tokens saved (estimated)") + " (Ledger, " + s.range + ")";
+      const pctStr = Math.abs(s.tokens_saved_pct_est || 0) + "%";
+      const val = neg ? num(-sv) + ` (+${pctStr} increase)` : num(sv) + ` (${pctStr})`;
+      const tip = "baseline is an estimate from chars/4 of the original prompt";
+      let d = `${num(s.completion_tokens || 0)} completion · ${num(s.reasoning_tokens || 0)} reasoning`;
+      if (s.excluded_count) {
+        d += ` (${num(s.excluded_count)} unmeasured older rows excluded)`;
+      }
+      return { l: label, v: val, d, tip };
     })(),
-    { l: "Cost saved", v: s.cost_saved_usd == null ? "unpriced" : "$" + s.cost_saved_usd.toFixed(4),
+    { l: "Cost saved (Ledger, " + s.range + ")", v: s.cost_saved_usd == null ? "unpriced" : "$" + s.cost_saved_usd.toFixed(4),
       d: "provider did not report a price" },
     { l: "Cache hit rate (Ledger, " + s.range + ")", v: s.cache_hit_rate + "%" },
     { l: "Requests proxied (Ledger, " + s.range + ")", v: num(s.requests) },
@@ -198,17 +203,17 @@ function renderKpis(s) {
   ).join("");
 }
 
-function renderCharts(series, passes, reqs) {
+function renderCharts(series, passes, reqs, summary) {
   const pts = series.points || [];
-  const base = pts.map((p) => p.tokens_baseline_est);
-  const act = pts.map((p) => p.tokens_actual);
+  const base = pts.map((p) => p.prompt_tokens_baseline_est ?? p.tokens_baseline_est);
+  const act = pts.map((p) => p.prompt_tokens_actual ?? p.tokens_actual);
   $("chart-tokens").replaceChildren(
     lineChart([
-      { label: "baseline-est", values: base, area: true },
-      { label: "actual", values: act },
+      { label: "baseline-est (prompt)", values: base, area: true },
+      { label: "actual (prompt)", values: act },
     ], 560, 180));
   $("fb-tokens").textContent = pts.length
-    ? "Fallback table: " + pts.map((p) => `${p.bucket.slice(11, 16)} b=${p.tokens_baseline_est} a=${p.tokens_actual}`).join("; ")
+    ? "Fallback table: " + pts.map((p) => `${p.bucket.slice(11, 16)} b=${p.prompt_tokens_baseline_est ?? p.tokens_baseline_est} a=${p.prompt_tokens_actual ?? p.tokens_actual}`).join("; ")
     : "No data in range.";
   $("chart-passes").replaceChildren(
     hBars((passes.passes || []).map((p) => ({ label: p.pass, value: p.tokens_saved_est }))));
@@ -218,10 +223,13 @@ function renderCharts(series, passes, reqs) {
   $("fb-cache").textContent = pts.length
     ? "avg " + (cachePts.reduce((a, b) => a + b, 0) / cachePts.length).toFixed(1) + "%"
     : "No data.";
-  const byMode = {};
-  (reqs.items || []).forEach((r) => { byMode[r.mode] = (byMode[r.mode] || 0) + 1; });
+  const byMode = (summary && summary.by_mode && Object.keys(summary.by_mode).length) ? summary.by_mode : {};
+  if (Object.keys(byMode).length === 0) {
+    (reqs.items || []).forEach((r) => { byMode[r.mode] = (byMode[r.mode] || 0) + 1; });
+  }
+  const totalModeReqs = (summary && summary.requests != null) ? summary.requests : Object.values(byMode).reduce((a, b) => a + b, 0);
   $("chart-modes").replaceChildren(donut(Object.entries(byMode).map(([label, value]) => ({ label, value }))));
-  $("fb-modes").textContent = Object.entries(byMode).map(([m, c]) => `${m}: ${c}`).join("; ") || "No data.";
+  $("fb-modes").textContent = (Object.entries(byMode).map(([m, c]) => `${m}: ${c}`).join("; ") || "No data.") + ` (Total: ${num(totalModeReqs)})`;
   $("chart-latency").replaceChildren(lineChart([
     { label: "p50", values: pts.map((p) => p.latency_p50_ms) },
     { label: "p95", values: pts.map((p) => p.latency_p95_ms) },

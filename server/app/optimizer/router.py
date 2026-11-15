@@ -85,8 +85,14 @@ async def _handle_chat(request: Request, api: str) -> Response:
             )
         resp = proxy_gateway.raw_completion(payload)
         tokens_actual, cost_actual = proxy_gateway.raw_usage(resp)
-        await ledger.record(session_id, "off", model, False, True, tokens_baseline_est,
-                            tokens_actual, 0.0, cost_actual, 0, [])
+        usage_info = proxy_gateway.raw_usage_breakdown(resp)
+        await ledger.record(
+            session_id, "off", model, False, True, tokens_baseline_est,
+            tokens_actual, 0.0, cost_actual, 0, [],
+            prompt_tokens_actual=usage_info.get("prompt_tokens"),
+            completion_tokens_actual=usage_info.get("completion_tokens"),
+            reasoning_tokens_actual=usage_info.get("reasoning_tokens"),
+        )
         return _reply(api, resp)
 
     # ---- added-overhead measurement (policy+cache+chain, excludes provider)
@@ -101,8 +107,14 @@ async def _handle_chat(request: Request, api: str) -> Response:
     if cache_hit is not None:
         PROXY_CACHE_HITS.inc()
         tokens_actual, cost_actual = proxy_gateway.raw_usage(cache_hit)
-        await ledger.record(session_id, policy.mode, model, True, False,
-                            tokens_baseline_est, tokens_actual, 0.0, cost_actual, 0, [])
+        usage_info = proxy_gateway.raw_usage_breakdown(cache_hit)
+        await ledger.record(
+            session_id, policy.mode, model, True, False,
+            tokens_baseline_est, tokens_actual, 0.0, cost_actual, 0, [],
+            prompt_tokens_actual=usage_info.get("prompt_tokens"),
+            completion_tokens_actual=usage_info.get("completion_tokens"),
+            reasoning_tokens_actual=usage_info.get("reasoning_tokens"),
+        )
         out = _reply(api, cache_hit, cache_hit_flag=True)
         return out
 
@@ -123,9 +135,15 @@ async def _handle_chat(request: Request, api: str) -> Response:
             )
         resp = proxy_gateway.raw_completion({**body, "model": model})
         tokens_actual, cost_actual = proxy_gateway.raw_usage(resp)
-        await ledger.record(session_id, policy.mode, model, False, True,
-                            tokens_baseline_est, tokens_actual, 0.0, cost_actual,
-                            overhead_ms, reports)
+        usage_info = proxy_gateway.raw_usage_breakdown(resp)
+        await ledger.record(
+            session_id, policy.mode, model, False, True,
+            tokens_baseline_est, tokens_actual, 0.0, cost_actual,
+            overhead_ms, reports,
+            prompt_tokens_actual=usage_info.get("prompt_tokens"),
+            completion_tokens_actual=usage_info.get("completion_tokens"),
+            reasoning_tokens_actual=usage_info.get("reasoning_tokens"),
+        )
         return _reply(api, resp)
     _record_savings(reports)
     payload = {**optimized, "model": model}
@@ -151,17 +169,29 @@ async def _handle_chat(request: Request, api: str) -> Response:
                 status_code=502,
             )
         tokens_actual, cost_actual = proxy_gateway.raw_usage(resp)
-        await ledger.record(session_id, policy.mode, model, False, True,
-                            tokens_baseline_est, tokens_actual, 0.0, cost_actual,
-                            overhead_ms, reports)
+        usage_info = proxy_gateway.raw_usage_breakdown(resp)
+        await ledger.record(
+            session_id, policy.mode, model, False, True,
+            tokens_baseline_est, tokens_actual, 0.0, cost_actual,
+            overhead_ms, reports,
+            prompt_tokens_actual=usage_info.get("prompt_tokens"),
+            completion_tokens_actual=usage_info.get("completion_tokens"),
+            reasoning_tokens_actual=usage_info.get("reasoning_tokens"),
+        )
         return _reply(api, resp)
 
     tokens_actual, cost_actual = proxy_gateway.raw_usage(resp)
+    usage_info = proxy_gateway.raw_usage_breakdown(resp)
     if "P9" in policy.enabled:
         await cache.store(model, body, resp)
-    await ledger.record(session_id, policy.mode, model, False, False,
-                        tokens_baseline_est, tokens_actual, 0.0, cost_actual,
-                        overhead_ms, reports)
+    await ledger.record(
+        session_id, policy.mode, model, False, False,
+        tokens_baseline_est, tokens_actual, 0.0, cost_actual,
+        overhead_ms, reports,
+        prompt_tokens_actual=usage_info.get("prompt_tokens"),
+        completion_tokens_actual=usage_info.get("completion_tokens"),
+        reasoning_tokens_actual=usage_info.get("reasoning_tokens"),
+    )
     return _reply(api, resp)
 
 

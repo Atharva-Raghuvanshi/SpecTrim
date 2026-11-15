@@ -81,7 +81,7 @@ def test_demo_rows_isolated_from_stats(ui_client) -> None:
     from scripts.seed_demo_traffic import seed
 
     before = ui_client.get("/stats").json()["requests"]
-    asyncio.get_event_loop().run_until_complete(seed(ui_client.app.state.pool, 5))
+    asyncio.run(seed(ui_client.app.state.pool, 5))
     real = ui_client.get("/stats").json()  # /stats must never include demo rows
     assert real["requests"] == before  # demo seeding does not move real stats
     import os
@@ -163,3 +163,95 @@ def test_ui_kpi_data_source_labels(ui_client) -> None:
     app_js = ui_client.get("/ui/app.js").text
     assert "Ledger," in app_js
     assert "s.range" in app_js
+
+
+def test_prompt_tokens_like_with_like_fixtures(ui_client) -> None:
+    """WP19.1: Prompt token accounting fixtures (lower, equal, higher than baseline, plus excluded unmeasured)."""
+    import asyncio
+    from app.optimizer.cache import SavingsLedger
+
+    ledger = SavingsLedger(ui_client.app.state.pool)
+
+    async def _run():
+        # Clean demo table for fixture isolation
+        async with ui_client.app.state.pool.connection() as conn, conn.cursor() as cur:
+            await cur.execute("DELETE FROM proxy_demo_requests")
+
+        # 1. Lower: baseline=1000, actual=700 (saved 300 = 30%)
+        await ledger.record(
+            "ses_lower", "balanced", "mock-model", False, False,
+            tokens_baseline_est=1000, tokens_actual=900, cost_baseline_est=0.0, cost_actual=0.0,
+            latency_ms=10, pass_reports=[],
+            prompt_tokens_actual=700, completion_tokens_actual=200, reasoning_tokens_actual=10,
+            demo=True,
+        )
+        s1 = await ledger.summary("24h", demo=True)
+        assert s1["tokens_saved_est"] == 300
+        assert s1["tokens_saved_pct_est"] == 30.0
+        assert s1["prompt_tokens_baseline_est"] == 1000
+        assert s1["prompt_tokens_actual"] == 700
+        assert s1["completion_tokens"] == 200
+        assert s1["reasoning_tokens"] == 10
+        assert s1["excluded_count"] == 0
+
+        # 2. Equal: baseline=1000, actual=1000 (saved 0 = 0%)
+        async with ui_client.app.state.pool.connection() as conn, conn.cursor() as cur:
+            await cur.execute("DELETE FROM proxy_demo_requests")
+        await ledger.record(
+            "ses_equal", "balanced", "mock-model", False, False,
+            tokens_baseline_est=1000, tokens_actual=1200, cost_baseline_est=0.0, cost_actual=0.0,
+            latency_ms=10, pass_reports=[],
+            prompt_tokens_actual=1000, completion_tokens_actual=200, reasoning_tokens_actual=0,
+            demo=True,
+        )
+        s2 = await ledger.summary("24h", demo=True)
+        assert s2["tokens_saved_est"] == 0
+        assert s2["tokens_saved_pct_est"] == 0.0
+        assert s2["prompt_tokens_baseline_est"] == 1000
+        assert s2["prompt_tokens_actual"] == 1000
+
+        # 3. Higher: baseline=1000, actual=1400 (net increase 400 = -40%)
+        async with ui_client.app.state.pool.connection() as conn, conn.cursor() as cur:
+            await cur.execute("DELETE FROM proxy_demo_requests")
+        await ledger.record(
+            "ses_higher", "balanced", "mock-model", False, False,
+            tokens_baseline_est=1000, tokens_actual=1600, cost_baseline_est=0.0, cost_actual=0.0,
+            latency_ms=10, pass_reports=[],
+            prompt_tokens_actual=1400, completion_tokens_actual=200, reasoning_tokens_actual=0,
+            demo=True,
+        )
+        s3 = await ledger.summary("24h", demo=True)
+        assert s3["tokens_saved_est"] == -400
+        assert s3["tokens_saved_pct_est"] == -40.0
+        assert s3["prompt_tokens_baseline_est"] == 1000
+        assert s3["prompt_tokens_actual"] == 1400
+
+        # 4. Unmeasured row (prompt_tokens_actual is None) is excluded from prompt accounting
+        await ledger.record(
+            "ses_unmeasured", "balanced", "mock-model", False, False,
+            tokens_baseline_est=5000, tokens_actual=5000, cost_baseline_est=0.0, cost_actual=0.0,
+            latency_ms=10, pass_reports=[],
+            prompt_tokens_actual=None, completion_tokens_actual=None, reasoning_tokens_actual=None,
+            demo=True,
+        )
+        s4 = await ledger.summary("24h", demo=True)
+        # prompt baseline remains 1000, prompt actual remains 1400, excluded_count is 1
+        assert s4["tokens_saved_est"] == -400
+        assert s4["tokens_saved_pct_est"] == -40.0
+        assert s4["prompt_tokens_baseline_est"] == 1000
+        assert s4["prompt_tokens_actual"] == 1400
+        assert s4["excluded_count"] == 1
+
+        # Also verify /ui/api/summary via test client with UI_DEMO=1
+        import os
+        os.environ["UI_DEMO"] = "1"
+        try:
+            api_res = ui_client.get("/ui/api/summary?range=24h").json()
+            assert api_res["tokens_saved_est"] == -400
+            assert api_res["prompt_tokens_baseline_est"] == 1000
+            assert api_res["prompt_tokens_actual"] == 1400
+            assert api_res["excluded_count"] == 1
+        finally:
+            os.environ.pop("UI_DEMO", None)
+
+    asyncio.run(_run())

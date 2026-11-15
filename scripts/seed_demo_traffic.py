@@ -48,14 +48,19 @@ async def seed(pool, n: int = 40) -> None:
                  "changed": p in ("P4", "P5"), "skipped": ""}
                 for p in PASSES if rnd.random() > 0.25
             ]
+            prompt_act = actual
+            comp_act = rnd.randint(80, 300)
+            tot_act = prompt_act + comp_act
             await cur.execute(
                 "INSERT INTO proxy_demo_requests (session_id, mode, model, cache_hit, "
                 "passthrough, tokens_baseline_est, tokens_actual, latency_ms, pass_reports, "
-                "created_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                "created_at, prompt_tokens_actual, completion_tokens_actual, reasoning_tokens_actual) "
+                "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                 (
                     f"demo_ses_{i:03d}", mode, model, hit, mode == "off",
-                    base, actual, rnd.randint(2, 40),
+                    base, tot_act, rnd.randint(2, 40),
                     json.dumps(reports), created,
+                    prompt_act, comp_act, 0,
                 ),
             )
     print(f"seeded {n} demo rows")
