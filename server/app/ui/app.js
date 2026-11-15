@@ -174,11 +174,12 @@ async function refreshOverview() {
 }
 
 function renderKpis(s) {
+  const win = " (Ledger, last " + s.range + ")";
   const kpis = [
     (() => {
       const sv = s.tokens_saved_est;
       const neg = sv < 0;
-      const label = (neg ? "Net increase (estimated)" : "Prompt tokens saved (estimated)") + " (Ledger, " + s.range + ")";
+      const label = (neg ? "Net increase (estimated)" : "Prompt tokens saved (estimated)") + win;
       const pctStr = Math.abs(s.tokens_saved_pct_est || 0) + "%";
       const val = neg ? num(-sv) + ` (+${pctStr} increase)` : num(sv) + ` (${pctStr})`;
       const tip = "baseline is an estimate from chars/4 of the original prompt";
@@ -188,14 +189,14 @@ function renderKpis(s) {
       }
       return { l: label, v: val, d, tip };
     })(),
-    { l: "Cost saved (Ledger, " + s.range + ")", v: s.cost_saved_usd == null ? "unpriced" : "$" + s.cost_saved_usd.toFixed(4),
+    { l: "Cost saved" + win, v: s.cost_saved_usd == null ? "unpriced" : "$" + s.cost_saved_usd.toFixed(4),
       d: "provider did not report a price" },
-    { l: "Cache hit rate (Ledger, " + s.range + ")", v: s.cache_hit_rate + "%" },
-    { l: "Requests proxied (Ledger, " + s.range + ")", v: num(s.requests) },
-    { l: "Passthrough (Ledger, " + s.range + ")", v: num(s.passthroughs) },
-    { l: "Validity-guard (Ledger, " + s.range + ")", v: num(s.invalid_after_pass_events) + " / " + num(s.invalid_original_events),
+    { l: "Cache hit rate" + win, v: s.cache_hit_rate + "%" },
+    { l: "Requests proxied" + win, v: num(s.requests) },
+    { l: "Passthrough" + win, v: num(s.passthroughs) },
+    { l: "Validity-guard" + win, v: num(s.invalid_after_pass_events) + " / " + num(s.invalid_original_events),
       d: "reverted passes / invalid originals" },
-    { l: "Added latency p95 (Ledger, " + s.range + ")", v: s.latency_p95_ms + " ms" },
+    { l: "Added latency p95" + win, v: s.latency_p95_ms + " ms" },
   ];
   $("kpis").innerHTML = kpis.map((k) =>
     `<div class="kpi" title="${escapeHtml(k.tip || "")}"><div class="l">${escapeHtml(k.l)}</div>` +
@@ -229,7 +230,7 @@ function renderCharts(series, passes, reqs, summary) {
   }
   const totalModeReqs = (summary && summary.requests != null) ? summary.requests : Object.values(byMode).reduce((a, b) => a + b, 0);
   $("chart-modes").replaceChildren(donut(Object.entries(byMode).map(([label, value]) => ({ label, value }))));
-  $("fb-modes").textContent = (Object.entries(byMode).map(([m, c]) => `${m}: ${c}`).join("; ") || "No data.") + ` (Total: ${num(totalModeReqs)})`;
+  $("fb-modes").textContent = `Total: ${num(totalModeReqs)} (${Object.entries(byMode).map(([m, c]) => `${m}: ${c}`).join("; ") || "No data"})`;
   $("chart-latency").replaceChildren(lineChart([
     { label: "p50", values: pts.map((p) => p.latency_p50_ms) },
     { label: "p95", values: pts.map((p) => p.latency_p95_ms) },
