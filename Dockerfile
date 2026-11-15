@@ -5,6 +5,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 
 COPY pyproject.toml ./
 COPY config ./config
+COPY prompts ./prompts
 COPY server ./server
 RUN pip install --no-cache-dir .
 

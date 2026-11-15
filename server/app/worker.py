@@ -37,11 +37,14 @@ class Worker:
             else:
                 await run_pipeline_job(ctx, job["session_id"])
             await self.jobs.complete(job["id"])
-        except GatewayRateLimited:
+        except GatewayRateLimited as exc:
+            print(f"[WORKER] job {job['id']}: rate limited (attempt {job['attempts']}): {exc}", flush=True)
             await self.jobs.fail_transient(job["id"], job["attempts"])
-        except InvalidTransition:
+        except InvalidTransition as exc:
+            print(f"[WORKER] job {job['id']}: InvalidTransition: {exc}", flush=True)
             await self.jobs.fail_dead(job["id"])
-        except Exception:
+        except Exception as exc:
+            print(f"[WORKER] job {job['id']}: ERROR {type(exc).__name__}: {exc}", flush=True)
             if job["attempts"] >= job["max_attempts"]:
                 await self.jobs.fail_dead(job["id"])
                 await self._mark_session_failed(job["session_id"])

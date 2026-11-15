@@ -7,7 +7,18 @@ from functools import lru_cache
 from pathlib import Path
 
 PROMPTS_DIR = Path(__file__).resolve().parents[3] / "prompts"
+# Docker: prompts are at /srv/prompts/ (WORKDIR-relative fallback)
+_CWD_PROMPTS = Path(os.environ.get("PROMPTS_DIR", "prompts"))
 VERSION_RE = re.compile(r"^v(\d+)\.md$")
+
+
+def _find_prompts_dir() -> Path:
+    """Prefer __file__-relative (dev mode); fall back to cwd-relative (Docker)."""
+    if PROMPTS_DIR.is_dir():
+        return PROMPTS_DIR
+    if _CWD_PROMPTS.is_dir():
+        return _CWD_PROMPTS
+    return PROMPTS_DIR
 
 
 @lru_cache(maxsize=None)
@@ -17,7 +28,7 @@ def latest_prompt(stage: str) -> tuple[str, str]:
     Honors PROMPT_VERSION env var (e.g. 'v1' or 'v2') if set and file exists;
     otherwise defaults to the highest vN.
     """
-    stage_dir = PROMPTS_DIR / stage
+    stage_dir = _find_prompts_dir() / stage
     if not stage_dir.is_dir():
         raise FileNotFoundError(f"no prompts for stage {stage!r}")
 
