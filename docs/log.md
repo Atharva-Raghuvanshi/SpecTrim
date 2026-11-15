@@ -686,3 +686,20 @@ make smoke-docker    # PASS=13 FAIL=0
 make test            # 166 passed
 make lint            # ruff+mypy clean
 ```
+
+## WP18 — fresh-clone fix + container smoke test + screenshots (2026-11-15)
+
+**Diagnosis:** cause **(b)** — setuptools didn't package `server/app/ui/` static files or `server/app/storage/migrations/*.sql` into the Docker image. Port conflict (cause a) also contributed (old stack on 8001).
+
+**Fixes:** pyproject.toml package-data (`ui/*` + `migrations/*.sql`), compose port renames to QO_* prefix, smoke_docker.sh, Makefile targets.
+
+**Smoke test result:** PASS=13 FAIL=0 from a clean clone (committed fix verified).
+
+**Screenshots saved to docs/screenshots/:**
+- ui-overview.png — UI Overview (KPIs, token chart, cache hit rate)
+- ui-specs.png — UI Specs page
+- ui-connect.png — UI Connect page
+- grafana-dashboard.png — Grafana home (Query Optimizer dashboard provisioned)
+- grafana-qo-dashboard.png — Grafana Query Optimizer dashboard with live panels (Sessions=7, HTTP requests graph, Daily spend, Proxy overhead p95)
+- api-docs-swagger.png — Swagger API docs (all endpoints)
+- prometheus-graph.png — Prometheus graph (qo_http_requests_total time series)
