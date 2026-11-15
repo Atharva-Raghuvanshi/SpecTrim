@@ -47,7 +47,8 @@ main { padding: var(--sp-3) var(--sp-4); display: flex; flex-direction: column; 
 .tb-group { display: flex; align-items: center; gap: var(--sp-1); }
 .tb-group label { color: var(--muted); font-size: 13px; }
 .tb-check { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 13px; }
-.topbar a { text-decoration: none; }
+.topbar a { text-decoration: underline; color: var(--accent); }
+.topbar a:visited { color: var(--accent); }
 
 .banner { padding: var(--sp-1) var(--sp-2); border-radius: var(--r);
   background: rgba(217,165,63,.15); border: 1px solid var(--warn); font-size: 14px; }
@@ -67,10 +68,10 @@ h3 { font-size: 14px; margin: var(--sp-2) 0 var(--sp-1); }
 .kpi .d { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .kpi .up { color: var(--accent2); } .kpi .down { color: var(--danger); }
 
-.chart { min-height: 160px; } .chart svg { width: 100%; height: auto; }
+.chart { min-height: 160px; overflow: hidden; } .chart svg { width: 100%; height: auto; max-width: 100%; }
 .chart-fallback { color: var(--muted); font-size: 12px; margin-top: var(--sp-1);
   font-variant-numeric: tabular-nums; }
-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; table-layout: auto; display: block; overflow-x: auto; }
 th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); font-size: 13px; }
 th { color: var(--muted); cursor: pointer; user-select: none; }
 .muted { color: var(--muted); }

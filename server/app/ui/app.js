@@ -173,16 +173,24 @@ async function refreshOverview() {
 
 function renderKpis(s) {
   const kpis = [
-    { l: "Tokens saved (Estimated · ledger)", v: num(s.tokens_saved_est) + ` (${s.tokens_saved_pct_est}%)`,
-      d: "baseline is an estimate; tooltip", tip: "baseline-est comes from a chars/4 estimate of the original payload — never a measured baseline" },
+    (() => {
+      const sv = s.tokens_saved_est;
+      const neg = sv < 0;
+      const label = neg ? "Net increase (Estimated · ledger)" : "Tokens saved (Estimated · ledger)";
+      const val = neg ? num(-sv) + ` (+${s.tokens_saved_pct_est}% increase)` : num(sv) + ` (${s.tokens_saved_pct_est}%)`;
+      const tip = neg
+        ? "Actual tokens exceeded the baseline-est. baseline-est is a chars/4 estimate vs provider-reported actual tokens — the estimate underestimates real usage for this traffic."
+        : "baseline-est comes from a chars/4 estimate of the original payload — never a measured baseline";
+      return { l: label, v: val, d: "", tip };
+    })(),
     { l: "Cost saved", v: s.cost_saved_usd == null ? "unpriced" : "$" + s.cost_saved_usd.toFixed(4),
       d: "provider did not report a price" },
-    { l: "Cache hit rate", v: s.cache_hit_rate + "%" },
-    { l: "Requests proxied", v: num(s.requests) },
-    { l: "Fail-open / passthrough", v: num(s.passthroughs) },
-    { l: "Validity-guard events", v: num(s.invalid_after_pass_events) + " / " + num(s.invalid_original_events),
+    { l: "Cache hit rate (Ledger, " + s.range + ")", v: s.cache_hit_rate + "%" },
+    { l: "Requests proxied (Ledger, " + s.range + ")", v: num(s.requests) },
+    { l: "Passthrough (Ledger, " + s.range + ")", v: num(s.passthroughs) },
+    { l: "Validity-guard (Ledger, " + s.range + ")", v: num(s.invalid_after_pass_events) + " / " + num(s.invalid_original_events),
       d: "reverted passes / invalid originals" },
-    { l: "Added latency p95", v: s.latency_p95_ms + " ms" },
+    { l: "Added latency p95 (Ledger, " + s.range + ")", v: s.latency_p95_ms + " ms" },
   ];
   $("kpis").innerHTML = kpis.map((k) =>
     `<div class="kpi" title="${escapeHtml(k.tip || "")}"><div class="l">${escapeHtml(k.l)}</div>` +
@@ -446,7 +454,17 @@ function renderConnect() {
 
 /* ---------- wiring ---------- */
 document.querySelectorAll(".nav-btn").forEach((b) =>
-  b.addEventListener("click", () => showPage(b.dataset.page)));
+  b.addEventListener("click", () => {
+    showPage(b.dataset.page);
+    location.hash = b.dataset.page;
+  }));
+// hash navigation: show the right page on load and on back/forward
+function showPageFromHash() {
+  const h = location.hash.replace("#", "");
+  if (["overview", "specs", "newspec", "connect"].includes(h)) showPage(h);
+}
+window.addEventListener("hashchange", showPageFromHash);
+showPageFromHash();
 $("range-select").addEventListener("change", (e) => {
   state.range = e.target.value; state.page = 0; refreshOverview();
 });

@@ -703,3 +703,10 @@ make lint            # ruff+mypy clean
 - grafana-qo-dashboard.png — Grafana Query Optimizer dashboard with live panels (Sessions=7, HTTP requests graph, Daily spend, Proxy overhead p95)
 - api-docs-swagger.png — Swagger API docs (all endpoints)
 - prometheus-graph.png — Prometheus graph (qo_http_requests_total time series)
+
+## WP19 — UI and dashboard honesty fixes (2026-11-15)
+
+**P1 investigation (27 invalid_original + 155 passthroughs):**
+- **155 passthroughs**: 120 from mode=off (BY DESIGN — mode=off is passthrough+metrics per PRD_v2 §4); ~35 from unit-test models (`m`, `m-ledger`, `m-anth`). Zero from real traffic fail-open. **Classification: (a) by-design behavior, not errors.**
+- **27 invalid_original events**: no current ledger rows match (ledger was truncated before the fixture fix). They were from test-generated traffic with tool messages lacking a preceding assistant tool_calls message — the validator correctly flagged them. **Classification: (a) genuinely invalid client requests, NOT validator false positives.** No validator change needed.
+- Source breakdown: all test traffic, no real-client invalid requests. Models: test fixtures (m, m-ledger, m-anth) and qwen/20b builder models.

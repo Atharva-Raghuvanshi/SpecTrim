@@ -1,6 +1,8 @@
 """WP12: request-validity guard, P1 atomic tool pairs, pass-registry check."""
 from __future__ import annotations
 
+import uuid
+
 import pytest
 from app.optimizer.chain import REGISTRY, run_chain
 from app.optimizer.passes import p1_cache_aware_assembly
@@ -93,7 +95,6 @@ def test_chain_skips_all_passes_when_original_invalid() -> None:
 
 def test_router_forwards_original_on_invalid_after_pass(ui_client, monkeypatch) -> None:
     client = ui_client
-    import uuid as _u
 
     import app.optimizer.chain as chain_mod
     from app.gateway import proxy_gateway
@@ -109,7 +110,7 @@ def test_router_forwards_original_on_invalid_after_pass(ui_client, monkeypatch) 
     monkeypatch.setattr(proxy_gateway, "raw_completion", lambda payload: good)
     r = client.post(
         "/v1/chat/completions",
-        json={"model": f"m-{_u.uuid4().hex[:8]}",
+        json={"model": f"m-{uuid.uuid4().hex[:8]}",
               "messages": [
                   {"role": "assistant", "content": "",
                    "tool_calls": [{"id": "t1", "type": "function",
@@ -152,3 +153,55 @@ def test_registry_covers_policy_table_except_p10_and_p9() -> None:
 
 def test_registry_keys_subset_of_policy_table() -> None:
     assert set(REGISTRY.keys()) <= set(PASS_ORDER)
+
+
+def test_pipeline_emits_stage_metrics(app_client) -> None:
+    """WP19 P5: a successful FakeGateway-backed spec session emits stage metrics."""
+    from app.observability import STAGE_CALLS
+
+    client, _ = app_client
+    r = client.post(
+        "/sessions", json={"idea": "habit tracker"},
+        headers={"Idempotency-Key": f"k-metrics-{uuid.uuid4()}"},
+    )
+    sid = r.json()["id"]
+    from tests.conftest import drain
+
+    drain(client, sid)
+    client.post(
+        f"/sessions/{sid}/answers",
+        json={"answers": [{"id": "Q1", "answer": "single user"}]},
+    )
+    drain(client, sid)
+
+    for stage in ("analyzer", "classifier", "spec_writer", "contract", "decomposer"):
+        # metrics use label values, so check via the collector's samples
+        found = False
+        for sample in STAGE_CALLS.collect()[0].samples:
+            if sample.labels.get("stage") == stage and sample.value > 0:
+                found = True
+                break
+        assert found, f"stage metric for {stage} not emitted"
+
+
+def test_grafana_panel_metrics_exist_in_metrics_endpoint(app_client) -> None:
+    """WP19 P5: every metric used by a Grafana panel must appear in /metrics."""
+    client, _ = app_client
+    metrics_text = client.get("/metrics").text
+    required = [
+        "qo_sessions_created_total",
+        "qo_tokens_in_total",
+        "qo_tokens_out_total",
+        "qo_stage_calls_total",
+        "qo_stage_latency_seconds",
+        "qo_http_requests_total",
+        "qo_proxy_cache_hits_total",
+        "qo_proxy_requests_total",
+        "qo_proxy_passthrough_total",
+        "qo_proxy_invalid_after_pass_total",
+        "qo_proxy_invalid_original_total",
+        "qo_proxy_overhead_seconds_bucket",
+        "qo_pass_savings_tokens_est_total",
+    ]
+    for metric in required:
+        assert metric in metrics_text, f"Grafana panel metric {metric} missing from /metrics"

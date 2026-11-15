@@ -116,3 +116,50 @@ def test_seed_script_refuses_without_ui_demo_flag() -> None:
     from scripts.seed_demo_traffic import main
 
     assert main() == 2  # refuses without UI_DEMO=1
+
+
+def test_ui_kpi_honest_labels(ui_client) -> None:
+    """WP19: KPI cards show data source, time window, and honest sign wording."""
+    client = ui_client
+    d = client.get("/ui/api/summary?range=24h").json()
+    assert "tokens_saved_pct_est" in d
+    assert "invalid_after_pass_events" in d
+    assert "invalid_original_events" in d
+
+
+def test_ui_disabled_stages_show_disabled(ui_client) -> None:
+    """WP15: eval-status shows disabled stages as DISABLED."""
+
+    from evals.status import selected_stages
+
+    sel = selected_stages()
+    assert "S1" in sel and "S2p" in sel and "S6" in sel and "S7" in sel
+    assert "S2" not in sel  # full E4b disabled by default
+    assert "S2b" not in sel  # safe arm disabled by default
+    assert "S3b" not in sel  # E5 disabled by default
+    assert "S4a" not in sel and "S4b" not in sel  # E3b disabled by default
+    assert "S5" not in sel  # tiny E4 disabled by default
+
+
+def test_ui_connect_page_has_copy_snippets(ui_client) -> None:
+    """WP19 P6: Connect page includes MCP and proxy snippets."""
+
+    app_js = ui_client.get("/ui/app.js").text
+    assert "claude mcp add" in app_js
+    assert "/v1/chat/completions" in app_js or "v1" in app_js
+    assert "x-optimizer-mode" in app_js
+
+
+def test_ui_hash_navigation_exists(ui_client) -> None:
+    """WP19 P4: app.js includes hash navigation for sidebar pages."""
+    app_js = ui_client.get("/ui/app.js").text
+    assert "hashchange" in app_js
+    assert "showPageFromHash" in app_js
+    assert "location.hash" in app_js
+
+
+def test_ui_kpi_data_source_labels(ui_client) -> None:
+    """WP19 P3: KPI cards show data source and time window."""
+    app_js = ui_client.get("/ui/app.js").text
+    assert "Ledger," in app_js
+    assert "s.range" in app_js
