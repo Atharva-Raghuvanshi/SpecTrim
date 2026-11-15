@@ -1,3 +1,119 @@
 .venv/Scripts/python -u -m evals.orchestr
 [2026-11-15 10:46:21Z] STAGE PLAN S1-E1E2-v2: est 45000 tok, 170000 tok free on openai/gpt-oss-120b
 [2026-11-15 10:46:21Z] STAGE S1-E1E2-v2: start
+[2026-11-15 11:02:15Z] STAGE S1-E1E2-v2: exit=0
+()'.
+
+
+[1;31mGive Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new[0m
+LiteLLM.Info: If you need to debug this error, use `litellm.turn_on_debug()'.
+
+
+[1;31mGive Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new[0m
+LiteLLM.Info: If you need to debug this error, use `litellm.turn_on_debug()'.
+
+[P29] status=ok valid=True asked=['data_ownership'] (+11020 tok)
+
+[1;31mGive Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new[0m
+LiteLLM.Info: If you need to debug this error, use `litellm.turn_on_debug()'.
+
+
+[1;31mGive Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new[0m
+LiteLLM.Info: If you need to debug this error, use `litellm.turn_on_debug()'.
+
+
+[1;31mGive Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new[0m
+LiteLLM.Info: If you need to debug this error, use `litellm.turn_on_debug()'.
+
+[P30] status=ok valid=True asked=[] (+12886 tok)
+
+==================== EVALUATION SUMMARY ====================
+{
+  "ran": 30,
+  "completed": 30,
+  "infra_aborted": 0,
+  "quality_fail": 0,
+  "e1": {
+    "valid": 30,
+    "invalid": 0,
+    "validity_rate": 1.0
+  },
+  "e2": {
+    "micro_tp": 34,
+    "micro_fp": 23,
+    "micro_fn": 8,
+    "micro_precision": 0.5964912280701754,
+    "micro_recall": 0.8095238095238095
+  },
+  "tokens_total_est": 399595,
+  "cost_usd_reported": 0.0,
+  "elapsed_s": 932.8
+}
+Results written to: evals\results\e1_e2_v2_full.json
+============================================================
+
+[2026-11-15 11:02:15Z] S2p pilot model: groq/qwen/qwen3.8-27b (headroom 170000 tok, hard cap 150000)
+[2026-11-15 11:02:16Z] S2p exit=1
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Admin\OneDrive\Desktop\Query Optimizer\evals\run_e4.py", line 32, in <module>
+    from evals.stamp import (  # noqa: E402  # noqa: E402
+ImportError: cannot import name 'get_stamp' from 'evals.stamp' (C:\Users\Admin\OneDrive\Desktop\Query Optimizer\evals\stamp.py). Did you mean: 'result_stamp'?
+
+[2026-11-15 11:02:16Z] S2-E4b-full-off-balanced: DISABLED (not in EVAL_STAGES)
+[2026-11-15 11:02:16Z] S2b-E4b-safe: DISABLED (not in EVAL_STAGES)
+[2026-11-15 11:02:16Z] S3b-E5-ablation: DISABLED (not in EVAL_STAGES)
+[2026-11-15 11:02:16Z] S4a-E3b-specs: DISABLED (not in EVAL_STAGES)
+[2026-11-15 11:02:16Z] S4b-E3b-builder: DISABLED (not in EVAL_STAGES)
+[2026-11-15 11:02:16Z] S5-E4-tiny-dev-regression: DISABLED (not in EVAL_STAGES)
+[2026-11-15 11:02:16Z] S6 finalization
+[2026-11-15 11:02:16Z] STAGE E6-pareto: start
+[2026-11-15 11:02:22Z] STAGE E6-pareto: exit=0
+saved C:\Users\Admin\OneDrive\Desktop\Query Optimizer\evals\results\pareto.png
+experiment config model n pass_rate tokens_in_avg
+E4 balanced groq/qwen/qwen3.8-27b n=8 75% 1670
+E4 off groq/qwen/qwen3.8-27b n=7 71% 1067
+E4 safe groq/qwen/qwen3.8-27b n=10 70% 2302
+E5 balanced groq/openai/gpt-oss-20b n=4 100% 282
+E5 balanced_no_P5 groq/openai/gpt-oss-20b n=4 100% 282
+E5 balanced_no_P9 groq/openai/gpt-oss-20b n=4 100% 282
+
+[2026-11-15 11:02:22Z] STAGE REPORT: start
+[2026-11-15 11:02:23Z] STAGE REPORT: exit=0
+report written: C:\Users\Admin\OneDrive\Desktop\Query Optimizer\evals\REPORT.md
+
+[2026-11-15 11:02:23Z] STAGE RESUME-CLAIMS: start
+[2026-11-15 11:02:23Z] STAGE RESUME-CLAIMS: exit=0
+claims written: C:\Users\Admin\OneDrive\Desktop\Query Optimizer\docs\RESUME_CLAIMS.md
+
+[2026-11-15 11:02:23Z] STAGE STATIC-REPORT: start
+[2026-11-15 11:02:23Z] STAGE STATIC-REPORT: exit=0
+static report: C:\Users\Admin\OneDrive\Desktop\Query Optimizer\docs\report.html
+
+[2026-11-15 11:02:23Z] S7 verify + tag
+[2026-11-15 11:03:38Z] S7 make test: exit=0 loop
+    pool = asyncio.get_event_loop().run_until_complete(_setup())
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================== 166 passed, 1 warning in 66.61s (0:01:06) ==================
+make[1]: Leaving directory 'C:/Users/Admin/OneDrive/Desktop/Query Optimizer'
+
+[2026-11-15 11:03:49Z] S7 make lint: exit=0 make[1]: Entering directory 'C:/Users/Admin/OneDrive/Desktop/Query Optimizer'
+.venv/Scripts/python -m ruff check .
+All checks passed!
+.venv/Scripts/python -m mypy server/app
+Success: no issues found in 55 source files
+make[1]: Leaving directory 'C:/Users/Admin/OneDrive/Desktop/Query Optimizer'
+
+[2026-11-15 11:05:27Z] S7 make coverage: exit=0 ----------------------------------------------------------
+TOTAL                                     665     37    94%
+Required test coverage of 80% reached. Total coverage: 94.44%
+166 passed, 1 warning in 92.88s (0:01:32)
+make[1]: Leaving directory 'C:/Users/Admin/OneDrive/Desktop/Query Optimizer'
+
+[2026-11-15 11:05:29Z] S7 secret scan: exit=0
+secret scan: 0 findings
+
+[2026-11-15 11:05:30Z] S7 commit: exit=0
+[2026-11-15 11:05:30Z] no git remote 'origin'; push manually with `git push origin HEAD --tags`

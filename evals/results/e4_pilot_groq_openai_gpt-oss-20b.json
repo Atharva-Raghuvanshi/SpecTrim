@@ -1,0 +1,70 @@
+{
+  "builder_model": "groq/openai/gpt-oss-20b",
+  "experiment": "e4",
+  "tasks_file": "C:\\Users\\Admin\\OneDrive\\Desktop\\Query Optimizer\\evals\\tasks\\tasks_e3.json",
+  "cells": {
+    "L1:off": {
+      "pass": null,
+      "infra_aborted": true,
+      "turns": 8,
+      "tokens_in": 4844,
+      "tokens_out": 621,
+      "requests": [],
+      "mode": "off",
+      "task": "L1",
+      "stamp": {
+        "content": "df445d0c9f65",
+        "provenance_commit": "5139100",
+        "inputs": {
+          "kind": "e4",
+          "registry": "0b335bc3c059",
+          "models": "5edfb7a65006",
+          "prompts": "385aab27fd06",
+          "tasks": "813f9c43b40e",
+          "version": "wp13"
+        }
+      }
+    },
+    "L1:balanced": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err",
+      "mode": "balanced",
+      "task": "L1"
+    },
+    "L3:off": {
+      "pass": null,
+      "infra_aborted": true,
+      "error": "RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m70m4qk5e3tvbafv3cs9qb4e` service ",
+      "mode": "off",
+      "task": "L3"
+    },
+    "L3:balanced": {
+      "pass": null,
+      "infra_aborted": false,
+      "error": "RuntimeError: proxy 502: {\"error\":{\"type\":\"infra_error\",\"message\":\"RateLimitError: litellm.RateLimitError: RateLimitError: GroqException - {\\\"err",
+      "mode": "balanced",
+      "task": "L3"
+    }
+  },
+  "stamp": {
+    "content": "df445d0c9f65",
+    "provenance_commit": "5139100",
+    "inputs": {
+      "kind": "e4",
+      "registry": "0b335bc3c059",
+      "models": "5edfb7a65006",
+      "prompts": "385aab27fd06",
+      "tasks": "813f9c43b40e",
+      "version": "wp13"
+    }
+  },
+  "tasks_version": "e3-v1",
+  "pilot": true,
+  "pilot_note": "pilot, n=2 pairs",
+  "paired": {
+    "pairs": [],
+    "n_pairs": 0,
+    "label": "pilot, n=2 pairs"
+  }
+}

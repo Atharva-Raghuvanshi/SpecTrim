@@ -14,11 +14,8 @@ _Generated from evals/results/*.json — only measured numbers appear here; anyt
 
 ## E4 token benchmark — dev/regression set (tiny single-file tasks)
 
-- model: `groq/qwen/qwen3.8-27b` · cells: 32 (pass 18 / fail 7 / retryable-turn-cap 7)
+- model: `groq/openai/gpt-oss-20b` · cells: 4 (pass 0 / fail 0 / retryable-turn-cap 4)
 
-- `balanced`: n=8 pass_rate=75% tokens_in_avg=1670 tokens_out_avg=159 iterations=2.75 latency=0.09s
-- `off`: n=7 pass_rate=71% tokens_in_avg=1067 tokens_out_avg=231 iterations=1.8571428571428572 latency=1.07s
-- `safe`: n=10 pass_rate=70% tokens_in_avg=2302 tokens_out_avg=187 iterations=3.5 latency=0.12s
 
 ## E5 pass ablation — dev/regression set
 

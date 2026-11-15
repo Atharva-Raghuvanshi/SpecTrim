@@ -1,42 +1,18 @@
 {
   "date_utc": "2026-11-15",
   "models": {
-    "groq/openai/gpt-oss-120b": {
-      "tokens_today": 0,
-      "requests_today": 0,
-      "last_updated_utc": "2026-11-13T14:05:10.342323+00:00",
-      "ratelimit_remaining_tokens": null,
-      "ratelimit_limit_tokens": null,
-      "ratelimit_reset_tokens_s": null
-    },
-    "openai/gpt-oss-120b": {
-      "tokens_today": 125349,
-      "requests_today": 60,
-      "last_updated_utc": "2026-11-15T11:02:13.849247+00:00",
+    "qwen/qwen3.8-27b": {
+      "tokens_today": 7058,
+      "requests_today": 4,
+      "last_updated_utc": "2026-11-15T11:40:02.433131+00:00",
       "ratelimit_remaining_tokens": null,
       "ratelimit_limit_tokens": null,
       "ratelimit_reset_tokens_s": null
     },
     "openai/gpt-oss-20b": {
-      "tokens_today": 26642,
-      "requests_today": 24,
-      "last_updated_utc": "2026-11-15T11:02:13.838242+00:00",
-      "ratelimit_remaining_tokens": null,
-      "ratelimit_limit_tokens": null,
-      "ratelimit_reset_tokens_s": null
-    },
-    "groq/qwen/qwen3.8-27b": {
-      "tokens_today": 0,
-      "requests_today": 0,
-      "last_updated_utc": "2026-11-14T17:15:03.826679+00:00",
-      "ratelimit_remaining_tokens": null,
-      "ratelimit_limit_tokens": null,
-      "ratelimit_reset_tokens_s": null
-    },
-    "groq/openai/gpt-oss-20b": {
-      "tokens_today": 0,
-      "requests_today": 0,
-      "last_updated_utc": "2026-11-14T08:13:16.662553+00:00",
+      "tokens_today": 5465,
+      "requests_today": 4,
+      "last_updated_utc": "2026-11-15T11:42:40.679262+00:00",
       "ratelimit_remaining_tokens": null,
       "ratelimit_limit_tokens": null,
       "ratelimit_reset_tokens_s": null

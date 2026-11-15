@@ -30,7 +30,6 @@ from checks import check_generated  # noqa: E402
 
 from evals.quota import QuotaTracker  # noqa: E402
 from evals.stamp import (  # noqa: E402  # noqa: E402
-    get_stamp,
     models_hash,
     prompts_hash,
     proxy_registry_hash,
@@ -264,6 +263,8 @@ def main() -> int:
     parser.add_argument("--passes-from-trial", action="store_true",
                         dest="passes_from_trial",
                         help="read the fired pass list from e5_trial.json")
+    parser.add_argument("--output", default=None, dest="output",
+                        help="override output json path")
     parser.add_argument("--task-ids", default=None, dest="task_ids",
                         help="comma-separated task ids (e.g. 'L1,L3' for the pilot)")
     parser.add_argument("--pilot", action="store_true",
@@ -296,7 +297,8 @@ def main() -> int:
 
     tasks_version = json.loads(
         Path(tasks_src).read_text(encoding="utf-8")).get("version", "dev")
-    out_path = RESULTS / f"{args.experiment}_{tasks_version}_{args.model.replace('/', '_')}.json"
+    out_path = (Path(args.output) if args.output else
+                RESULTS / f"{args.experiment}_{tasks_version}_{args.model.replace('/', '_')}.json")
     results: dict = (
         json.loads(out_path.read_text(encoding="utf-8"))
         if out_path.is_file() else {"builder_model": args.model, "experiment": args.experiment,
@@ -334,9 +336,12 @@ def main() -> int:
     from fastapi.testclient import TestClient
 
     with TestClient(create_app()) as client:  # lifespan: settings, gateway, pool
-        run_all(client, quota, args, task_ids, by_id_all, configs, results, out_path,
-                max_cells=args.max_cells)
-    summarize(results)
+        if args.pilot:
+            run_pilot_cells(client, quota, args, results, out_path)
+        else:
+            run_all(client, quota, args, task_ids, by_id_all, configs, results, out_path,
+                    max_cells=args.max_cells)
+            summarize(results)
     out_path.write_text(json.dumps(results, indent=2), encoding="utf-8")
     return 0
 
@@ -348,7 +353,11 @@ def run_pilot_cells(client, quota, args, results, out_path) -> None:  # noqa: AN
     from app.optimizer.validate import validate_internal as _unused_guard  # noqa: F401
 
     model = args.model
-    stamp = get_stamp()
+    stamp = result_stamp("e4", {
+        "registry": proxy_registry_hash(), "models": models_hash(),
+        "prompts": prompts_hash(), "tasks": tasks_hash(str(
+            args.tasks_file or str(Path(__file__).resolve().parent / "tasks_e4b.json"))),
+    })
     results["stamp"] = stamp
     results["pilot"] = True
     results["pilot_note"] = "pilot, n=2 pairs"

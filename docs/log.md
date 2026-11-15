@@ -618,3 +618,50 @@ orchestrator.log: STAGE PLAN S1 … 170,000 tok free → S1 started
 PID 38136 confirmed alive (ctypes OpenProcess). The orchestrator runs detached
 (survives shell exit), probes hourly when a model is exhausted, and proceeds
 S1 → S2p → S6 → S7 (verify/secret-scan/commit/tag/COMPLETE) automatically.
+
+## WP17 — final results and close-out (2026-11-15)
+
+**Status:** DONE. Commits: STEP1 `1ad7005`, code `8b78f10`, results `4fe5a97`/`3c1e8aa`, final `this`. **166 tests, ruff+mypy clean, coverage 94%.** Secret scan clean (0 tracked .env, 0 findings).
+
+### Measured results (final)
+
+| Experiment | Result | n | Model |
+|---|---|---|---|
+| E1 validity (v2 prompts) | **30/30 = 100%** of attempted runs valid; 0 quality failures | 30 | gpt-oss-120b pipeline |
+| E2 precision/recall (v2) | **P 0.596 / R 0.810** (micro, category-level, n=30) | 30 | pipeline |
+| E2 v1 baseline | P 0.357 / R 0.769 (n=10 completed) | 10 | pipeline |
+| E3 downstream lift | paired n=9 all ties, Fisher p≈0.64 — no significant difference | 9 pairs | gpt-oss-20b |
+| E4b pilot | 0 complete pairs: L1:off quality_fail (no submit in 8 turns); L1/L3:balanced + L3:off infra (502/rate-limit) | 4 cells attempted, 0 complete | gpt-oss-20b |
+| E4b full + safe arm | **NOT MEASURED: not run (free-tier quota / scope)** | 0/24 | qwen (quota) |
+| E5 ablation | **NOT MEASURED: not run (free-tier quota / scope + trial not completed)** | 0/40 | gpt-oss-20b |
+| E3b multi-file | **NOT MEASURED: not run (free-tier quota / scope)** | 0/12 | gpt-oss-20b |
+| E4 tiny dev/regression | **PARTIAL: 25/48 cells completed under pre-WP11 registry; re-run queued** | 25 | qwen |
+| E6 Pareto | generated from partial points (pareto.png + table) | — | — |
+| Proxy overhead p95 vs input size | 0.2ms @1.3K → 70.7ms @177K (all <150ms with pre-rep GC; GC-heavy ~290ms @177K noted) | 100 reps/bucket | n/a |
+| Guard cost | 0.4ms p95 | 100 reps | n/a |
+
+### Resume-safe claims (final — only measured, paired where applicable)
+1. "Spec pipeline validity: **100% of 30 attempted runs** (v2 prompts, gpt-oss-120b pipeline). Zero quality failures."
+2. "Question precision **0.596**, recall **0.810** (micro, n=30, v2 prompts). v1 baseline was P 0.357 / R 0.769 (n=10 completed)."
+3. "E3 downstream lift: **paired n=9, all 9 ties** (Fisher p≈0.64) — no significant difference between raw and optimized on trivial tasks. No claim of benefit or harm."
+4. "Proxy overhead p95 by input size: 0.2ms @1.3K, 2.1ms @9.4K, 7.6ms @48.6K, 13.1ms @97.7K, **70.7ms @177K** (target <150ms). Validity guard adds 0.4ms p95."
+5. "Fail-open correctness: 100% of injected failures yield the original request (tested)."
+6. "Cache correctness: 0 stale serves across model/namespace/version invalidation (tested)."
+7. "E4b pilot: builder agent (gpt-oss-20b) did not submit within 8 turns on either task in off mode; balanced arm hit 502 infra errors. **0 complete pairs** — the multi-file tasks are too hard for the builder model at this context size, or the tool protocol needs tuning. NOT a comparison result."
+8. "Quota reconciliation: merged gpt-oss-20b daily total = **SUM** 203,032 tok (not max); split keys recorded different calls (E1/E2 under `res.model`, E4/E5 under `args.model`). Provider headers expose the per-minute TPM window only."
+
+### DoD audit — FINAL
+All items from the earlier audit stand, with these updates:
+- E1: 100% of 30 attempted (upgraded from 10/10 partial)
+- E2: P 0.596 / R 0.810 measured on full 30 (upgraded from partial dry-run)
+- E3: paired 9 ties p≈0.64 (unchanged — no significant difference)
+- E4b pilot: attempted, 0 complete pairs (documented honestly)
+- E4b full, E5, E3b: NOT MEASURED (scope + quota)
+- Remaining: **demo video, resume** (VPS/domain from user, `git push origin HEAD --tags` when remote exists)
+
+### What was NOT measured and why
+- E4b full 24 cells + safe arm: free-tier quota exhausted + scope cut (WP15)
+- E5 ablation: passes never fired on tiny fixtures; E4b large-fixture run infra-blocked
+- E3b multi-file lift: 120b quota exhausted for spec-gen; 20b quota exhausted for builder
+- Demo video: needs VPS + domain (user provides)
+- Resume: needs git remote 'origin'
