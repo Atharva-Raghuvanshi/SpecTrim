@@ -22,6 +22,7 @@ from app.observability import (
     PROXY_OVERHEAD,
     PROXY_PASSTHROUGH,
     PROXY_REQUESTS,
+    record_stage_call,
 )
 from app.optimizer.anthropic import from_anthropic, to_anthropic, translate_stream_to_anthropic
 from app.optimizer.cache import ResponseCache, SavingsLedger
@@ -35,9 +36,16 @@ DEFAULT_MODEL = "groq/openai/gpt-oss-20b"
 
 def _record_savings(reports: list[dict]) -> None:
     for r in reports:
-        saved = r.get("tokens_before_est", 0) - r.get("tokens_after_est", 0)
-        if saved > 0:
-            PASS_SAVINGS_EST.labels(**{"pass": r["pass"]}).inc(saved)
+        p = r.get("pass")
+        if p:
+            saved = int(r.get("tokens_before_est", 0)) - int(r.get("tokens_after_est", 0))
+            PASS_SAVINGS_EST.labels(**{"pass": p}).inc(max(0, saved))
+
+
+def _record_proxy_metrics(model: str, usage_info: dict, cost: float | None, latency_ms: int, tokens_baseline_est: int) -> None:
+    t_in = usage_info.get("prompt_tokens") or tokens_baseline_est or 0
+    t_out = usage_info.get("completion_tokens") or 0
+    record_stage_call("proxy", model, t_in, t_out, cost, latency_ms)
 
 
 async def _handle_chat(request: Request, api: str) -> Response:
@@ -93,6 +101,7 @@ async def _handle_chat(request: Request, api: str) -> Response:
             completion_tokens_actual=usage_info.get("completion_tokens"),
             reasoning_tokens_actual=usage_info.get("reasoning_tokens"),
         )
+        _record_proxy_metrics(model, usage_info, cost_actual, 0, tokens_baseline_est)
         return _reply(api, resp)
 
     # ---- added-overhead measurement (policy+cache+chain, excludes provider)
@@ -115,6 +124,7 @@ async def _handle_chat(request: Request, api: str) -> Response:
             completion_tokens_actual=usage_info.get("completion_tokens"),
             reasoning_tokens_actual=usage_info.get("reasoning_tokens"),
         )
+        _record_proxy_metrics(model, usage_info, cost_actual, 0, tokens_baseline_est)
         out = _reply(api, cache_hit, cache_hit_flag=True)
         return out
 
@@ -144,6 +154,7 @@ async def _handle_chat(request: Request, api: str) -> Response:
             completion_tokens_actual=usage_info.get("completion_tokens"),
             reasoning_tokens_actual=usage_info.get("reasoning_tokens"),
         )
+        _record_proxy_metrics(model, usage_info, cost_actual, overhead_ms, tokens_baseline_est)
         return _reply(api, resp)
     _record_savings(reports)
     payload = {**optimized, "model": model}
@@ -178,6 +189,7 @@ async def _handle_chat(request: Request, api: str) -> Response:
             completion_tokens_actual=usage_info.get("completion_tokens"),
             reasoning_tokens_actual=usage_info.get("reasoning_tokens"),
         )
+        _record_proxy_metrics(model, usage_info, cost_actual, overhead_ms, tokens_baseline_est)
         return _reply(api, resp)
 
     tokens_actual, cost_actual = proxy_gateway.raw_usage(resp)
@@ -192,6 +204,7 @@ async def _handle_chat(request: Request, api: str) -> Response:
         completion_tokens_actual=usage_info.get("completion_tokens"),
         reasoning_tokens_actual=usage_info.get("reasoning_tokens"),
     )
+    _record_proxy_metrics(model, usage_info, cost_actual, overhead_ms, tokens_baseline_est)
     return _reply(api, resp)
 
 

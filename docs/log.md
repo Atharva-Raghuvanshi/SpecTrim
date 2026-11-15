@@ -730,3 +730,18 @@ KPI cards show "(Ledger, {range})" data source and time window.
 ### P5 — Grafana metrics verified: all 13 panel queries match registered metrics (test_grafana_panel_metrics_exist_in_metrics_endpoint + test_pipeline_emits_stage_metrics).
 
 ### P6 — assertions added for KPI labels, DISABLED stages, Connect snippets, hash navigation.
+
+### WP19.3 — Grafana Panel to Prometheus Metric Mapping
+| Panel | Prometheus Metric(s) | Description |
+|---|---|---|
+| Sessions created (total) | `qo_sessions_created_total` | Total sessions created |
+| Tokens by stage (5m) | `qo_tokens_in_total`, `qo_tokens_out_total` | Prompt/completion tokens per stage & proxy |
+| Cost (USD, 5m) | `qo_cost_usd_total`, `qo_cost_unpriced_total` | Dollars spent per stage & proxy ('unpriced' for unpriced models) |
+| Stage latency p95 (5m) | `qo_stage_latency_seconds_bucket` | Stage and proxy execution latency histogram |
+| HTTP requests (5m) | `qo_http_requests_total` | Rate of incoming requests by route |
+| Daily spend (today) | `qo_daily_spend_usd` | Total USD spend today across pipeline sessions |
+| Per-pass token savings (est, 5m) | `qo_pass_savings_tokens_est_total` | Rate of prompt tokens saved per pass |
+| Cache hit rate (15m) | `qo_proxy_cache_hits_total`, `qo_proxy_requests_total` | Cache hit percentage |
+| Passthrough / fail-open (5m) | `qo_proxy_passthrough_total` | Forwarded unoptimized requests grouped by reason |
+| Validity-guard events (total) | `qo_proxy_invalid_after_pass_total`, `qo_proxy_invalid_original_total` | Reverted passes and invalid original requests |
+| Added proxy overhead p95 (5m) | `qo_proxy_overhead_seconds_bucket` | Overhead seconds added by optimizer chain |

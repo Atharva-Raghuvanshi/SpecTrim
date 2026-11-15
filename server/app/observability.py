@@ -22,6 +22,7 @@ STAGE_CALLS = Counter(
 TOKENS_IN = Counter("qo_tokens_in_total", "Prompt tokens", ["stage", "model"])
 TOKENS_OUT = Counter("qo_tokens_out_total", "Completion tokens", ["stage", "model"])
 COST_USD = Counter("qo_cost_usd_total", "Cost in USD", ["stage", "model"])
+COST_UNPRICED = Counter("qo_cost_unpriced_total", "Calls with unpriced models", ["stage", "model"])
 STAGE_LATENCY = Histogram(
     "qo_stage_latency_seconds", "Stage latency", ["stage", "model"],
     buckets=(0.25, 0.5, 1, 2, 5, 10, 30, 60, 120),
@@ -93,4 +94,25 @@ def record_stage_call(stage: str, model: str, tokens_in: int, tokens_out: int,
     TOKENS_OUT.labels(stage=stage, model=model).inc(tokens_out)
     if cost_usd is not None:
         COST_USD.labels(stage=stage, model=model).inc(cost_usd)
+    else:
+        COST_UNPRICED.labels(stage=stage, model=model).inc()
     STAGE_LATENCY.labels(stage=stage, model=model).observe(latency_ms / 1000)
+
+
+def init_metrics() -> None:
+    """Pre-initialize Prometheus series with zero values so dashboards never show empty/no-data."""
+    stages = ("S1", "S2", "S3", "S4", "S5", "S6", "S7", "proxy")
+    for s in stages:
+        STAGE_CALLS.labels(stage=s, model="default")
+        TOKENS_IN.labels(stage=s, model="default")
+        TOKENS_OUT.labels(stage=s, model="default")
+        COST_USD.labels(stage=s, model="default")
+        COST_UNPRICED.labels(stage=s, model="default")
+        STAGE_LATENCY.labels(stage=s, model="default")
+
+    passes = ("P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9")
+    for p in passes:
+        PASS_SAVINGS_EST.labels(**{"pass": p})
+
+
+init_metrics()

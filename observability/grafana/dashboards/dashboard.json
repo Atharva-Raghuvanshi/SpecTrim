@@ -17,18 +17,37 @@
         {"expr": "sum(rate(qo_tokens_in_total[5m])) by (stage)", "refId": "A", "legendFormat": "in {{stage}}"},
         {"expr": "sum(rate(qo_tokens_out_total[5m])) by (stage)", "refId": "B", "legendFormat": "out {{stage}}"}
       ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0"
+        }
+      },
       "gridPos": {"x": 6, "y": 0, "w": 12, "h": 8}
     },
     {
       "type": "timeseries",
       "title": "Cost (USD, 5m)",
-      "targets": [{"expr": "sum(rate(qo_cost_usd_total[5m])) by (stage)", "refId": "A", "legendFormat": "{{stage}}"}],
+      "targets": [
+        {"expr": "sum(rate(qo_cost_usd_total[5m])) by (stage)", "refId": "A", "legendFormat": "{{stage}}"},
+        {"expr": "sum(rate(qo_cost_unpriced_total[5m])) by (stage)", "refId": "B", "legendFormat": "unpriced ({{stage}})"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "unpriced"
+        }
+      },
       "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4}
     },
     {
       "type": "timeseries",
       "title": "Stage latency p95 (5m)",
       "targets": [{"expr": "histogram_quantile(0.95, sum(rate(qo_stage_latency_seconds_bucket[5m])) by (le, stage))", "refId": "A", "legendFormat": "{{stage}}"}],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "0s"
+        }
+      },
       "gridPos": {"x": 18, "y": 4, "w": 6, "h": 4}
     },
     {
@@ -47,6 +66,11 @@
       "type": "timeseries",
       "title": "Per-pass token savings (est, 5m)",
       "targets": [{"expr": "sum(rate(qo_pass_savings_tokens_est_total[5m])) by (pass)", "refId": "A", "legendFormat": "{{pass}}"}],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0"
+        }
+      },
       "gridPos": {"x": 0, "y": 14, "w": 8, "h": 6}
     },
     {
