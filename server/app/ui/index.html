@@ -3,21 +3,39 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Query Optimizer</title>
+<title>Query Optimizer — AI Token Optimization Dashboard</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="shell">
   <aside class="sidebar">
-    <div class="brand">QO<span>·optimizer</span></div>
+    <div class="brand">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:#c084fc"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+      QO<span>·optimizer</span>
+    </div>
     <nav>
-      <button class="nav-btn active" data-page="overview">Overview</button>
-      <button class="nav-btn" data-page="specs">Specs</button>
-      <button class="nav-btn" data-page="newspec">New spec</button>
-      <button class="nav-btn" data-page="connect">Connect</button>
+      <button class="nav-btn active" data-page="overview">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        Overview
+      </button>
+      <button class="nav-btn" data-page="specs">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+        Specs
+      </button>
+      <button class="nav-btn" data-page="newspec">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+        New spec
+      </button>
+      <button class="nav-btn" data-page="connect">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+        Connect
+      </button>
     </nav>
     <div class="sidebar-foot">
-      <button id="theme-toggle" class="ghost" title="Toggle theme">Theme</button>
+      <button id="theme-toggle" class="ghost" title="Toggle theme">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        Theme
+      </button>
       <div class="token-row">
         <input id="token-input" type="password" placeholder="Bearer token (optional)">
         <button id="token-save" class="ghost">Save</button>
@@ -41,7 +59,10 @@
       </div>
       <label class="tb-check"><input type="checkbox" id="auto-refresh"> Auto-refresh (10s)</label>
       <span id="health" class="health">…</span>
-      <a class="ghost" href="http://localhost:3000" target="_blank" rel="noopener">Open Grafana</a>
+      <a class="ghost" href="http://localhost:3000" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        Open Grafana
+      </a>
     </header>
 
     <div id="demo-banner" class="banner hidden">
@@ -99,7 +120,7 @@
         <h1 style="margin:0">Specs</h1>
         <div class="row" style="margin:0;align-items:center;gap:var(--sp-2)">
           <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="specs-hide-eval" checked> Hide eval sessions</label>
-          <select id="specs-status-filter" style="padding:4px 8px;border-radius:var(--r);background:var(--bg);color:var(--text);border:1px solid var(--line);font-size:13px">
+          <select id="specs-status-filter" style="padding:6px 10px;border-radius:var(--r);background:var(--bg2);color:var(--text);border:1px solid var(--line);font-size:13px">
             <option value="all">All statuses</option>
             <option value="ready">ready</option>
             <option value="awaiting_user">awaiting_user</option>
@@ -121,12 +142,17 @@
     <section id="page-newspec" class="page hidden">
       <h1>New spec</h1>
       <div class="card">
-        <textarea id="idea-input" rows="4" placeholder="Describe the product idea…"></textarea>
+        <h2>Generate Architecture & API Specification</h2>
+        <p class="muted" style="margin-top:0">Provide your product concept or user story. The multi-stage agent pipeline will analyze requirements, ask clarifying questions if needed, and draft complete OpenAPIs, schemas, and architecture blueprints.</p>
+        <textarea id="idea-input" rows="4" placeholder="Describe the product idea, user stories, constraints, or feature requirements…"></textarea>
         <div class="row">
           <input id="idem-input" placeholder="Idempotency-Key (optional)" />
-          <button id="create-spec" class="primary">Create session</button>
+          <button id="create-spec" class="primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Create session
+          </button>
         </div>
-        <div id="spec-progress" class="muted">Idle.</div>
+        <div id="spec-progress" class="muted" style="margin-top:12px">Idle.</div>
         <div id="questions-box" class="hidden"></div>
       </div>
     </section>

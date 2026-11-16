@@ -130,7 +130,10 @@ async def savings_report() -> dict:
 
 def main() -> int:
     transport = os.environ.get("MCP_TRANSPORT", "stdio")
-    mcp.run(transport=transport)  # type: ignore[arg-type,call-overload]
+    if transport in ("streamable-http", "sse"):
+        mcp.run(transport=transport, host="0.0.0.0", port=8001)  # type: ignore[arg-type,call-overload]
+    else:
+        mcp.run(transport=transport)  # type: ignore[arg-type,call-overload]
     return 0
 
 
